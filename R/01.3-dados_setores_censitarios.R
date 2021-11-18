@@ -79,7 +79,7 @@ source('fun/setup.R')
 # 70+     - Pess13_V0104:Pess13_V134
 
 
-# Pasta para todos os arquivos
+# Pasta geral para todos os arquivos e demais pastas
 files_folder <- "../../indice-mobilidade_dados"
 subfolder4 <- sprintf("%s/04_dados_censitarios", files_folder)
 
@@ -343,7 +343,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
     } else {
       future::plan(future::multisession)
     }
-    invisible(future.apply::future_lapply(X = x, FUN=merge_renda_setores, future.packages=c('sf', 'dplyr', 'data.table')))
+    invisible(future.apply::future_lapply(X = x, FUN = merge_renda_setores, future.packages=c('sf', 'dplyr', 'data.table')))
     
   } else {
     message('Arquivo para a cidade ', munis, " já existe, pulando...\n")
@@ -357,7 +357,11 @@ merge_renda_setores_all <- function(ano, munis = "all") {
 
 # merge_renda_setores_all(ano = 2019, munis = 'bho')
 
-for (muni in munis_list$munis_metro[ano_metro == ano]$abrev_muni){
-  merge_renda_setores_all(ano = 2019, munis = muni)
-  }
+# A criação da condicional checando se o arquivo para determinado município 
+# existe fez com que não seja possível usar o 'all' (embora aparentemente ele já
+# estava não-funcional antes da modificação) - usar a seguinte construção para 
+# todos os arquivos:
+x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
+lapply(X = x, FUN = merge_renda_setores_all, ano = 2019)
+
 # .rs.restartR()

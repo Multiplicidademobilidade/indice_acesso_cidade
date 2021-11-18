@@ -26,6 +26,7 @@ library(ggmap)        # geocoding
 library(ggthemes)     # temas para visualizacao de dados
 library(h3jsr)        # h3 hex remotes::install_github("obrl-soil/h3jsr"), requer install.packages("V8")
 library(hrbrthemes)   # requer hrbrthemes::import_roboto_condensed()
+library(janitor)
 library(knitr)
 library(lubridate)    # dados em data/horario
 library(maptools)
