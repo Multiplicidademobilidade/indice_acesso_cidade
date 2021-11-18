@@ -30,12 +30,17 @@
 
 geocode_filter <- function(ano, atividade) {
   
+  # Estrutura de pastas
+  files_folder <- "../../indice-mobilidade_dados"
+  subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
+  
   # determinar path dos dados
   path_in <- case_when(
     atividade == 'rais' ~ sprintf("../../data/acesso_oport/rais/%s/rais_%s_etapa3_geocoded.rds", ano, ano),
-    atividade == 'educacao' ~ sprintf("../../data/acesso_oport/educacao/%s/educacao_%s_filter_geocoded_gmaps.rds", ano, ano),
+    # Comentado pois não faremos o passo de revisão do georreferenciamento para
+    # as escolas - ver comentário sobre isso em 01.4-dados_educacao.R
+    # atividade == 'educacao' ~ sprintf("%s/%s/educacao_%s_filter_geocoded_gmaps.rds", subfolder6, ano, ano),
     atividade == 'saude' ~ sprintf("../../data/acesso_oport/saude/%s/saude_%s_filter_geocoded_gmaps.rds", ano, ano),
-    
   )
   
   # rais: codemun
@@ -48,9 +53,6 @@ geocode_filter <- function(ano, atividade) {
     rename(id = 1) %>%
     # renomear variavel de codigo do municipio
     rename_with(~ "code_muni", matches("codemun|ibge$"))
-  
-  
-  
   
   
   # # 2.1) Identificar os route que tem o mesmo cep do input e output
@@ -102,42 +104,31 @@ geocode_filter <- function(ano, atividade) {
   
   # data_bsb <- data[code_muni %like% "530010"]
   
-  
   # prop.table(table(data_bsb$keep))
   
   # filtrar somente os que vao ficar
   data <- data[keep == TRUE]
   
   
-  
   # 3) Salvar --------------------------------------------------------------
   
-  if (atividade %in% c("educacao")) {
-    
-    data <- rename(data, co_entidade = id) %>% setDT()
-    path_out <- sprintf("../../data/acesso_oport/%s/%s/%s_%s_filter_geocoded_gmaps_gquality.rds", 
-                        atividade, ano, atividade, ano) 
-    
-  } else if (atividade == "saude") {
-    
-    
+  # if (atividade %in% c("educacao")) {
+    # data <- rename(data, co_entidade = id) %>% setDT()
+    # path_out <- sprintf("%s/%s/%s_%s_filter_geocoded_gmaps_gquality.rds", 
+    #                     subfolder6, ano, atividade, ano) 
+  # } else if (atividade == "saude") {
+  if (atividade == "saude") {
     data <- rename(data, cnes = id) %>% setDT()
     path_out <- sprintf("../../data/acesso_oport/%s/%s/%s_%s_filter_geocoded_gmaps_gquality.rds", 
                         atividade, ano, atividade, ano) 
-    
   } else if (atividade == "rais") {
-    
     # rename id
     data <- rename(data, id_estab = id) %>% setDT()
-    
     path_out <- sprintf("../../data/acesso_oport/%s/%s/%s_%s_etapa4_geocoded_gmaps_gquality.rds", 
                         atividade, ano, atividade, ano) 
-    
   }
   
   write_rds(data, path_out, compress = "gz")
-  
-  
   
 }
 
