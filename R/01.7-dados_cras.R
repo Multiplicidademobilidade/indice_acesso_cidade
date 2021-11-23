@@ -1,0 +1,80 @@
+#> Esse script faz Download, Limpeza dos dados brutos e geolocalização dos CRAS
+
+# Setup
+source('fun/setup.R')
+
+# Criar as pastas de trabalho para os dados de saúde
+ano = 2019 # Atualizar conforme o caso
+files_folder <- "../../indice-mobilidade_dados"
+subfolder9 <- sprintf("%s/09_cras_assist_social", files_folder)
+subfolder9A <- sprintf("%s/%s", subfolder9, ano)
+if ("09_cras_assist_social" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
+  dir.create(subfolder9, showWarnings = FALSE)
+}
+if (ano %nin% list.dirs(subfolder9, recursive = FALSE, full.names = FALSE)){
+  dir.create(subfolder9A, showWarnings = FALSE)
+}
+
+###### 1. Download arquivos originais ###################
+data_base_folder <- sprintf("%s/00_Originais", files_folder)
+cras_files_folder <- sprintf("%s/CRAS", data_base_folder)
+if ("CRAS" %nin% list.dirs(data_base_folder, recursive = FALSE, full.names = FALSE)){
+  dir.create(cras_files_folder, showWarnings = FALSE)
+}
+if (ano %nin% list.dirs(cras_files_folder, recursive = FALSE, full.names = FALSE)){
+  dir.create(sprintf("%s/%s", cras_files_folder, ano), showWarnings = FALSE)
+}
+
+# CRAS 2019
+# Os arquivos podem ser encontrados neste link caso dê problema em baixar pelo R:
+# http://aplicacoes.mds.gov.br/sagi/snas/vigilancia/index2.php
+# No linux, os arquivos vêm com problema de encoding - descompactar usando:
+# 7z x CRAS\(5\).zip
+download.file("https://aplicacoes.mds.gov.br/sagi/dicivip_datain/ckfinder/userfiles/files/CRAS(5).zip" ,
+              destfile = sprintf("%s/Censo_SUAS_2019_CRAS.zip", cras_files_folder))
+unzip(sprintf("%s/%s/Censo_SUAS_2019_CRAS.zip", cras_files_folder, ano), exdir = cras_files_folder)
+
+# # CRAS 2018
+# download.file('https://aplicacoes.mds.gov.br/sagi/dicivip_datain/ckfinder/userfiles/files/CRAS(3).zip',
+#               destfile = "../../data-raw/CRAS/Censo_SUAS_2018_CRAS.zip")
+# unzip("../../data-raw/CRAS/Censo_SUAS_2018_CRAS.zip", exdir = "../../data-raw/CRAS/2018")
+# 
+# # CRAS 2017
+# download.file('http://aplicacoes.mds.gov.br/sagi/dicivip_datain/ckfinder/userfiles/files/Censo_SUAS/2017/Censo_SUAS_2017_CRAS.zip',
+#               destfile = "../../data-raw/CRAS/Censo_SUAS_2017_CRAS.zip")
+# unzip("../../data-raw/CRAS/Censo_SUAS_2017_CRAS.zip",exdir = "../../data-raw/CRAS/2017")
+
+
+########### 2. Limpeza e Geocode
+
+# carregar funcoes
+source('fun/cras/cras.R')
+
+# Aplicar funcao 
+# purrr::walk(.x = c('2017', '2018', '2019'), .f = cras_geocode)
+# Função modificada para rodar somente 2019 - ela também possui dois novos
+# argumentos referentes às pasta com os arquivos brutos originais e de saída
+cras_geocode(ano = ano, raw_data_folder = sprintf("%s/%s", cras_files_folder, ano), out_folder = subfolder9, run_gmaps = TRUE)
+
+
+
+# # trazer entao geocode ----------------------------------------------------
+# update_geocode_cras <- function(ano) {
+#   # abrir cras do ano
+#   cras <- fread(sprintf("%s/cras_%s.csv", subfolder9A, ano))
+#   
+#   # abrir geocode
+#   cras_geocode <- fread(sprintf("%s/geocode_cras.csv", subfolder9))
+#   
+#   cras[cras_geocode, on = "code_cras",
+#        c("lon", "lat") :=
+#          list(i.lon, i.lat)]
+#   
+#   # output
+#   write_rds(cras, sprintf("%s/cras_%s_geocoded.rds", subfolder9A, ano))
+# }
+
+
+# update_geocode_cras(2017)
+# update_geocode_cras(2018)
+# update_geocode_cras(2019)
