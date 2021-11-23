@@ -16,9 +16,9 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     subfolder3A <- sprintf("%s/%s", subfolder3, ano)
     subfolder5 <- sprintf("%s/05_setores_agregados", files_folder)
     subfolder5A <- sprintf("%s/%s", subfolder5, ano)
-    subfolder7 <- sprintf("%s/07_grade_municipio_com_renda_cor", files_folder)
+    subfolder7 <- sprintf("%s/XY_grade_municipio_com_renda_cor", files_folder)
     subfolder7A <- sprintf("%s/%s", subfolder7, ano)
-    if ("07_grade_municipio_com_renda_cor" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
+    if ("XY_grade_municipio_com_renda_cor" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
       dir.create(subfolder7)
     }
     if (ano %nin% list.dirs(subfolder7, recursive = FALSE, full.names = FALSE)){
@@ -26,7 +26,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     }
     
     # status message
-    message('Trabalhando na cidade ', sigla_muni, '\n')
+    message(Sys.time(), ' - Trabalhando na cidade: ', sigla_muni, '\n')
     
     # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
     out_file <- sprintf("grade_renda_cor_%s_%s.rds", sigla_muni, ano)
@@ -53,6 +53,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
       
       # Corrigir grades de borda - cortar as grades da borda, tirar 
       # rebarbas e dividis a grade segundo recorte dos setores
+      message('\n', Sys.time(), ' - 1-5: Começando cálculo de área geral em grade_corrigida em: ', sigla_muni, '\n')
       grade_corrigida <- 
         grade %>%
         # Deixar um registro da área de cada grade
@@ -61,10 +62,12 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
         # atribui os ids da coluna code_tract para a grade
         st_intersection(setor %>% dplyr::select(code_tract))
       
-      # Fazer o group_by() aqui vai dar um erro ''Assigned data `geom` must be 
+      
+      
+      # Fazer o group_by() aqui vai dar um erro 'Assigned data `geom` must be 
       # compatible with existing data', dizendo que os dados existentes possuem
       # x linhas e os 'assigned data' possuem x+1 linhas. Vamos fazer esses
-      # cálculos como um dataframe e depois o reassociaremos ao objeto grade_corrigida
+      # cálculos como um dataframe e depois o reassociaremos ao objeto 'grade_corrigida'
       grade_corrigida_df <-
         grade_corrigida %>% 
         as.data.frame() %>% 
@@ -74,7 +77,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
                   pop_mulheres = first(FEM),
                   area_antes = first(area_antes))
       
-      # Juntar resultados de volta ao objeto grade_corrigida - uma vez que temos
+      # Juntar resultados de volta ao objeto 'grade_corrigida' - uma vez que temos
       # uma nova coluna de 'area_antes', vamos descartar a original
       grade_corrigida <- 
         grade_corrigida %>% 
@@ -92,7 +95,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
                pop_homens = prop * pop_homens,
                pop_mulheres = prop * pop_mulheres)
       
-      # Selecionar colunas da GRADE
+        # Selecionar colunas da GRADE
       grade_corrigida <- 
         grade_corrigida %>%
         rename(area_grade = area_depois) %>%
@@ -103,6 +106,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
       
       # Criar id único de cada setor e filtrar colunas DO SETOR
       # calcula area de cada setor
+      message('\n', Sys.time(), ' - 2-5: Começando cálculo de área geral em setor em : ', sigla_muni, '\n')
       setor <- 
         setor %>%
         mutate(id_setor = 1:n()) %>%
@@ -153,16 +157,22 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
       # head(setor, 3)
       
       
-      # funcao de reaportion com duas variaveis de referencia (populacao e area)
-      # Resultado (ui_fim) eh uma grade estatistica com informacao de renda inputada a partir do setor censitario
+      # Função de reaportion com duas variáveis de referência (população e área);
+      # resultado (ui_fim) é uma grade estatística com informação de renda 
+      # inputada a partir do setor censitário
+
       ### aplicacao para renda --------------------------
       # tip from https://rpubs.com/rural_gis/255550
+      message('\n', Sys.time(), ' - 3-5: Começando st_intersection() grade_corrigida vs setor em: ', sigla_muni, '\n')
       ui <- sf::st_intersection(grade_corrigida, setor)
+      # rm(grade_corrigida, setor)
       
       # O shape possui várias features com geometria inválida, transformá-las
       # antes de prosseguir
+      message('\n', Sys.time(), ' - 4-5: Começando st_make_valid() em: ', sigla_muni, '\n')
       ui <- st_make_valid(ui)
       
+      message('\n', Sys.time(), ' - 5-5: Começando cálculo de área do pedaço em: ', sigla_muni, '\n')
       ui <- ui %>%
         # Calcular a area de cada pedaco
         dplyr::mutate(area_pedaco = st_area(.)) %>%
@@ -280,6 +290,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
       
       # Salvar em disco
       write_rds(ui_fim_sf, sprintf("%s/%s", subfolder7A, out_file), compress = 'gz')
+      message('\n', Sys.time(), 'Finalizado: ', sigla_muni, '\n')
       
     } else {
       message('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
@@ -293,12 +304,13 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
   } else (x = munis)
   
   # Parallel processing using future.apply
-  if (future::supportsMulticore()) {
-    future::plan(future::multicore)
-  } else {
-    future::plan(future::multisession)
-  }
-  invisible(future.apply::future_lapply(X = x, FUN=renda_de_setor_p_grade_muni, future.packages=c('sf', 'dplyr')))
+  # if (future::supportsMulticore()) {
+  #   future::plan(future::multicore)
+  # } else {
+  #   future::plan(future::multisession)
+  # }
+  # invisible(future.apply::future_lapply(X = x, FUN=renda_de_setor_p_grade_muni, future.packages=c('sf', 'dplyr')))
+  lapply(X = x, FUN=renda_de_setor_p_grade_muni)
   
 }
 
@@ -313,5 +325,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
 # RAM, em especial para estados grandes. Monitorar. Talvez seja preciso rodar
 # por cidade e reiniciar a sessão como com .rs.restartR() após cada cidade
 
-renda_de_setor_p_grade(ano = 2019, munis = 'lda')
+renda_de_setor_p_grade(ano = 2019, munis = 'oco')
 # .rs.restartR()
+# "bho" "cam" "cgr" "cur" "for" "goi" "mac" "man" "nat" "rec" "rio" "sal" "spo" 
+# "tsa" "jpa" "ula" "vta" "oco" "sne" "sjc" "lda"

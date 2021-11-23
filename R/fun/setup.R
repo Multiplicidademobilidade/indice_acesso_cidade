@@ -18,6 +18,7 @@ library(beepr)
 library(bit64)        # viz large numbers
 library(data.table)   # manipulacao de dados
 library(extrafont)    # fontes de texto
+library(fastDummies)  # para a criação de dummies
 library(fasttime)     # rapido processamento de dados em data/horario
 library(furrr)
 library(future.apply) # Aplicar funcoes em paralelo
