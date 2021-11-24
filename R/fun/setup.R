@@ -42,6 +42,7 @@ library(raster)
 library(RColorBrewer) # paleta de cores
 library(rgeos)
 library(sf)           # leitura e manipulacao de dados espaciais
+library(tictoc)
 
 # Não utilizadas (vindas do script original do IPEA)
 # library(bit.64)       # lidar com numeros ee 64bits
