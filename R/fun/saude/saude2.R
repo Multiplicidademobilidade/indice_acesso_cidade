@@ -27,9 +27,8 @@
 # 1. Criar as pastas de trabalho para os dados de saúde
 ano = 2019 # Atualizar conforme o caso
 files_folder <- "../../indice-mobilidade_dados"
-subfolder7 <- sprintf("%s/07_cnes_saude", files_folder)
-subfolder7A <- sprintf("%s/%s", subfolder7, ano)
-dir.create(sprintf("%s", subfolder7A), recursive = TRUE, showWarnings = FALSE)
+subfolder6 <- sprintf("%s/06_cnes_saude/%s", files_folder, ano)
+dir.create(sprintf("%s", subfolder6), recursive = TRUE, showWarnings = FALSE)
 
 
 # 2. Baixar a base completa do CNES para o mês base no link e descompactá-la
@@ -302,7 +301,7 @@ cnes_estab <-
   filter(TP_GESTAO != 'S') %>% 
   # Deve haver necessariamente um tipo de atendimento, não pode ser "não se aplica"
   filter(CO_GESTAO_01 == 1 | CO_GESTAO_02 == 1 | CO_GESTAO_03 == 1 |
-         CO_GESTAO_04 == 1 | CO_GESTAO_05 == 1 | CO_GESTAO_06 == 1) %>% 
+           CO_GESTAO_04 == 1 | CO_GESTAO_05 == 1 | CO_GESTAO_06 == 1) %>% 
   # Filter 1: healthcare facilities operating with the public health system
   # Convênio deve atender SUS
   filter(CO_CONVENIO_01 == 1) %>% 
@@ -326,4 +325,4 @@ cnes_estab <-
 # ------------------------------------------------
 # Salvar arquivo final
 # ------------------------------------------------
-write_rds(cnes_estab, sprintf("%s/saude_%s_filter_geocoded.rds", subfolder7A, ano), compress = 'gz')
+write_rds(cnes_estab, sprintf("%s/saude_%s_filter_geocoded.rds", subfolder6, ano), compress = 'gz')

@@ -42,7 +42,6 @@ library(raster)
 library(RColorBrewer) # paleta de cores
 library(rgeos)
 library(sf)           # leitura e manipulacao de dados espaciais
-library(tictoc)
 
 # Não utilizadas (vindas do script original do IPEA)
 # library(bit.64)       # lidar com numeros ee 64bits
@@ -86,7 +85,7 @@ munis_list <- list(
     2927408,    "sal",         "Salvador",              "BA",           1.36,
     3106200,    "bho",         "Belo Horizonte",        "MG",           0.69,
     3170206,    "ula",         "Uberlandia",            "MG",           0.74, # 0.74 estimado
-    3205309,    "vta",         "Vitoria",               "ES",           0.74, # 0.74 estimado
+    # 3205309,    "vta",         "Vitoria",               "ES",           0.74, # 0.74 estimado
     3304557,    "rio",         "Rio de Janeiro",        "RJ",           1.91,
     3509502,    "cam",         "Campinas",              "SP",           1.20,
     3534401,    "oco",         "Osasco",                "SP",           0.74, # 0.74 estimado
@@ -133,7 +132,7 @@ munis_list <- list(
     "tsa",       "todos",  "todos",  "todos",  "todos",
     "jpa",       "todos",  "todos",  "todos",  "todos",
     "ula",       "todos",  "todos",  "todos",  "todos",
-    "vta",       "todos",  "todos",  "todos",  "todos",
+    # "vta",       "todos",  "todos",  "todos",  "todos",
     "oco",       "todos",  "todos",  "todos",  "todos",
     "sne",       "todos",  "todos",  "todos",  "todos",
     "sjc",       "todos",  "todos",  "todos",  "todos",
@@ -217,7 +216,7 @@ munis_list <- list(
 #    "gua",       2019,     3518800,
     "mac",       2019,     2704302,
     "man",       2019,     1302603,
-    "nat",       2019,     2408102,
+    # "nat",       2019,     2408102,
 #    "poa",       2019,     4314902,
     "rec",       2019,     2611606,
     "rio",       2019,     3304557,

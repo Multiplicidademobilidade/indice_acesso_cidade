@@ -35,17 +35,17 @@ password <- readline("Give the password : ")
 download_srtm <- function(ano, sigla_muni) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder1A <- sprintf("%s/01_municipios/%s", files_folder, ano)
-  subfolder11A <- sprintf("%s/11_topografia/%s", files_folder, sigla_muni)
-  dir.create(sprintf("%s", subfolder11A), recursive = TRUE, showWarnings = FALSE)
+  subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
+  subfolder10 <- sprintf("%s/10_topografia/%s", files_folder, sigla_muni)
+  dir.create(sprintf("%s", subfolder10), recursive = TRUE, showWarnings = FALSE)
   
   out_file <- sprintf("topografia_%s.tif", sigla_muni)
-  if (out_file %nin% list.files(subfolder11A)){
-  
+  if (out_file %nin% list.files(subfolder10)){
+    
     message('\nComeçando processo para a cidade: ', sigla_muni)
     
     # read municipality boundary
-    muni_sf <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1A, sigla_muni, ano))
+    muni_sf <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano))
     
     # muni_sf %>% mapview()
     
@@ -63,8 +63,8 @@ download_srtm <- function(ano, sigla_muni) {
     
     # build the url's for each tile
     urls <- paste0("https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/",
-                  tile, ".SRTMGL1.hgt.zip")
-  
+                   tile, ".SRTMGL1.hgt.zip")
+    
     # download zip files and extract raster tiles
     outputdir <- tempdir()
     zipfiles <- paste0(outputdir, "/", tile, ".hgt.zip")
@@ -87,10 +87,10 @@ download_srtm <- function(ano, sigla_muni) {
       rst_layer <- do.call(raster::mosaic, args = c(rst, fun = mean))
     }
     rst_layer_crop <- raster::crop(rst_layer, st_bbox(muni_sf))
-  
+    
     # save processed raster to the municipality folder
     raster::writeRaster(rst_layer_crop, 
-                        sprintf("%s/%s", subfolder11A, out_file), 
+                        sprintf("%s/%s", subfolder10, out_file), 
                         overwrite = TRUE)
     
   } else {

@@ -7,7 +7,7 @@
 # desse link: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar
 # 2) Dezipar o arquivo completamente
 # 3) Copiar o arquivo de ANEXOS/dicionario, ESCOLAS, e as MATRICULAS de todas as regioes
-# 4) Copiar para a pasta do ano no indice-mobilidade_dados/06_censo_escolar/[ano]
+# 4) Copiar para a pasta do ano no indice-mobilidade_dados/05_censo_escolar/[ano]
 
 
 # Aviso sobre encoding - dados para 2019 possuíam os seguintes encodings, 
@@ -26,7 +26,7 @@
 # onde é possível baixar as bases das escolas. Se baixar as escolas por região,
 # salve e renomeie cada arquivo no padrão de 'INEP_ESCOLAS_CO.csv' e 
 # 'INEP_ESCOLAS_NE.csv' etc para rodar o script. Guarde os arquivos todos na
-# mesma pasta do ano em indice-mobilidade_dados/06_censo_escolar/[ano], junto
+# mesma pasta do ano em indice-mobilidade_dados/05_censo_escolar/[ano], junto
 # com os demais baixados no passo anterior.
 
 
@@ -35,22 +35,20 @@
 # fora da função devido ao processo manual de baixar e copiar os arquivos
 criar_pastas_censo_educacao <- function(ano){
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
-  subfolder6A <- sprintf("%s/%s", subfolder6, ano)
-  dir.create(sprintf("%s", subfolder6A), recursive = TRUE, showWarnings = FALSE)
+  subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
+  dir.create(sprintf("%s", subfolder5), recursive = TRUE, showWarnings = FALSE)
 }
 
 
 educacao_filter <- function(ano, download = FALSE) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
-  subfolder6A <- sprintf("%s/%s", subfolder6, ano)
+  subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
   
   # 1) Abrir e juntar dados de matriculas
   matriculas <- 
-    lapply(list.files(sprintf("%s", subfolder6A), pattern = "MATRICULA", full.names = TRUE),
+    lapply(list.files(sprintf("%s", subfolder5), pattern = "MATRICULA", full.names = TRUE),
            fread, select = c("CO_ENTIDADE", "TP_DEPENDENCIA", "TP_ETAPA_ENSINO", 
                              "IN_REGULAR", "IN_PROFISSIONALIZANTE")) %>%
     rbindlist()
@@ -167,7 +165,7 @@ educacao_filter <- function(ano, download = FALSE) {
                  "TP_DEPENDENCIA", "TP_SITUACAO_FUNCIONAMENTO"), 
                ifelse(ano == 2017, "NU_FUNCIONARIOS", "QT_FUNCIONARIOS"))
   
-  escolas <- fread(sprintf("%s/ESCOLAS.CSV", subfolder6A), select = colunas)
+  escolas <- fread(sprintf("%s/ESCOLAS.CSV", subfolder5), select = colunas)
   # rename funcionarios variable
   if (ano != 2019) {
     colnames(escolas)[ncol(escolas)] <- "NU_FUNCIONARIOS"
@@ -220,13 +218,13 @@ educacao_filter <- function(ano, download = FALSE) {
       escolas_fim_mat %>%
       mutate(ano = ano) %>%
       dplyr::select(co_entidade, ano, code_muni = co_municipio, no_entidade, 
-             mat_infantil, mat_fundamental, mat_medio, nu_funcionarios)
+                    mat_infantil, mat_fundamental, mat_medio, nu_funcionarios)
   } else {
     escolas_fim_mat <- 
       escolas_fim_mat %>%
       mutate(ano = ano) %>%
       dplyr::select(co_entidade, ano,  code_muni = co_municipio, no_entidade, 
-             mat_infantil, mat_fundamental, mat_medio)
+                    mat_infantil, mat_fundamental, mat_medio)
   }
   
   message("Total de matriculas nivel mat_infantil: ", sum(escolas_fim_mat$mat_infantil, na.rm = TRUE))
@@ -234,20 +232,19 @@ educacao_filter <- function(ano, download = FALSE) {
   message("Total de matriculas nivel mat_medio: ", sum(escolas_fim_mat$mat_medio, na.rm = TRUE))
   
   # 4) salvar ---------------------------
-  write_rds(escolas_fim_mat, sprintf("%s/educacao_%s_filter.rds", subfolder6A, ano), compress = 'gz')
+  write_rds(escolas_fim_mat, sprintf("%s/educacao_%s_filter.rds", subfolder5, ano), compress = 'gz')
 }
 
 
 educacao_juntar_geocode_inep <- function(ano_base) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
-  subfolder6A <- sprintf("%s/%s", subfolder6, ano_base)
+  subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
   
   # 1) Abrir todos os dados das escolas
   escolas_coords <- 
-    lapply(list.files(sprintf("%s", subfolder6A), pattern = "INEP_ESCOLAS", full.names = TRUE),
+    lapply(list.files(sprintf("%s", subfolder5), pattern = "INEP_ESCOLAS", full.names = TRUE),
            fread, sep = ';', colClasses = list(character = 1:19)) %>%
     rbindlist()
   
@@ -261,8 +258,8 @@ educacao_juntar_geocode_inep <- function(ano_base) {
            longitude = as.double(longitude))
   
   # 2) Abrir arquivo com matrículas por escola e juntá-lo ao das coordenadas
-  # censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder6, c(2017, 2018, 2019), c(2017, 2018, 2019)), read_rds)
-  censo_escolar <- read_rds(sprintf("%s/%s/educacao_%s_filter.rds", subfolder6, ano_base, ano_base))
+  # censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder5, c(2017, 2018, 2019), c(2017, 2018, 2019)), read_rds)
+  censo_escolar <- read_rds(sprintf("%s/educacao_%s_filter.rds", subfolder5, ano_base))
   
   escolas_coords_out <- 
     censo_escolar %>% 
@@ -275,9 +272,9 @@ educacao_juntar_geocode_inep <- function(ano_base) {
                                    TRUE ~ no_entidade)) %>% 
     # Descartar a coluna 'escola'
     dplyr::select(-escola)
-    
-    
-  write_rds(escolas_coords_out, sprintf("%s/educacao_%s_filter_geocoded.rds", subfolder6A, ano), compress = 'gz')
+  
+  
+  write_rds(escolas_coords_out, sprintf("%s/educacao_%s_filter_geocoded.rds", subfolder5, ano), compress = 'gz')
 }
 
 
@@ -286,16 +283,15 @@ educacao_geocode_all <- function(ano) {
   
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
-  subfolder6A <- sprintf("%s/%s", subfolder6, ano)
+  subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   
   # Checar se arquivo resultante já existe. Se sim, avisar e pular processamento
   out_file <- sprintf("educacao_%s_filter_geocoded_gmaps.rds", ano)
   
-  if (out_file %nin% list.files(subfolder6A)){
+  if (out_file %nin% list.files(subfolder5)){
     
     # Arquivo com as escolas e os geocodes vindos do INEP
-    open_file <- sprintf('%s/educacao_%s_filter_geocoded.rds', subfolder6A, ano)
+    open_file <- sprintf('%s/educacao_%s_filter_geocoded.rds', subfolder5)
     educacao_geocode_raw <- read_rds(open_file) 
     
     # Filtrar somente os que não possuem dados de latlong
@@ -327,9 +323,9 @@ educacao_geocode_all <- function(ano) {
       arrange(co_entidade)
     
     # Salvar arquivo resultante
-    write_rds(educacao_geocodada_final, sprintf("%s/%s", subfolder6A, out_file), compress = 'gz')
-    # write_delim(geocode_ggmap, sprintf("%s/educacao_%s_filter_geocoded_gmaps.csv", subfolder6A, ano), delim = ';')
-    # write_delim(educacao_geocodada_final, sprintf("%s/educacao_%s_filter_geocoded_gmaps2.csv", subfolder6A, ano), delim = ';')
+    write_rds(educacao_geocodada_final, sprintf("%s/%s", subfolder5, out_file), compress = 'gz')
+    # write_delim(geocode_ggmap, sprintf("%s/educacao_%s_filter_geocoded_gmaps.csv", subfolder5, ano), delim = ';')
+    # write_delim(educacao_geocodada_final, sprintf("%s/educacao_%s_filter_geocoded_gmaps2.csv", subfolder5, ano), delim = ';')
     
   } else {
     message('Arquivo para o ano  ', ano, " já existe, pulando...\n")
@@ -356,8 +352,8 @@ educacao_geocode_all <- function(ano) {
 #'   
 #'   
 #'   # abrir base com as escolas do censo escolar
-#'   # censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder6, c(2017, 2018, 2019), c(2017, 2018, 2019)), read_rds)
-#'   censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder6, 2019, 2019), read_rds)
+#'   # censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder5, c(2017, 2018, 2019), c(2017, 2018, 2019)), read_rds)
+#'   censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder5, 2019, 2019), read_rds)
 #'   censo_escolar_estabs <- censo_escolar %>% rbindlist(fill = TRUE) %>% dplyr::select(co_entidade)
 #'   
 #'   # filtrar somente as escolas dos nossos municipios

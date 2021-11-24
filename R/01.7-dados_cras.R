@@ -6,9 +6,9 @@ source('fun/setup.R')
 # Criar as pastas de trabalho para os dados de saúde
 ano = 2019 # Atualizar conforme o caso
 files_folder <- "../../indice-mobilidade_dados"
-subfolder9 <- sprintf("%s/09_cras_assist_social", files_folder)
-subfolder9A <- sprintf("%s/%s", subfolder9, ano)
-dir.create(sprintf("%s", subfolder9A), recursive = TRUE, showWarnings = FALSE)
+cras_base_folder <- sprintf("%s/08_cras_assist_social", files_folder)
+subfolder8 <- sprintf("%s/%s", cras_base_folder, ano)
+dir.create(sprintf("%s", subfolder8), recursive = TRUE, showWarnings = FALSE)
 
 ###### 1. Download arquivos originais ###################
 data_base_folder <- sprintf("%s/00_Originais", files_folder)
@@ -45,24 +45,24 @@ source('fun/cras/cras.R')
 # purrr::walk(.x = c('2017', '2018', '2019'), .f = cras_geocode)
 # Função modificada para rodar somente 2019 - ela também possui dois novos
 # argumentos referentes às pasta com os arquivos brutos originais e de saída
-cras_geocode(ano = ano, raw_data_folder = sprintf("%s/%s", cras_files_folder, ano), out_folder = subfolder9, run_gmaps = TRUE)
+cras_geocode(ano = ano, raw_data_folder = sprintf("%s/%s", cras_files_folder, ano), out_folder = cras_base_folder, run_gmaps = TRUE)
 
 
 
 # # trazer entao geocode ----------------------------------------------------
 # update_geocode_cras <- function(ano) {
 #   # abrir cras do ano
-#   cras <- fread(sprintf("%s/cras_%s.csv", subfolder9A, ano))
+#   cras <- fread(sprintf("%s/cras_%s.csv", subfolder8, ano))
 #   
 #   # abrir geocode
-#   cras_geocode <- fread(sprintf("%s/geocode_cras.csv", subfolder9))
+#   cras_geocode <- fread(sprintf("%s/geocode_cras.csv", cras_base_folder))
 #   
 #   cras[cras_geocode, on = "code_cras",
 #        c("lon", "lat") :=
 #          list(i.lon, i.lat)]
 #   
 #   # output
-#   write_rds(cras, sprintf("%s/cras_%s_geocoded.rds", subfolder9A, ano))
+#   write_rds(cras, sprintf("%s/cras_%s_geocoded.rds", subfolder8, ano))
 # }
 
 

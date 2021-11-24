@@ -11,7 +11,8 @@ source('fun/setup.R')
 # https://www.ibge.gov.br/estatisticas/downloads-estatisticas.html
 # Censos > Censo Demográfico 2010 > Resultados do Universo > Agregados por Setores Censitários
 # 
-# Descompactar todos os arquivos .zip. Vamos precisar das planilhas:
+# Descompactar todos os arquivos .zip. Os arquivos foram salvos na pasta
+# "../../indice-mobilidade_dados/00_Originais/Censo2010. Vamos precisar das planilhas:
 # 1. Basico
 # 2. Domicilio 02
 # 3. DomicilioRenda
@@ -81,7 +82,7 @@ source('fun/setup.R')
 
 # Pasta geral para todos os arquivos e demais pastas
 files_folder <- "../../indice-mobilidade_dados"
-subfolder4 <- sprintf("%s/04_dados_censitarios", files_folder)
+censo_original_files <- sprintf("%s/00_Originais/Censo2010", files_folder)
 
 # Lista todos os arquivos de uma pasta com o mesmo padrão regex, não recursivo
 list_common_files <- function(files_path, files_pattern){
@@ -91,17 +92,17 @@ list_common_files <- function(files_path, files_pattern){
 
 # Abre arquivos com a mesma estrutura e os junta-em um único dataframe
 merge_common_files <- function(open_files, files_encoding){
-    out_df <- 
-      lapply(X = open_files,
-             FUN = read_delim, delim = ';', locale = locale(encoding = files_encoding), 
-                   col_types = cols(.default = 'c')) %>% 
-      rbindlist(fill = TRUE)
-    
-    return(out_df)
+  out_df <- 
+    lapply(X = open_files,
+           FUN = read_delim, delim = ';', locale = locale(encoding = files_encoding), 
+           col_types = cols(.default = 'c')) %>% 
+    rbindlist(fill = TRUE)
+  
+  return(out_df)
 }
 
 # Abrir arquivos do Censo - Basico
-income_files <- list_common_files(subfolder4, '^Basico_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^Basico_(.+).csv')
 df_basico <- merge_common_files(income_files, 'iso_8859-1')
 # TO tem uma codificação indefinida e vai dar erro com os acentos. Por sorte,
 # não precisaremos das colunas que vão ficar com o encoding zoado
@@ -111,7 +112,7 @@ df_basico <- df_basico %>% dplyr::select(Cod_UF, Cod_municipio, Cod_setor)
 
 
 # Abrir arquivos do Censo - DomicilioRenda
-income_files <- list_common_files(subfolder4, '^DomicilioRenda_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^DomicilioRenda_(.+).csv')
 df_dom_renda <- merge_common_files(income_files, 'ascii')
 # dim = 310120    134; zero NAs
 # Isolar colunas de interesse e renomear para ficar de acordo com IPEA original
@@ -119,7 +120,7 @@ df_dom_renda <- df_dom_renda %>% dplyr::select(Cod_setor, V003) %>% rename(DomRe
 
 
 # Abrir arquivos do Censo - Domicilio02
-income_files <- list_common_files(subfolder4, '^Domicilio02_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^Domicilio02_(.+).csv')
 df_dom02 <- merge_common_files(income_files, 'ascii')
 # dim = 310120    134; zero NAs
 # Isolar colunas de interesse e renomear para ficar de acordo com IPEA original
@@ -127,7 +128,7 @@ df_dom02 <- df_dom02 %>% dplyr::select(Cod_setor, V002) %>% rename(Dom2_V002 = V
 
 
 # Abrir arquivos do Censo - Pessoa03
-income_files <- list_common_files(subfolder4, '^Pessoa03_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^Pessoa03_(.+).csv')
 df_pess03 <- merge_common_files(income_files, 'ascii')
 # dim = 310120    254; zero NAs
 # Isolar colunas de interesse e renomear para ficar de acordo com IPEA original
@@ -136,7 +137,7 @@ colnames(df_pess03) <- c('Cod_setor', paste0("Pess3_V00", rep(2:6)))
 
 
 # Abrir arquivos do Censo - Pessoa13
-income_files <- list_common_files(subfolder4, '^Pessoa13_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^Pessoa13_(.+).csv')
 df_pess13 <- merge_common_files(income_files, 'ascii')
 # dim = 310120    137; zero NAs
 # Isolar colunas de interesse e renomear para ficar de acordo com IPEA original
@@ -150,7 +151,7 @@ rm(df_tmp1, df_tmp2)
 
 
 # Abrir arquivos do Censo - Entorno04
-income_files <- list_common_files(subfolder4, '^Entorno04_(.+).csv')
+income_files <- list_common_files(censo_original_files, '^Entorno04_(.+).csv')
 df_ent04 <- merge_common_files(income_files, 'ascii')
 # dim = 310120    241; zero NAs
 # Isolar colunas de interesse e renomear para ficar de acordo com IPEA original
@@ -159,7 +160,7 @@ df_ent04 <- df_ent04 %>%
   # Substituir 'X' por 0 em algumas das variáveis
   mutate_at(vars(starts_with("V")), ~ ifelse(.x == "X", 0, .x)) %>% 
   rename_at(vars(starts_with("V")), ~ paste0("Entorno04_", .x))
-  
+
 
 # Algumas observações antes de juntar tudo: 
 # 
@@ -229,16 +230,14 @@ setores2 <- setores %>% filter(Cod_municipio %in% code_munis)
 # munis <- sigla <- "goi"
 merge_renda_setores_all <- function(ano, munis = "all") { 
   # Criar estrutura de pastas
-  subfolder2 <- sprintf("%s/02_setores_censitarios", files_folder)
-  subfolder2A <- sprintf("%s/%s", subfolder2, ano)
-  subfolder5 <- sprintf("%s/05_setores_agregados", files_folder)
-  subfolder5A <- sprintf("%s/%s", subfolder5, ano)
-  dir.create(sprintf("%s", subfolder5A), recursive = TRUE, showWarnings = FALSE)
+  subfolder2 <- sprintf("%s/02_setores_censitarios/%s", files_folder, ano)
+  subfolder4 <- sprintf("%s/04_setores_agregados/%s", files_folder, ano)
+  dir.create(sprintf("%s", subfolder4), recursive = TRUE, showWarnings = FALSE)
   
   # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
   out_file <- sprintf("setores_agregados_%s_%s.rds", munis, ano)
   
-  if (out_file %nin% list.files(subfolder5A)){
+  if (out_file %nin% list.files(subfolder4)){
     # Agrupar variáveis de idade/renda e somá-las
     setores3 <- 
       setores2 %>% 
@@ -302,7 +301,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
     setores5 <- 
       setores5 %>% 
       mutate(renda_per_capita = renda_total / moradores_total, .after = 'moradores_total')
-  
+    
     
     # Função para fazer merge dos dados e salvar arquivos na pasta de dados
     merge_renda_setores <- function(sigla){
@@ -315,16 +314,16 @@ merge_renda_setores_all <- function(ano, munis = "all") {
       dados <- subset(setores5, cod_muni %in% code_muni)
       
       # Ler shape dos setores
-      sf <- readr::read_rds( sprintf("%s/setores_%s_%s.rds", subfolder2A, sigla, ano) )
+      sf <- readr::read_rds( sprintf("%s/setores_%s_%s.rds", subfolder2, sigla, ano) )
       
       # merge
       sf2 <- dplyr::left_join(sf, dados, by = c('code_tract' = 'cod_setor'))
       
       # salvar
-      readr::write_rds(sf2,  sprintf("%s/%s", subfolder5A, out_file), compress = 'gz')
-      }
-
-
+      readr::write_rds(sf2,  sprintf("%s/%s", subfolder4, out_file), compress = 'gz')
+    }
+    
+    
     # aplicar funcao -----------------
     if (munis == "all") {
       # seleciona todos municipios ou RMs do ano escolhido
@@ -343,7 +342,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
   } else {
     message('Arquivo para a cidade ', munis, " já existe, pulando...\n")
   }
-  }
+}
 
 #  Carregar dados socioecônomicos dos setores censitários - usar uma sigla das presentes
 # em munis_list$munis_metro[ano_metro == ano]$abrev_muni ou 'all' para todos
