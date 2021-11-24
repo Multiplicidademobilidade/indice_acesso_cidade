@@ -233,12 +233,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
   subfolder2A <- sprintf("%s/%s", subfolder2, ano)
   subfolder5 <- sprintf("%s/05_setores_agregados", files_folder)
   subfolder5A <- sprintf("%s/%s", subfolder5, ano)
-  if ("05_setores_agregados" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder5)
-  }
-  if (ano %nin% list.dirs(subfolder5, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder5A)
-  }
+  dir.create(sprintf("%s", subfolder5A), recursive = TRUE, showWarnings = FALSE)
   
   # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
   out_file <- sprintf("setores_agregados_%s_%s.rds", munis, ano)

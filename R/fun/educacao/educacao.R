@@ -37,12 +37,7 @@ criar_pastas_censo_educacao <- function(ano){
   files_folder <- "../../indice-mobilidade_dados"
   subfolder6 <- sprintf("%s/06_censo_escolar", files_folder)
   subfolder6A <- sprintf("%s/%s", subfolder6, ano)
-  if ("06_censo_escolar" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder6, showWarnings = FALSE)
-  }
-  if (ano %nin% list.dirs(subfolder6, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder6A, showWarnings = FALSE)
-  }  
+  dir.create(sprintf("%s", subfolder6A), recursive = TRUE, showWarnings = FALSE)
 }
 
 

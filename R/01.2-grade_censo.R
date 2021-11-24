@@ -18,16 +18,9 @@ criar_grade_muni_all <- function(ano, munis = "all") {
   files_folder <- "../../indice-mobilidade_dados"
   subfolder1 <- sprintf("%s/01_municipios", files_folder)
   subfolder1A <- sprintf("%s/%s", subfolder1, ano)
-  # subfolder2 é a pasta de setores censitários
   subfolder3 <- sprintf("%s/03_grade_municipios", files_folder)
   subfolder3A <- sprintf("%s/%s", subfolder3, ano)
-  
-  if ("grade_municipios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder3)
-    }
-  if (ano %nin% list.dirs(subfolder3, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolder3A)
-  }
+  dir.create(sprintf("%s", subfolder3A), recursive = TRUE, showWarnings = FALSE)
   
   # funcao para criar grade por municipio
   criar_grade_muni <- function(sigla){

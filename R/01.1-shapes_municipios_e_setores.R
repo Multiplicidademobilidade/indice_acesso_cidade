@@ -28,21 +28,8 @@ download_muni_setores <- function(ano, munis = "all") {
     subfolder1A <- sprintf("%s/%s", subfolder1, ano)
     subfolder2 <- sprintf("%s/02_setores_censitarios", files_folder)
     subfolder2A <- sprintf("%s/%s", subfolder2, ano)
-    if ("indice-mobilidade_dados" %nin% list.dirs('../../', recursive = FALSE, full.names = FALSE)){
-      dir.create(files_folder)
-    }
-    if ("municipios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder1)
-    }
-    if ("setores_censitarios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder2)
-    }
-    if (ano %nin% list.dirs(subfolder1, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder1A)
-    }
-    if (ano %nin% list.dirs(subfolder2, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder2A)
-    }
+    dir.create(sprintf("%s", subfolder1A), recursive = TRUE, showWarnings = FALSE)
+    dir.create(sprintf("%s", subfolder2A), recursive = TRUE, showWarnings = FALSE)
     
     # Fazer download de arquivos - shapes dos municipios
     out_file1 <- sprintf("municipio_%s_%s.rds", sigla_muni, ano)

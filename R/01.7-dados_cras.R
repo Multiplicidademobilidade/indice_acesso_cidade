@@ -8,22 +8,13 @@ ano = 2019 # Atualizar conforme o caso
 files_folder <- "../../indice-mobilidade_dados"
 subfolder9 <- sprintf("%s/09_cras_assist_social", files_folder)
 subfolder9A <- sprintf("%s/%s", subfolder9, ano)
-if ("09_cras_assist_social" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-  dir.create(subfolder9, showWarnings = FALSE)
-}
-if (ano %nin% list.dirs(subfolder9, recursive = FALSE, full.names = FALSE)){
-  dir.create(subfolder9A, showWarnings = FALSE)
-}
+dir.create(sprintf("%s", subfolder9A), recursive = TRUE, showWarnings = FALSE)
 
 ###### 1. Download arquivos originais ###################
 data_base_folder <- sprintf("%s/00_Originais", files_folder)
 cras_files_folder <- sprintf("%s/CRAS", data_base_folder)
-if ("CRAS" %nin% list.dirs(data_base_folder, recursive = FALSE, full.names = FALSE)){
-  dir.create(cras_files_folder, showWarnings = FALSE)
-}
-if (ano %nin% list.dirs(cras_files_folder, recursive = FALSE, full.names = FALSE)){
-  dir.create(sprintf("%s/%s", cras_files_folder, ano), showWarnings = FALSE)
-}
+dir.create(sprintf("%s/%s", cras_files_folder, ano), recursive = TRUE, showWarnings = FALSE)
+
 
 # CRAS 2019
 # Os arquivos podem ser encontrados neste link caso dê problema em baixar pelo R:

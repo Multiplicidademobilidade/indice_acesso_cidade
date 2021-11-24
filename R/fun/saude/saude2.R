@@ -29,12 +29,7 @@ ano = 2019 # Atualizar conforme o caso
 files_folder <- "../../indice-mobilidade_dados"
 subfolder7 <- sprintf("%s/07_cnes_saude", files_folder)
 subfolder7A <- sprintf("%s/%s", subfolder7, ano)
-if ("07_cnes_saude" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-  dir.create(subfolder7, showWarnings = FALSE)
-}
-if (ano %nin% list.dirs(subfolder7, recursive = FALSE, full.names = FALSE)){
-  dir.create(subfolder7A, showWarnings = FALSE)
-}
+dir.create(sprintf("%s", subfolder7A), recursive = TRUE, showWarnings = FALSE)
 
 
 # 2. Baixar a base completa do CNES para o mês base no link e descompactá-la

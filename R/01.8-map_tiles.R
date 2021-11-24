@@ -24,7 +24,7 @@ baixar_map_tile_ceramic <- function(ano, munis = "all") {
   subfolder10 <- sprintf("%s/10_maptiles_crop", files_folder)
   subfolder10A <- sprintf("%s/%s", subfolder10, ano)
   subfolder10B <- sprintf("%s/mapbox", subfolder10A)
-  dir.create(sprintf("%s", subfolder10B, ano), recursive = TRUE)
+  dir.create(sprintf("%s", subfolder10B, ano), recursive = TRUE, showWarnings = FALSE)
   
   baixar_map_tile_ceramic_muni <- function(sigla_muni) {
     
