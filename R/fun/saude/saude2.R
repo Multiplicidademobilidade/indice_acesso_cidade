@@ -50,7 +50,7 @@ dir.create(sprintf("%s", subfolder7A), recursive = TRUE, showWarnings = FALSE)
 
 # 4. Informar a pasta onde estão os dados descompactados e iniciar processo de
 # junção das bases
-cnes_files_folder <- "../../indice-mobilidade_dados/00_Originais/CNES202001/BASE_DE_DADOS_CNES_202001"
+cnes_files_folder <- sprintf("%s/00_Originais/CNES202001/BASE_DE_DADOS_CNES_202001", files_folder)
 
 
 # ------------------------------------------------
@@ -262,8 +262,9 @@ rm(convenio)
 # ------------------------------------------------
 # No código original do IPEA:
 # complex_baix - se refere aos booleans CO_GESTAO_01
-# complex_medi - se refere aos booleans CO_GESTAO_02, CO_GESTAO_03, CO_GESTAO_05
+# complex_medi - se refere aos booleans CO_GESTAO_02, CO_GESTAO_05
 # complex_alta - se refere aos booleans CO_GESTAO_03, CO_GESTAO_04, CO_GESTAO_06
+# Para CO_GESTAO_03 foi atribuída somente a complexidade média
 
 # _ambu - se refere aos booleans TP_PROG_01
 # _hosp - se refere aos booleans TP_PROG_02
@@ -274,7 +275,7 @@ rm(convenio)
 # Complexidade baixa sempre terá TP_PROG igual a Ambulatorial ou Não Se Aplica
 health_low_filter  <- quo(CO_GESTAO_01 == 1 & (TP_PROG_1 == 1 | TP_PROG_2 == 1) & TP_GESTAO != 'S')
 health_med_filter  <- quo((CO_GESTAO_02 == 1 | CO_GESTAO_03 == 1 | CO_GESTAO_05 == 1) & (TP_PROG_1 == 1 | TP_PROG_2 == 1) & TP_GESTAO != 'S')
-health_high_filter <- quo((CO_GESTAO_03 == 1 | CO_GESTAO_04 == 1 | CO_GESTAO_06 == 1) & (TP_PROG_1 == 1 | TP_PROG_2 == 1) & TP_GESTAO != 'S')
+health_high_filter <- quo((CO_GESTAO_04 == 1 | CO_GESTAO_06 == 1) & (TP_PROG_1 == 1 | TP_PROG_2 == 1) & TP_GESTAO != 'S')
 
 cnes_estab <- 
   cnes_estab %>% 
