@@ -16,6 +16,7 @@ library(tidylog)
 
 library(beepr)
 library(bit64)        # viz large numbers
+library(ceramic)
 library(data.table)   # manipulacao de dados
 library(extrafont)    # fontes de texto
 library(fastDummies)  # para a criação de dummies
