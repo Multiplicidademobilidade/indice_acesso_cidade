@@ -18,9 +18,9 @@ criar_hexagonos <- function(ano, munis = "all") {
     files_folder <- "../../indice-mobilidade_dados"
     subfolder1 <- sprintf("%s/01_municipios", files_folder)
     subfolder1A <- sprintf("%s/%s", subfolder1, ano)
-    subfolderX <- sprintf("%s/XX_hex_municipios", files_folder)
+    subfolderX <- sprintf("%s/09_hex_municipios", files_folder)
     subfolderXA <- sprintf("%s/%s", subfolderX, ano)
-    if ("XX_hex_municipios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
+    if ("09_hex_municipios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
       dir.create(subfolderX)
     }
     if (ano %nin% list.dirs(subfolderX, recursive = FALSE, full.names = FALSE)){
@@ -39,7 +39,7 @@ criar_hexagonos <- function(ano, munis = "all") {
     
     # Definição da resolução
     # A Tabela de resoluções H3 pode ser encontrada em: https://h3geo.org/docs/core-library/restable
-    res_todas <- c(8, 9) # Inicialmente foram propostas as resolucoes 8 e 9
+    res_todas <- c(7, 8, 9) # Inicialmente foram propostas as resolucoes 8 e 9
     #resolution <- res_todas[2]
     
     # Criar grades hexagonais
@@ -93,5 +93,5 @@ criar_hexagonos <- function(ano, munis = "all") {
 
 
 #### 2) Aplicar funcao ------------
-criar_hexagonos(ano = 2019, munis = 'all')
+#criar_hexagonos(ano = 2019, munis = 'all')
 
