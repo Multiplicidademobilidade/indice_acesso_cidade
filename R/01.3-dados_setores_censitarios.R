@@ -340,7 +340,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
     invisible(future.apply::future_lapply(X = x, FUN = merge_renda_setores, future.packages=c('sf', 'dplyr', 'data.table')))
     
   } else {
-    message('Arquivo para a cidade ', munis, " já existe, pulando...\n")
+    message('\nArquivo para a cidade ', munis, " já existe, pulando...\n")
   }
 }
 
@@ -355,7 +355,8 @@ merge_renda_setores_all <- function(ano, munis = "all") {
 # existe fez com que não seja possível usar o 'all' (embora aparentemente ele já
 # estava não-funcional antes da modificação) - usar a seguinte construção para 
 # todos os arquivos:
+ano = 2019
 x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
-lapply(X = x, FUN = merge_renda_setores_all, ano = 2019)
+lapply(X = x, FUN = merge_renda_setores_all, ano = ano)
 
 # .rs.restartR()

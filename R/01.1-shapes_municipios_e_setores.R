@@ -45,6 +45,8 @@ download_muni_setores <- function(ano, munis = "all") {
         
         # salvar municipios
         readr::write_rds(muni_sf, sprintf("%s/%s", subfolder1A, out_file1), compress = 'gz')
+    } else {
+      message('\nArquivo ', out_file1, ' já existe na pasta\n', subfolder1A,  '.\nPulando etapa 1.')
     }
     
     
@@ -58,6 +60,8 @@ download_muni_setores <- function(ano, munis = "all") {
       
       # salvar setores censitarios
       readr::write_rds(ct_sf, sprintf("%s/%s", subfolder2A, out_file2), compress = 'gz')
+    } else {
+      message('\nArquivo ', out_file2, ' já existe na pasta\n', subfolder2A,  '.\nPulando etapa 2.')
     }
   }
   
@@ -76,4 +80,4 @@ download_muni_setores <- function(ano, munis = "all") {
 # download_muni_setores(ano = 2019, munis = 'sgo')
 # download_muni_setores(ano = 2019, munis = 'all')
 
-download_muni_setores(ano = 2019, munis = 'all')
+download_muni_setores(ano = 2019, munis = 'oco')

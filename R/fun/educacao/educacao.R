@@ -291,7 +291,7 @@ educacao_geocode_all <- function(ano) {
   if (out_file %nin% list.files(subfolder5)){
     
     # Arquivo com as escolas e os geocodes vindos do INEP
-    open_file <- sprintf('%s/educacao_%s_filter_geocoded.rds', subfolder5)
+    open_file <- sprintf('%s/educacao_%s_filter_geocoded.rds', subfolder5, ano)
     educacao_geocode_raw <- read_rds(open_file) 
     
     # Filtrar somente os que não possuem dados de latlong

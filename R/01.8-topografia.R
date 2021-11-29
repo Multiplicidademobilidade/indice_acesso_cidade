@@ -39,6 +39,7 @@ download_srtm <- function(ano, sigla_muni) {
   subfolder10 <- sprintf("%s/10_topografia/%s", files_folder, sigla_muni)
   dir.create(sprintf("%s", subfolder10), recursive = TRUE, showWarnings = FALSE)
   
+  # Rodar somente caso arquivo final não exista na pasta
   out_file <- sprintf("topografia_%s.tif", sigla_muni)
   if (out_file %nin% list.files(subfolder10)){
     

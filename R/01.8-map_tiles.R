@@ -25,28 +25,33 @@ baixar_map_tile_ceramic <- function(ano, munis = "all") {
   
   baixar_map_tile_ceramic_muni <- function(sigla_muni) {
     
-    # sigla_muni <- "oco"
+    # Rodar somente caso arquivo final não exista na pasta
+    out_file <- sprintf("maptile_crop_mapbox_%s_%s.rds", sigla_muni, ano)
     
-    # read shape
-    temp_sf <- read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano))
-    mapbox_url <- "https://api.mapbox.com/styles/v1/ciclocidade/cktkjh2ek5ckc17s16nr036kn/tiles/{zoom}/{x}/{y}"
-    
-    # download tile based on custom template (style)
-    tile_for <- cc_location(loc = raster::extent(st_bbox(temp_sf)), 
-                            base_url = mapbox_url
-                            # type = "styles/v1/kauebraga/ck34n83gd0dli1cnvtnrlgber/tiles" 
-                            # , debug = TRUE
-    )
-    
-    plotRGB(tile_for)
-    
-    # as rgb data.frame
-    tab <- as.data.frame(tile_for, xy = TRUE)
-    names(tab) <- c("x", "y", "red", "green", "blue")
-    tab$hex <- rgb(tab$red, tab$green, tab$blue, maxColorValue = 255)
-    
-    # save tile
-    readr::write_rds(tab, sprintf("%s/maptile_crop_mapbox_%s_%s.rds", subfolder9, sigla_muni, ano))
+    if (out_file %nin% list.files(subfolder9)){
+      # read shape
+      temp_sf <- read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano))
+      mapbox_url <- "https://api.mapbox.com/styles/v1/ciclocidade/cktkjh2ek5ckc17s16nr036kn/tiles/{zoom}/{x}/{y}"
+      
+      # download tile based on custom template (style)
+      tile_for <- cc_location(loc = raster::extent(st_bbox(temp_sf)), 
+                              base_url = mapbox_url
+                              # type = "styles/v1/kauebraga/ck34n83gd0dli1cnvtnrlgber/tiles" 
+                              # , debug = TRUE
+      )
+      
+      plotRGB(tile_for)
+      
+      # as rgb data.frame
+      tab <- as.data.frame(tile_for, xy = TRUE)
+      names(tab) <- c("x", "y", "red", "green", "blue")
+      tab$hex <- rgb(tab$red, tab$green, tab$blue, maxColorValue = 255)
+      
+      # save tile
+      readr::write_rds(tab, sprintf("%s/%s", subfolder9, out_file))
+    } else {
+      message('\nArquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
+    }
   }
   
   # aplicar funcao

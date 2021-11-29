@@ -8,118 +8,119 @@
 #' retira hospitais indesejados
 
 
-saude_filter <- function(ano) {
-  
-  # 1) Ler os dados da base do CNES que geocoded pelo streemap ---------------------------------
-  
-  
-  cnes_geocoded <- fread(sprintf("../../data/geocode/cnes/%s/cnes_%s_raw_geocoded.csv", ano, ano),
-                         colClasses = "character", encoding = "UTF-8")
-  
-  message(nrow(cnes_geocoded))
-  
-  
-  # cnes_geocoded %>% filter(cnes %in% c("7698585",
-  #                                      "9491473",
-  #                                      "7698313",
-  #                                      "5184932")) %>% View()
-  
-  
-  # 2) Limpar os dados do CNES ---------------------------------
-  
-  
-  # Filter 0: healthcare nao aplica (pq nao tem servicos de alta/baixa complexidade, e.g. academias de saude, secretarias de saude etc)
-  cnes_filter0 <- cnes_geocoded[complex_nao_aplic_est == ""] 
-  cnes_filter0 <- cnes_filter0[complex_nao_aplic_mun == ""]
-  
-  message("filter0: ", nrow(cnes_filter0))
-  
-  # Filter 1: healthcare facilities operating with the public health system
-  cnes_filter1 <- setDT(cnes_filter0)[ atende_sus == 'SIM']
-  
-  message("filter1: ", nrow(cnes_filter1))
-  
-  # Filter 2: Pessoa juridica
-  cnes_filter1$pessoa_fisica_ou_pessoa_juridi <- iconv(cnes_filter1$pessoa_fisica_ou_pessoa_juridi,
-                                                       from = "UTF-8", to = "ASCII//TRANSLIT")
-  cnes_filter2 <- cnes_filter1[ pessoa_fisica_ou_pessoa_juridi == 'PESSOA_JURIDICA']
-  
-  message("filter2: ", nrow(cnes_filter2))
-  
-  # filter 3: Only municipalities in the project
-  code_munis <- munis_list$munis_metro[ano_metro == ano]$code_muni %>% 
-    unlist() %>% substring(., 1, 6)
-  cnes_filter3 <- cnes_filter2[ibge %in% code_munis]
-  
-  message("filter3: ", nrow(cnes_filter3))
-  
-  # filter 4: Only atendimento hospitalar ou ambulatorial
-  install_ambu <- ifelse(ano %in% c(2017, 2018), "X", "SIM")
-  cnes_filter4 <- cnes_filter3[ instal_fisica_ambu==install_ambu | instal_fisica_hospt==install_ambu]
-  
-  
-  # filter 5. Remove special categories of facilities 
-  
-  # 5.1 Delete prison hospitals, research centers, police hospitals etc
-  to_remove1 <- 'ZOONOSES|VETERINARI|CENTRO DE ESTUDOS|PSIQUIAT|PRESIDIO|PENAL|JUDICIARIO|PENITENCIARIA|PENITENCIARIO|PRISIONAL|FUNDACAO CASA|CASA DE CUSTODIA|CASA DE CUST|SEDIT|DETENCAO|PROVISORIA|SANATORIO|POLICIA| PADI|DE REGULACAO|VIGILANCIA|SAMU |ACADEMIA|DEPEND QUIMICO|REEDUCACAO SOCIAL|CAPS|CENTRO DE ATENCAO PSICOSSOCIAL|DISTRIB DE ORGAOS|MILITAR|CADEIA PUBLICA|DOMICILIAR|ARTES MARCIAIS|UBS IPAT|UBS CDPM II'
-  # PADI = Programa de Atenção Domiciliar ao Idoso
-  # DE REGULACAO = gestora de servico
-  # CAPS - CENTRO DE ATENCAO PSICOSSOCIAL - saude mental e drogas
-  # UBS IPAT e UBS CDPM II - vinculatos a policia
-  
-  
-  
-  # 5.2 Delete Home care, tele saude, unidades moveis de saude
-  to_remove2 <- 'TELESSAUDE|UNIDADE MOVEL|DOMICILIAR|PSICOSSOCIAL|FARMACIA|DE ORGAOS|CENTRAL DE REGULACAO DO ACESSO'
-  
-  # apply filter 5
-  cnes_filter5 <- cnes_filter4[ estabelecimento %nlike% to_remove1 ]
-  cnes_filter5 <- cnes_filter5[ tipo_unidade %nlike% to_remove2 ]
-  table(cnes_filter5$tipo_unidade)
-  
-  
-  
-  
-  
-  ### Organiza Nivel de atencao criando dummy
-  
-  
-  # convert health facilities Hierarchy into dummy variables
-  cnes_filter5[, health_low := ifelse(complex_baix_ambu_est=='X'|
-                                        complex_baix_ambu_mun=='X' |
-                                        complex_baix_hosp_est=='X' |
-                                        complex_baix_hosp_mun=='X' , 1, 0)]
-  
-  cnes_filter5[, health_med := ifelse(complex_medi_ambu_est=='X'|
-                                        complex_medi_ambu_mun=='X' |
-                                        complex_medi_hosp_est=='X' |
-                                        complex_medi_hosp_mun=='X' , 1, 0)]
-  
-  cnes_filter5[, health_high := ifelse(complex_alta_ambu_est=='X'|
-                                         complex_alta_ambu_mun=='X' |
-                                         complex_alta_hosp_est=='X' |
-                                         complex_alta_hosp_mun=='X' , 1, 0)]
-  
-  
-  # table(cnes_filter5$health_low, useNA = "always")  # 3593
-  # table(cnes_filter5$health_med, useNA = "always")  # 4224
-  # table(cnes_filter5$health_high, useNA = "always") # 858
-  
-  # nrow(cnes_filter5) # 4872 obs
-  
-  # colocar todos codigos de CNES com 7 digitos
-  cnes_filter5[, cnes := stringr::str_pad(cnes, width = 7, side = "left", pad = 0)]
-  
-  
-  # 3) Salvar ---------
-  write_rds(cnes_filter5, sprintf("../../data/acesso_oport/saude/%s/saude_%s_filter_geocoded.rds", ano, ano)
-            , compress = 'gz')
-  
-  
-  nrow(cnes_filter5)
-  
-  
-}
+# # Esta função foi substituída pelo script saude2.R, da mesma pasta
+# saude_filter <- function(ano) {
+#   
+#   # 1) Ler os dados da base do CNES que geocoded pelo streemap ---------------------------------
+#   
+#   
+#   cnes_geocoded <- fread(sprintf("../../data/geocode/cnes/%s/cnes_%s_raw_geocoded.csv", ano, ano),
+#                          colClasses = "character", encoding = "UTF-8")
+#   
+#   message(nrow(cnes_geocoded))
+#   
+#   
+#   # cnes_geocoded %>% filter(cnes %in% c("7698585",
+#   #                                      "9491473",
+#   #                                      "7698313",
+#   #                                      "5184932")) %>% View()
+#   
+#   
+#   # 2) Limpar os dados do CNES ---------------------------------
+#   
+#   
+#   # Filter 0: healthcare nao aplica (pq nao tem servicos de alta/baixa complexidade, e.g. academias de saude, secretarias de saude etc)
+#   cnes_filter0 <- cnes_geocoded[complex_nao_aplic_est == ""] 
+#   cnes_filter0 <- cnes_filter0[complex_nao_aplic_mun == ""]
+#   
+#   message("filter0: ", nrow(cnes_filter0))
+#   
+#   # Filter 1: healthcare facilities operating with the public health system
+#   cnes_filter1 <- setDT(cnes_filter0)[ atende_sus == 'SIM']
+#   
+#   message("filter1: ", nrow(cnes_filter1))
+#   
+#   # Filter 2: Pessoa juridica
+#   cnes_filter1$pessoa_fisica_ou_pessoa_juridi <- iconv(cnes_filter1$pessoa_fisica_ou_pessoa_juridi,
+#                                                        from = "UTF-8", to = "ASCII//TRANSLIT")
+#   cnes_filter2 <- cnes_filter1[ pessoa_fisica_ou_pessoa_juridi == 'PESSOA_JURIDICA']
+#   
+#   message("filter2: ", nrow(cnes_filter2))
+#   
+#   # filter 3: Only municipalities in the project
+#   code_munis <- munis_list$munis_metro[ano_metro == ano]$code_muni %>% 
+#     unlist() %>% substring(., 1, 6)
+#   cnes_filter3 <- cnes_filter2[ibge %in% code_munis]
+#   
+#   message("filter3: ", nrow(cnes_filter3))
+#   
+#   # filter 4: Only atendimento hospitalar ou ambulatorial
+#   install_ambu <- ifelse(ano %in% c(2017, 2018), "X", "SIM")
+#   cnes_filter4 <- cnes_filter3[ instal_fisica_ambu==install_ambu | instal_fisica_hospt==install_ambu]
+#   
+#   
+#   # filter 5. Remove special categories of facilities 
+#   
+#   # 5.1 Delete prison hospitals, research centers, police hospitals etc
+#   to_remove1 <- 'ZOONOSES|VETERINARI|CENTRO DE ESTUDOS|PSIQUIAT|PRESIDIO|PENAL|JUDICIARIO|PENITENCIARIA|PENITENCIARIO|PRISIONAL|FUNDACAO CASA|CASA DE CUSTODIA|CASA DE CUST|SEDIT|DETENCAO|PROVISORIA|SANATORIO|POLICIA| PADI|DE REGULACAO|VIGILANCIA|SAMU |ACADEMIA|DEPEND QUIMICO|REEDUCACAO SOCIAL|CAPS|CENTRO DE ATENCAO PSICOSSOCIAL|DISTRIB DE ORGAOS|MILITAR|CADEIA PUBLICA|DOMICILIAR|ARTES MARCIAIS|UBS IPAT|UBS CDPM II'
+#   # PADI = Programa de Atenção Domiciliar ao Idoso
+#   # DE REGULACAO = gestora de servico
+#   # CAPS - CENTRO DE ATENCAO PSICOSSOCIAL - saude mental e drogas
+#   # UBS IPAT e UBS CDPM II - vinculatos a policia
+#   
+#   
+#   
+#   # 5.2 Delete Home care, tele saude, unidades moveis de saude
+#   to_remove2 <- 'TELESSAUDE|UNIDADE MOVEL|DOMICILIAR|PSICOSSOCIAL|FARMACIA|DE ORGAOS|CENTRAL DE REGULACAO DO ACESSO'
+#   
+#   # apply filter 5
+#   cnes_filter5 <- cnes_filter4[ estabelecimento %nlike% to_remove1 ]
+#   cnes_filter5 <- cnes_filter5[ tipo_unidade %nlike% to_remove2 ]
+#   table(cnes_filter5$tipo_unidade)
+#   
+#   
+#   
+#   
+#   
+#   ### Organiza Nivel de atencao criando dummy
+#   
+#   
+#   # convert health facilities Hierarchy into dummy variables
+#   cnes_filter5[, health_low := ifelse(complex_baix_ambu_est=='X'|
+#                                         complex_baix_ambu_mun=='X' |
+#                                         complex_baix_hosp_est=='X' |
+#                                         complex_baix_hosp_mun=='X' , 1, 0)]
+#   
+#   cnes_filter5[, health_med := ifelse(complex_medi_ambu_est=='X'|
+#                                         complex_medi_ambu_mun=='X' |
+#                                         complex_medi_hosp_est=='X' |
+#                                         complex_medi_hosp_mun=='X' , 1, 0)]
+#   
+#   cnes_filter5[, health_high := ifelse(complex_alta_ambu_est=='X'|
+#                                          complex_alta_ambu_mun=='X' |
+#                                          complex_alta_hosp_est=='X' |
+#                                          complex_alta_hosp_mun=='X' , 1, 0)]
+#   
+#   
+#   # table(cnes_filter5$health_low, useNA = "always")  # 3593
+#   # table(cnes_filter5$health_med, useNA = "always")  # 4224
+#   # table(cnes_filter5$health_high, useNA = "always") # 858
+#   
+#   # nrow(cnes_filter5) # 4872 obs
+#   
+#   # colocar todos codigos de CNES com 7 digitos
+#   cnes_filter5[, cnes := stringr::str_pad(cnes, width = 7, side = "left", pad = 0)]
+#   
+#   
+#   # 3) Salvar ---------
+#   write_rds(cnes_filter5, sprintf("../../data/acesso_oport/saude/%s/saude_%s_filter_geocoded.rds", ano, ano)
+#             , compress = 'gz')
+#   
+#   
+#   nrow(cnes_filter5)
+#   
+#   
+# }
 
 # saude_filter(2017)
 

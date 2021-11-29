@@ -25,7 +25,7 @@ criar_grade_muni_all <- function(ano, munis = "all") {
   # funcao para criar grade por municipio
   criar_grade_muni <- function(sigla){
     
-    message(paste0('Rodando cidade: ', sigla,"\n"))
+    message('\nRodando cidade: ', sigla,"\n")
     
     # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
     out_file <- sprintf("grade_%s_%s.rds", sigla, ano)
@@ -71,7 +71,7 @@ criar_grade_muni_all <- function(ano, munis = "all") {
       write_rds(grade_muni, sprintf("%s/%s", subfolder3A, out_file), compress = 'gz')
       
     } else {
-        message(paste0('Arquivo para a cidade ', sigla, " já existe, pulando...\n"))}
+        message('Arquivo para a cidade ', sigla, " já existe, pulando...\n")}
     }
 
   # Aplicar função
@@ -104,5 +104,5 @@ criar_grade_muni_all <- function(ano, munis = "all") {
 # previstas com o gc() no código não liberam a RAM usada pelo R-Studio, o que
 # torna necessário reiniciar a sessão como um todo com .rs.restartR() após
 # rodar cada cidade
-criar_grade_muni_all(ano = 2019, munis = 'lda')
+criar_grade_muni_all(ano = 2019, munis = 'oco')
 # .rs.restartR()

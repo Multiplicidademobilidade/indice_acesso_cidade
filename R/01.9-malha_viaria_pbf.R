@@ -201,9 +201,9 @@ extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
 }
 
 
-# purrr::walk(munis_list$munis_metro[ano_metro == ano]$abrev_muni, extrai_malha_viaria, ano = ano_pbf)
-# system.time(extrai_malha_viaria(muni = "poa", ano = ano_pbf))
-# extrai_malha_viaria(muni = "nat", ano_base = 2019, ano_arq_pbf = ano_pbf)
-purrr::walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, extrai_malha_viaria, ano_base = 2019, ano_arq_pbf = ano_pbf)
+# extrai_malha_viaria(muni = "oco", ano_base = 2019, ano_arq_pbf = ano_pbf)
+# Demora de 2 a 3 minutos por cidade para rodar
+ano = 2019
+purrr::walk(munis_list$munis_metro[ano_metro == ano]$abrev_muni, extrai_malha_viaria, ano_base = ano, ano_arq_pbf = ano_pbf)
 
 
