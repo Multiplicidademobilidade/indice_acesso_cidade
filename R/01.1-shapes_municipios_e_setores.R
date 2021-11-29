@@ -35,13 +35,24 @@ download_muni_setores <- function(ano, munis = "all") {
     out_file1 <- sprintf("municipio_%s_%s.rds", sigla_muni, ano)
     # Baixar somente se arquivo não existir na pasta
     if (out_file1 %nin% list.files(subfolder1A)){
+        # Baixar shape do estado
         uf_sf <- geobr::read_municipality(code_muni = state_code, year = ano)
+        
+        # A cidade de Vitória possui duas pequenas ilhas além mar - retirá-las
+        if (sigla_muni == 'vta'){
+          # As duas ilhas têm área menor do que 50000000 m²
+          uf_sf <- ms_filter_islands(uf_sf, min_area = 50000000) 
+        }
+        
+        # Filtrar pelo município
         muni_sf <- uf_sf %>% filter(code_muni %in% code_munis)
         # muni_sf <- purrr::map_dfr(code_munis, geobr::read_municipality, year=ano, simplified = F)
         # Dissolver os polígonos dos municípios componentes da RM
         muni_sf <- dissolve_polygons(muni_sf, group_column = "code_state")
         # Transformar em WGS84
         muni_sf <- st_transform(muni_sf, 4326)
+        
+        
         
         # salvar municipios
         readr::write_rds(muni_sf, sprintf("%s/%s", subfolder1A, out_file1), compress = 'gz')
@@ -80,4 +91,4 @@ download_muni_setores <- function(ano, munis = "all") {
 # download_muni_setores(ano = 2019, munis = 'sgo')
 # download_muni_setores(ano = 2019, munis = 'all')
 
-download_muni_setores(ano = 2019, munis = 'oco')
+download_muni_setores(ano = 2019, munis = 'all')

@@ -104,5 +104,5 @@ criar_grade_muni_all <- function(ano, munis = "all") {
 # previstas com o gc() no código não liberam a RAM usada pelo R-Studio, o que
 # torna necessário reiniciar a sessão como um todo com .rs.restartR() após
 # rodar cada cidade
-criar_grade_muni_all(ano = 2019, munis = 'oco')
+criar_grade_muni_all(ano = 2019, munis = 'vta')
 # .rs.restartR()
