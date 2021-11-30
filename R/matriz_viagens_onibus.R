@@ -1,5 +1,5 @@
 
-# Esse script contem duas funções
+# Esse script contem duas funções:
 
 # A primeira pega a matriz de hexágonos e prepara um dataframe contendo todas as 
 # origens, destinos, distâncias e strings para a API. 
