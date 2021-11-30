@@ -76,9 +76,8 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
       dplyr::select(id_hex, sigla_muni, hex_dest, distancia, origem, destino)
     
     # Salvar
-    # write_rds(matriz, 
-    # sprintf("~/repos/acesso_oport/hex_municipio/%s/hex_%s_%s_%s.rds", ano, sigla_muni, resol, ano), compress = 'gz')
-    save(file, file=sprintf("%s/df_%s_0%s_%s.Rdata", save_folderA, sigla_munis, resol, ano))
+    write_rds(file, sprintf("%s/df_%s_0%s_%s.rds", save_folderA, sigla_munis, resol, ano), compress = 'gz')
+    #save(file, file=sprintf("%s/df_%s_0%s_%s.Rdata", save_folderA, sigla_munis, resol, ano))
   }
   # Aplicar funcao
   if (munis == "all") {
@@ -134,7 +133,7 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="8"){
   # 4.0 Salvar
    # write_rds(matriz, 
              # sprintf("~/repos/acesso_oport/hex_municipio/%s/hex_%s_%s_%s.rds", ano, sigla_muni, resol, ano), compress = 'gz')
-    save(matriz, file=sprintf("%s/matriz_%s_0%s_%s.Rdata", files_folder, sigla_munis, resol, ano))
+    save(matriz, file=sprintf("%s/matriz_%s_0%s_%s.RData", files_folder, sigla_munis, resol, ano))
 
   }
   
