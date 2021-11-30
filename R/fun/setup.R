@@ -39,6 +39,7 @@ library(patchwork)
 library(pbapply)      # progress bar
 library(quantreg)
 library(raster)
+library(rmapshaper)
 library(RColorBrewer) # paleta de cores
 library(rgeos)
 library(sf)           # leitura e manipulacao de dados espaciais
@@ -85,7 +86,7 @@ munis_list <- list(
     2927408,    "sal",         "Salvador",              "BA",           1.36,
     3106200,    "bho",         "Belo Horizonte",        "MG",           0.69,
     3170206,    "ula",         "Uberlandia",            "MG",           0.74, # 0.74 estimado
-    # 3205309,    "vta",         "Vitoria",               "ES",           0.74, # 0.74 estimado
+    3205309,    "vta",         "Vitoria",               "ES",           0.74, # 0.74 estimado
     3304557,    "rio",         "Rio de Janeiro",        "RJ",           1.91,
     3509502,    "cam",         "Campinas",              "SP",           1.20,
     3534401,    "oco",         "Osasco",                "SP",           0.74, # 0.74 estimado
@@ -132,7 +133,7 @@ munis_list <- list(
     "tsa",       "todos",  "todos",  "todos",  "todos",
     "jpa",       "todos",  "todos",  "todos",  "todos",
     "ula",       "todos",  "todos",  "todos",  "todos",
-    # "vta",       "todos",  "todos",  "todos",  "todos",
+    "vta",       "todos",  "todos",  "todos",  "todos",
     "oco",       "todos",  "todos",  "todos",  "todos",
     "sne",       "todos",  "todos",  "todos",  "todos",
     "sjc",       "todos",  "todos",  "todos",  "todos",
@@ -228,7 +229,7 @@ munis_list <- list(
     "tsa",       2019,     2211001,
     "jpa",       2019,     2507507,
     "ula",       2019,     3170206,
-    # "vta",       2019,     3205309,
+    "vta",       2019,     3205309,
     "oco",       2019,     3534401,
     "sne",       2019,     3547809,
     "sjc",       2019,     3549904,

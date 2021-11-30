@@ -93,12 +93,12 @@ download_srtm <- function(ano, sigla_muni) {
     raster::writeRaster(rst_layer_crop, 
                         sprintf("%s/%s", subfolder10, out_file), 
                         overwrite = TRUE)
+    # plot(rst_layer_crop)
     
   } else {
     message(paste0('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n"))
   }
 }
 
-# download_srtm("poa")
-# download_srtm("bel")
+# download_srtm(2019, "oco")
 walk(munis_list$munis_df$abrev_muni, download_srtm, ano = 2019)
