@@ -16,22 +16,15 @@ criar_hexagonos <- function(ano, munis = "all") {
     
     # Estrutura de pastas
     files_folder <- "../../indice-mobilidade_dados"
-    subfolder1 <- sprintf("%s/01_municipios", files_folder)
-    subfolder1A <- sprintf("%s/%s", subfolder1, ano)
-    subfolderX <- sprintf("%s/09_hex_municipios", files_folder)
-    subfolderXA <- sprintf("%s/%s", subfolderX, ano)
-    if ("09_hex_municipios" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolderX)
-    }
-    if (ano %nin% list.dirs(subfolderX, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolderXA)
-    }
+    subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
+    subfolderX <- sprintf("%s/XX_hex_municipios/%s", files_folder, ano)
+    dir.create(subfolderX, recursive = TRUE, showWarnings = FALSE)
     
     # Leitura do(s) municipio(s)
     #muni <- readr::read_rds(sprintf("~/repos/acesso_oport/data-raw/municipios/%s/municipio_%s_%s.rds", 
                                    #ano, sigla_muni, ano) ) %>%
     muni <- 
-      readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1A, sigla_muni, ano) ) %>%
+      readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano) ) %>%
       # Buffer para extender a area do municipio e assim evitar que os hexagonos nao considerem areas de borda
       st_buffer(dist = 0.003)
     
@@ -39,8 +32,11 @@ criar_hexagonos <- function(ano, munis = "all") {
     
     # Definição da resolução
     # A Tabela de resoluções H3 pode ser encontrada em: https://h3geo.org/docs/core-library/restable
-    res_todas <- c(7, 8, 9) # Inicialmente foram propostas as resolucoes 8 e 9
-    #resolution <- res_todas[2]
+    # res_todas <- c(7, 8, 9)
+    # resolution <- res_todas[2] 
+    # Vamos usar a resolução 8
+    res_todas <- c(8) 
+    resolution <- res_todas[1]
     
     # Criar grades hexagonais
     make_hex <- function(resolution) {
@@ -48,7 +44,7 @@ criar_hexagonos <- function(ano, munis = "all") {
       # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
       out_file <- sprintf("hex_%s_%s_0%s.rds", sigla_muni, ano, resolution)
       
-      if (out_file %nin% list.files(subfolderXA)){
+      if (out_file %nin% list.files(subfolderX)){
           # get the unique h3 ids of the hexagons intersecting your polygon at a given resolution
           hex_ids <- polyfill(muni, res = resolution, simple = TRUE)
           
@@ -66,7 +62,7 @@ criar_hexagonos <- function(ano, munis = "all") {
           # mapview(select(hex_grid, geometry))
           
           # salvar ------------------------------------------------------------------
-          write_rds(hex_grid, sprintf("%s/%s", subfolderXA, out_file), compress = 'gz')
+          write_rds(hex_grid, sprintf("%s/%s", subfolderX, out_file), compress = 'gz')
           
       } else {
         message('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
@@ -93,5 +89,5 @@ criar_hexagonos <- function(ano, munis = "all") {
 
 
 #### 2) Aplicar funcao ------------
-#criar_hexagonos(ano = 2019, munis = 'all')
+criar_hexagonos(ano = 2019, munis = 'all')
 

@@ -12,18 +12,10 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     
     # Estrutura de pastas
     files_folder <- "../../indice-mobilidade_dados"
-    subfolder3 <- sprintf("%s/03_grade_municipios", files_folder)
-    subfolder3A <- sprintf("%s/%s", subfolder3, ano)
-    subfolder5 <- sprintf("%s/05_setores_agregados", files_folder)
-    subfolder5A <- sprintf("%s/%s", subfolder5, ano)
-    subfolder7 <- sprintf("%s/XY_grade_municipio_com_renda_cor", files_folder)
-    subfolder7A <- sprintf("%s/%s", subfolder7, ano)
-    if ("XY_grade_municipio_com_renda_cor" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder7)
-    }
-    if (ano %nin% list.dirs(subfolder7, recursive = FALSE, full.names = FALSE)){
-      dir.create(subfolder7A)
-    }
+    subfolder3 <- sprintf("%s/03_grade_municipios/%s", files_folder, ano)
+    subfolder4 <- sprintf("%s/04_setores_agregados/%s", files_folder, ano)
+    subfolderY <- sprintf("%s/XY_grade_municipio_com_renda_cor/%s", files_folder, ano)
+    dir.create(subfolderY, recursive = TRUE, showWarnings = FALSE)
     
     # status message
     message(Sys.time(), ' - Trabalhando na cidade: ', sigla_muni, '\n')
@@ -31,10 +23,10 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
     out_file <- sprintf("grade_renda_cor_%s_%s.rds", sigla_muni, ano)
     
-    if (out_file %nin% list.files(subfolder7A)){
+    if (out_file %nin% list.files(subfolderY)){
       # Caminho para os arquivos
-      path_setor <- sprintf("%s/setores_agregados_%s_%s.rds", subfolder5A, sigla_muni, ano)
-      path_grade <- sprintf("%s/grade_%s_%s.rds", subfolder3A, sigla_muni, ano)
+      path_setor <- sprintf("%s/setores_agregados_%s_%s.rds", subfolder4, sigla_muni, ano)
+      path_grade <- sprintf("%s/grade_%s_%s.rds", subfolder3, sigla_muni, ano)
       
       # Ler shapes de setores censitários e grades estatísticas
       setor <- readr::read_rds(path_setor)
@@ -289,8 +281,8 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
         )
       
       # Salvar em disco
-      write_rds(ui_fim_sf, sprintf("%s/%s", subfolder7A, out_file), compress = 'gz')
-      message('\n', Sys.time(), 'Finalizado: ', sigla_muni, '\n')
+      write_rds(ui_fim_sf, sprintf("%s/%s", subfolderY, out_file), compress = 'gz')
+      message('\n', Sys.time(), ' - Finalizado: ', sigla_muni, '\n')
       
     } else {
       message('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
@@ -300,7 +292,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
   
   #### Aplicando função em paralelo para salvar grades com info de renda
   if (munis == "all") {
-    x = munis_df$abrev_muni
+    x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
   } else (x = munis)
   
   # Parallel processing using future.apply
@@ -325,7 +317,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
 # RAM, em especial para estados grandes. Monitorar. Talvez seja preciso rodar
 # por cidade e reiniciar a sessão como com .rs.restartR() após cada cidade
 
-renda_de_setor_p_grade(ano = 2019, munis = 'oco')
+renda_de_setor_p_grade(ano = 2019, munis = 'jpa')
 # .rs.restartR()
 # "bho" "cam" "cgr" "cur" "for" "goi" "mac" "man" "nat" "rec" "rio" "sal" "spo" 
 # "tsa" "jpa" "ula" "vta" "oco" "sne" "sjc" "lda"
