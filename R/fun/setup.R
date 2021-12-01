@@ -27,6 +27,7 @@ library(geobr)        # dados espaciais do brasil
 library(ggmap)        # geocoding
 library(ggthemes)     # temas para visualizacao de dados
 library(h3jsr)        # h3 hex remotes::install_github("obrl-soil/h3jsr"), requer install.packages("V8")
+library(Hmisc)
 library(hrbrthemes)   # requer hrbrthemes::import_roboto_condensed()
 library(httr)
 library(janitor)
@@ -217,7 +218,7 @@ munis_list <- list(
 #    "gua",       2019,     3518800,
     "mac",       2019,     2704302,
     "man",       2019,     1302603,
-    # "nat",       2019,     2408102,
+    "nat",       2019,     2408102,
 #    "poa",       2019,     4314902,
     "rec",       2019,     2611606,
     "rio",       2019,     3304557,
