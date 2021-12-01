@@ -42,38 +42,46 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
     # Junta no original
     file <- file %>% dplyr::select(-(hex_dest)) %>%
       left_join(file_aux, by= "id_hex")
+    rm(file_aux)
+    gc()
     # Calcula as distâncias
     file$distancia <- grid_distance(origin = file$id_hex, destination = file$hex_dest)
+    
     # Preparando string:
     # 1. Encontro o centro dos hexagonos
     # Origem
-    file <- file %>%
-      mutate(center_orig = st_centroid(geometry))
+    #file <- file %>%
+    #  mutate(center_orig = st_centroid(geometry))
+    
+#    file <- file %>%
+#      mutate(center_orig = h3_to_point(id_hex))
     # Destino
-    file <- file %>%
-      mutate(geometry_dest = h3_to_polygon(hex_dest)) %>%
-      mutate(center_dest = st_centroid(geometry_dest))
+    #file <- file %>%
+    #  mutate(geometry_dest = h3_to_polygon(hex_dest)) %>%
+    #  mutate(center_dest = st_centroid(geometry_dest))
+#    file <- file %>%
+#      mutate(center_dest = h3_to_point(hex_dest))
     
     # 2. Separo Lat e Long
     # Origem
-    file <- file %>%
-      mutate(lat_orig = unlist(map(file$center_orig,2)),
-             long_orig = unlist(map(file$center_orig,1)))
+#    file <- file %>%
+#      mutate(lat_orig = unlist(map(file$center_orig,2)),
+#             long_orig = unlist(map(file$center_orig,1)))
     # Destino
-    file <- file %>%
-      mutate(lat_dest = unlist(map(file$center_dest,2)),
-             long_dest = unlist(map(file$center_dest,1)))
+#    file <- file %>%
+#      mutate(lat_dest = unlist(map(file$center_dest,2)),
+#             long_dest = unlist(map(file$center_dest,1)))
     
     # 3. Junto numa string para o padrao da API
     # Origem
-    file <- file %>%
-      mutate(origem = str_c(lat_orig, long_orig, sep='+'))
+#    file <- file %>%
+#      mutate(origem = str_c(lat_orig, long_orig, sep='+'))
     # Destino
-    file <- file %>%
-      mutate(destino = str_c(lat_dest, long_dest, sep='+'))  
+#    file <- file %>%
+#      mutate(destino = str_c(lat_dest, long_dest, sep='+'))  
     # Seleciona colunas
-    file <- file %>%
-      dplyr::select(id_hex, sigla_muni, hex_dest, distancia, origem, destino)
+#    file <- file %>%
+#      dplyr::select(id_hex, sigla_muni, hex_dest, distancia, origem, destino)
     
     # Salvar
     write_rds(file, sprintf("%s/df_%s_0%s_%s.rds", save_folderA, sigla_munis, resol, ano), compress = 'gz')
@@ -90,7 +98,7 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
 }
 
 # Preciso fazer um por um
-preparar_matriz(munis = "nat")
+preparar_matriz(munis = "sne")
 
 
 # faz a leitura do arquivo .Rdata localizado na pasta dataframes
