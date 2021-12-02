@@ -15,7 +15,11 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   subfolder6 <- sprintf("%s/06_cnes_saude/%s", files_folder, ano)
   subfolder7 <- sprintf("%s/07_rais_empregos/%s", files_folder, ano)
+  subfolder8 <- sprintf("%s/08_cras_assist_social/%s", files_folder, ano)
   subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
+  subfolder13 <- sprintf("%s/13_grade_municipio_com_renda_cor/%s", files_folder, ano)
+  subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
+  dir.create(subfolder14, recursive = TRUE, showWarnings = FALSE)
   
   
   # 1) Abrir arquivos com as oportunidades -------------------------------------
@@ -50,75 +54,96 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
   
   # 1.3) Empregos
   # empregos <- readr::read_rds(sprintf("%s/rais_%s_etapa4_geocoded_gmaps_gquality_corrected_escola.rds", subfolder7, ano))
+  empregos <- readr::read_rds(sprintf("%s/rais_%s.rds", subfolder7, ano))
   
-  # remove lat lon missing
-  empregos <- empregos[!is.na(lat), ]
+  # selecionar colunas
+  empregos <- empregos %>% dplyr::select(code_muni = municipio, 
+                                         # id_estab, 
+                                         # baixo, 
+                                         # medio, 
+                                         # alto, 
+                                         vinc_ativos = qtd_vinculos_ativos, # Nova coluna
+                                         lon, 
+                                         lat)
   
-  # select columns
-  empregos <- empregos[, .(code_muni, id_estab, baixo, medio, alto, lon, lat)]
+  # remover linhas sem latlong
+  empregos <- empregos %>% filter(!is.na(lat))
+  
+  
   
   # 1.3) CRAS
-  cras <- read_rds(sprintf("../../data/acesso_oport/cras/cras_%s_geocoded.rds", ano))
+  # cras <- read_rds(sprintf("../../data/acesso_oport/cras/cras_%s_geocoded.rds", ano))
+  cras <- read_rds(sprintf("%s/cras_%s_geocoded.rds", subfolder8, ano))
   
-  # remove lat lon missing
-  cras <- cras[!is.na(lat),] 
+  # selecionar colunas
+  cras <- cras %>% dplyr::select(code_cras, code_muni, lon, lat)
   
-  # select columns
-  cras <- cras[, .(code_cras, code_muni,
-                   lon, lat)]
+  # remover linhas sem latlong
+  cras <- cras %>% filter(!is.na(lat))
   
   
-  #' A funcao `agrupar_variaveis` agrupa as variaveis de uso do solo determinadas acima
-  #'  nos hexagonos de cada um dos municipios
-  #'  Tambem traz as informacoes demograficas da grade do ibge
+  #' A funcao `agrupar_variaveis` agrupa as variáveis de uso do solo determinadas 
+  #' acima nos hexágonos de cada um dos municípios. Tambám traz as informações 
+  #' demográficas da grade do IBGE
   
   agrupar_variaveis <- function(sigla_muni) { 
     
     # sigla_muni <- "for"
-    # sigla_muni <- "nat"
+    # sigla_muni <- "oco"
     
     # status message
-    message('Woking on city ', sigla_muni, '\n')
+    message('Trabalhando na cidade ', sigla_muni, '\n')
     
-    # resolucoes disponiveis
-    res <- c("08", "09")
+    # Resoluções disponíveis
+    # res <- c("08", "09")
+    res <- c("08")
     
-    # Pegar endereco das grades e hexagonos em todas resolucoes
-    grade_file <- sprintf("../../data/acesso_oport/grade_municipio_com_renda_cor/%s/grade_renda_cor_%s_%s.rds", ano, sigla_muni, ano)
+    # Pegar endereco das grades e hexágonos em todas resoluções
+    grade_file <- sprintf("%s/grade_renda_cor_%s_%s.rds", subfolder13, sigla_muni, ano)
     
-    # Gerar centroide da grade de cada municipio
-    centroide_pop <- readr::read_rds(grade_file) %>%
-      dplyr::select(id_grade, pop_total, pop_homens, pop_mulheres,
-                    renda,  
-                    cor_branca, cor_amarela, cor_indigena, cor_negra,  
+    # Gerar centroide da grade de cada município
+    centroide_pop <- 
+      readr::read_rds(grade_file) %>%
+      dplyr::select(id_grade, pop_total, pop_mulheres, pop_homens,
+                    renda,
+                    cor_branca, cor_amarela, cor_indigena, cor_negra,
                     idade_0a5,
                     idade_6a14,
                     idade_15a18,
                     idade_19a24,
                     idade_25a39,
                     idade_40a69,
-                    idade_70   ) %>%
+                    idade_70   ) %>% 
       st_centroid()
     
     # Qual o codigo do municipio em questao?
-    cod_mun_ok <- munis_list$munis_metro[abrev_muni == sigla_muni & ano_metro == ano]$code_muni %>% 
+    cod_mun_ok <- 
+      munis_list$munis_metro[abrev_muni == sigla_muni & ano_metro == ano]$code_muni %>% 
       unlist()
     
     # Filtrar somente as atividades referentes a cada municipio e transforma em sf
     # para rais 2017
-    empregos_filtrado <- empregos[code_muni %in% substr(cod_mun_ok, 1, 6)] %>%
+    empregos_filtrado <- 
+      empregos %>% 
+      filter(str_starts(code_muni, str_sub(cod_mun_ok, start = 1, end = 6))) %>%
       st_as_sf(coords = c("lon", "lat"), crs = 4326)
     
     # escolas
-    escolas_filtrado <- escolas[code_muni %in% cod_mun_ok] %>%
+    escolas_filtrado <- 
+      escolas %>% 
+      filter(code_muni == cod_mun_ok) %>%
       st_as_sf(coords = c("lon", "lat"), crs = 4326)
     
     # saude
-    cnes_filtrado <- cnes_data[code_muni %in% substr(cod_mun_ok, 1, 6)] %>% 
+    cnes_filtrado <- 
+      cnes_data %>% 
+      filter(str_starts(code_muni, str_sub(cod_mun_ok, start = 1, end = 6))) %>%
       st_as_sf(coords = c("lon", "lat"), crs = 4326)
     
     # cras
-    cras_filtrado <- cras[code_muni %in% cod_mun_ok] %>% 
+    cras_filtrado <- 
+      cras %>% 
+      filter(code_muni == cod_mun_ok) %>%
       st_as_sf(coords = c("lon", "lat"), crs = 4326)
     
     
@@ -130,7 +155,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
       # muni_res <- '08'
       
       # endereco do hexagono na resolucao
-      hexf <- sprintf("../../data/acesso_oport/hex_municipio/%s/hex_%s_%s_%s.rds", ano, sigla_muni, muni_res, ano)
+      hexf <- sprintf("%s/hex_%s_%s_%s.rds", subfolder12, sigla_muni, muni_res, ano)
       
       # Ler arquivo de hexagono  
       hex_muni <- readr::read_rds(hexf)
@@ -140,7 +165,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
       hex_pop <- hex_muni %>% st_join(centroide_pop)
       
       
-      ### a. substituir CENTROID pela proporcao de intersecao
+      ### a. substituir CENTROIDE pela proporcao de intersecao
       ### b. arredondamento %>%
       ###  mutate_at(vars(matches("pop|renda|moradores|cor|idade")), round)
       
@@ -196,10 +221,11 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
       hex_rais <- hex_muni %>% st_join(empregos_filtrado) %>% setDT()
       
       # Summarize
-      hex_rais <- hex_rais[, .(empregos_baixa = sum(baixo, na.rm = TRUE),
-                               empregos_media = sum(medio, na.rm = TRUE),
-                               empregos_alta  = sum(alto, na.rm = TRUE),
-                               empregos_total = sum(alto, medio, baixo, na.rm = TRUE)), 
+      hex_rais <- hex_rais[, .(# empregos_baixa = sum(baixo, na.rm = TRUE),
+                               # empregos_media = sum(medio, na.rm = TRUE),
+                               # empregos_alta  = sum(alto, na.rm = TRUE),
+                               # empregos_total = sum(alto, medio, baixo, na.rm = TRUE)
+                               empregos_total = sum(vinc_ativos, na.rm = TRUE)), 
                            by = id_hex ]
       
       
@@ -269,7 +295,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
       
       
       # Salva grade de hexagonos com todas informacoes de uso do soloe
-      dir_output <- sprintf("../../data/acesso_oport/hex_agregados/%s/hex_agregado_%s_%s_%s.rds", ano, sigla_muni, muni_res, ano)
+      dir_output <- sprintf("%s/hex_agregado_%s_%s_%s.rds", subfolder14, sigla_muni, muni_res, ano)
       readr::write_rds(hex_muni_fim, dir_output)
       
     }
@@ -281,9 +307,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
   
   # Aplica funcao para cada municipio
   if (munis == "all") {
-    
     x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
-    
   } else (x = munis)
   
   # Parallel processing using future.apply
@@ -298,9 +322,8 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
 
 
 # aplicar funcao -----------------
-agrupar_variaveis_hex(ano = 2017)
-agrupar_variaveis_hex(ano = 2018)
-agrupar_variaveis_hex(ano = 2019)
+# agrupar_variaveis_hex(ano = 2019, munis = 'vta')
+agrupar_variaveis_hex(ano = 2019, munis = 'all')
 
 
 
