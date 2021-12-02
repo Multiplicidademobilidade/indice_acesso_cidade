@@ -184,8 +184,17 @@ extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
     # Chama o Osmosis
     message('\nIniciando o osmosis para ', muni, '\n')
     arg1 <- sprintf("--read-pbf %s", br_pbf)
-    arg2 <- sprintf("--bounding-box left=%s bottom=%s right=%s top=%s", 
-                    muni_bbox@xmin, muni_bbox@ymin, muni_bbox@xmax, muni_bbox@ymax)
+    
+    # O município de Osasco vai dar erro no momento de criação da rede (script 4.1)
+    if (muni == 'oco'){
+      arg2 <- sprintf("--bounding-box left=%s bottom=%s right=%s top=%s completeWays='yes'", 
+                      muni_bbox@xmin, muni_bbox@ymin, muni_bbox@xmax, muni_bbox@ymax)
+      
+    } else {
+      arg2 <- sprintf("--bounding-box left=%s bottom=%s right=%s top=%s",
+                      muni_bbox@xmin, muni_bbox@ymin, muni_bbox@xmax, muni_bbox@ymax)
+      }
+    
     arg3 <- sprintf("--write-pbf %s", muni_pbf)
     system2(command = osmosis_path, args = c(arg1, arg2, arg3))
     

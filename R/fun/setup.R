@@ -32,6 +32,7 @@ library(hrbrthemes)   # requer hrbrthemes::import_roboto_condensed()
 library(httr)
 library(janitor)
 library(knitr)
+library(leafgl)
 library(lubridate)    # dados em data/horario
 library(maptools)
 library(mapview)      # visualizacao interativa dos dados
