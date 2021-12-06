@@ -17,48 +17,59 @@ library(gmapsdistance) # Distance Matrix API
 
 # Recebe o .rds dos hexágonos e prepara uma matriz de origens e destinos
 preparar_matriz <- function(ano=2019, munis="all", resol=8){
+  
+  ano <- 2019; resol <- 8; sigla_munis <- 'goi'
+  
+  # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolderxy <- sprintf("%s/XY_matriz_viagens_onibus", files_folder)
   save_folderA <- sprintf("%s/%s/dataframes", subfolderxy, ano)
-  
-  if ("XY_matriz_viagens_onibus" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-    dir.create(subfolderxy)
-  }
-  
-  if ("dataframes" %nin% list.dirs(sprintf("%s/%s", subfolderxy,ano), recursive = FALSE, full.names = FALSE)){
-    dir.create(save_folderA)
-  }
+  dir.create(save_folderA, recursive = TRUE, showWarnings = FALSE)
   
   prepara_e_salva <- function(sigla_munis){
     #file <- read_rds(sprintf("%s/hex_%s_%s_0%s.rds", load_folder, sigla_munis, ano, resol))
     message(Sys.time(), ' - Trabalhando na cidade: ', sigla_munis, '\n')
+    
     # Carregar grid de hexagonos
-    file <- read_rds(sprintf("%s/hex_%s_2019_0%s.rds", subfolder12, sigla_munis, resol))%>%
+    file <- 
+      read_rds(sprintf("%s/hex_%s_0%s_%s.rds", subfolder12, sigla_munis, resol, ano)) %>%
       st_drop_geometry()
+    
     # Carregar agregados populacionais
-    file2 <- read_rds(sprintf("%s/hex_agregado_%s_0%s_%s.rds", subfolder14, sigla_munis, resol, ano))%>%
-      dplyr::select(c(id_hex, pop_total))%>%
+    file2 <- 
+      read_rds(sprintf("%s/hex_agregado_%s_0%s_%s.rds", subfolder14, sigla_munis, resol, ano)) %>%
+      dplyr::select(c(id_hex, pop_total)) %>%
       st_drop_geometry()
     
     # Juntando dataframes e filtrando pop > 0
-    file <- left_join(file, file2)%>%
-      dplyr::filter(pop_total != 0)
+    file <- left_join(file, file2) %>% dplyr::filter(pop_total != 0)
     
-    # Duplica id_hex
-    file$hex_dest <- file$id_hex
-    # Expand (cria todas as combinações de origens/destinos)
-    file_aux <- file %>% expand(id_hex, hex_dest)#%>% 
-    #rename(destino = hex_dest)
+    # Criar dataframe temporário
+    file_aux <- 
+      file %>% 
+      # Duplica id_hex
+      mutate(hex_dest = id_hex) %>% 
+      # Expand (cria todas as combinações de origens/destinos)
+      expand(id_hex, hex_dest) %>% 
+      filter(id_hex != hex_dest)
+    
+    # Calcula as distâncias
+    file_aux$distancia <- grid_distance(origin = file_aux$id_hex, destination = file_aux$hex_dest)
+    
     # Junta no original
-    file <- file %>% dplyr::select(-(hex_dest)) %>%
+    file <- 
+      file %>% 
+      dplyr::select(-(hex_dest)) %>%
       left_join(file_aux, by= "id_hex")
+    
     # Remove
     rm(file_aux)
     gc()
-    # Calcula as distâncias
-    file$distancia <- grid_distance(origin = file$id_hex, destination = file$hex_dest)
+    
+    
+    
     # Preparando string:
     # 1. Encontro o centro dos hexagonos
     # Origem
@@ -91,8 +102,9 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
 #      dplyr::select(id_hex, sigla_muni, hex_dest, distancia, origem, destino)
     
     # Salvar
-     write_rds(file, 
-     sprintf("%s/matriz_%s_0%s_%s.rds", save_folderA, sigla_munis, resol, ano), compress = 'gz')
+     write_rds(file,
+               sprintf("%s/matriz_%s_0%s_%s.rds", save_folderA, sigla_munis, resol, ano), 
+               compress = 'gz')
     #save(file, file=sprintf("%s/df_%s_0%s_%s.Rdata", save_folderA, sigla_munis, resol, ano))
   }
   # Aplicar funcao
