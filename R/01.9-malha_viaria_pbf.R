@@ -25,7 +25,7 @@ dir.create(sprintf("%s", subfolder11), recursive = TRUE, showWarnings = FALSE)
 # 2. Baixar arquivo PBF
 # ----------------------------------------
 # Baixar o arquivo PBF do Brasil manualmente do site download.geofabrik.de/ e 
-# salvar na pasta criada ('../../indice-mobilidade_dados/12_malha_viaria/[ano]/br')
+# salvar na pasta criada ('../../indice-mobilidade_dados/11_malha_viaria/[ano]/')
 
 
 # ----------------------------------------

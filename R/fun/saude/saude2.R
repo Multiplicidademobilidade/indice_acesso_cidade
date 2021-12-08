@@ -171,9 +171,9 @@ gestao <-
   # como dummies separadas - queremos integrar tudo em uma linha só, como
   # um boolean. Para isso, vamos somar as colunas com group_by()...
   group_by(CO_UNIDADE) %>% 
-  summarize(across(everything(), sum)) %>% 
+  dplyr::summarize(across(everything(), sum)) %>% 
   # ... e o que for maior que zero vai se tornar 1
-  mutate(across(where(is.numeric), ~ case_when(. > 0 ~ 1, TRUE ~ 0)))
+  dplyr::mutate(across(where(is.numeric), ~ case_when(. > 0 ~ 1, TRUE ~ 0)))
 
 
 # Juntar ao dataframe principal
@@ -226,9 +226,9 @@ convenio <-
   # como dummies separadas - queremos integrar tudo em uma linha só, como
   # um boolean. Para isso, vamos somar as colunas com group_by()...
   group_by(CO_UNIDADE) %>% 
-  summarize(across(everything(), sum)) %>% 
+  dplyr::summarize(across(everything(), sum)) %>% 
   # ... e o que for maior que zero vai se tornar 1
-  mutate(across(where(is.numeric), ~ case_when(. > 0 ~ 1, TRUE ~ 0)))
+  dplyr::mutate(across(where(is.numeric), ~ case_when(. > 0 ~ 1, TRUE ~ 0)))
 
 
 # # Checando uma das CO_UNIDADE que possuía 23 entradas

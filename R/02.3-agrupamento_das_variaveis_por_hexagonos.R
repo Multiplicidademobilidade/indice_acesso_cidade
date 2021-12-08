@@ -57,7 +57,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
   empregos <- readr::read_rds(sprintf("%s/rais_%s.rds", subfolder7, ano))
   
   # selecionar colunas
-  empregos <- empregos %>% dplyr::select(code_muni = municipio, 
+  empregos <- empregos %>% dplyr::select(code_muni = codemun, 
                                          # id_estab, 
                                          # baixo, 
                                          # medio, 

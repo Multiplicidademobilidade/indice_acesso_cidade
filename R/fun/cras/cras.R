@@ -108,7 +108,7 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
   # 3) Corrige coordenadas defeituosas ------------------------------------------------------------------
   
   munis <- 
-    purrr::map_dfr(as.integer(code_munis), geobr::read_municipality) %>% 
+    purrr::map_dfr(as.integer(code_munis), geobr::read_municipality, year = ano) %>% 
     as_tibble() %>% 
     st_sf() %>%
     st_centroid() %>% 

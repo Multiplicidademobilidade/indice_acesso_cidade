@@ -117,7 +117,7 @@ go <- go %>%
 #                            sheet = "points_snap")
 files_folder <- "../../indice-mobilidade_dados"
 subfolder15 <- sprintf("%s/15_otp/", files_folder)
-write_delim(go, sprintf('%s/points/resumo_pontos_%s_%s.csv', subfolder15, hex_res, ano), delim = ';')
+write_delim(go, sprintf("%s/15_otp/02_points/resumo_pontos_%s_%s.csv", files_folder, hex_res, ano), delim = ';')
 
 
 

@@ -18,7 +18,7 @@ library(gmapsdistance) # Distance Matrix API
 # Recebe o .rds dos hexágonos e prepara uma matriz de origens e destinos
 preparar_matriz <- function(ano=2019, munis="all", resol=8){
   
-  ano <- 2019; resol <- 8; sigla_munis <- 'goi'
+  # ano <- 2019; resol <- 8; sigla_munis <- 'goi'
   
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
@@ -52,22 +52,15 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
       # Duplica id_hex
       mutate(hex_dest = id_hex) %>% 
       # Expand (cria todas as combinações de origens/destinos)
-      expand(id_hex, hex_dest) %>% 
-      filter(id_hex != hex_dest)
+      expand(id_hex, hex_dest)
     
     # Calcula as distâncias
     file_aux$distancia <- grid_distance(origin = file_aux$id_hex, destination = file_aux$hex_dest)
     
     # Junta no original
-    file <- 
-      file %>% 
-      dplyr::select(-(hex_dest)) %>%
-      left_join(file_aux, by= "id_hex")
-    
-    # Remove
-    rm(file_aux)
-    gc()
-    
+    file_aux <- 
+      file_aux %>%
+      left_join(file, by= "id_hex")
     
     
     # Preparando string:
@@ -102,7 +95,7 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
 #      dplyr::select(id_hex, sigla_muni, hex_dest, distancia, origem, destino)
     
     # Salvar
-     write_rds(file,
+     write_rds(file_aux,
                sprintf("%s/matriz_%s_0%s_%s.rds", save_folderA, sigla_munis, resol, ano), 
                compress = 'gz')
     #save(file, file=sprintf("%s/df_%s_0%s_%s.Rdata", save_folderA, sigla_munis, resol, ano))
@@ -118,7 +111,6 @@ preparar_matriz <- function(ano=2019, munis="all", resol=8){
 }
 
 # Preciso fazer um por um
-source('fun/setup.R')
 preparar_matriz(munis = "goi")
 
 

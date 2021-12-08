@@ -39,7 +39,7 @@ construir_graph_muni <- function(sigla_muni, ano, ano_pbf) {
 # aplicar funcao ------------------------------------------------------------------------------
 # lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, construir_graph_muni, ano = 2017)
 # lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, construir_graph_muni, ano = 2018)
-lapply(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, construir_graph_muni, ano = 2019)
+lapply(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, construir_graph_muni, ano = 2019, ano_pbf = 2021)
 
 
-construir_graph_muni(sigla_muni = 'tsa', ano = 2019, ano_pbf = 2021)
+# construir_graph_muni(sigla_muni = 'tsa', ano = 2019, ano_pbf = 2021)

@@ -8,7 +8,8 @@ source('fun/setup.R')
 source('fun/educacao/educacao.R')
 
 # ATENÇÃO: Os arquivos base para rodar este script devem ser baixados de forma
-# manual - ver 'fun/educacao/educacao.R' para mais detalhes
+# manual e inseridos na pasta de trabalho 05_censo_escolar/[ano]- ver 
+# 'fun/educacao/educacao.R' para mais detalhes
 
 # Atualizar anos na linha abaixo para criar as pastas para cada ano
 # lapply(X = 2017:2019, FUN = criar_pastas_censo_educacao)
