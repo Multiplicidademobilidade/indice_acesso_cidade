@@ -45,30 +45,10 @@ dir.create(sprintf("%s/%s", cras_files_folder, ano), recursive = TRUE, showWarni
 source('fun/cras/cras.R')
 
 # Aplicar funcao 
-# purrr::walk(.x = c('2017', '2018', '2019'), .f = cras_geocode)
-# Função modificada para rodar somente 2019 - ela também possui dois novos
-# argumentos referentes às pasta com os arquivos brutos originais e de saída
-cras_geocode(ano = ano, raw_data_folder = sprintf("%s/%s", cras_files_folder, ano), out_folder = cras_base_folder, run_gmaps = TRUE)
+cras_geocode(ano = ano, 
+             raw_data_folder = sprintf("%s/%s", cras_files_folder, ano), 
+             out_folder = cras_base_folder, 
+             run_gmaps = TRUE)
 
 
 
-# # trazer entao geocode ----------------------------------------------------
-# update_geocode_cras <- function(ano) {
-#   # abrir cras do ano
-#   cras <- fread(sprintf("%s/cras_%s.csv", subfolder8, ano))
-#   
-#   # abrir geocode
-#   cras_geocode <- fread(sprintf("%s/geocode_cras.csv", cras_base_folder))
-#   
-#   cras[cras_geocode, on = "code_cras",
-#        c("lon", "lat") :=
-#          list(i.lon, i.lat)]
-#   
-#   # output
-#   write_rds(cras, sprintf("%s/cras_%s_geocoded.rds", subfolder8, ano))
-# }
-
-
-# update_geocode_cras(2017)
-# update_geocode_cras(2018)
-# update_geocode_cras(2019)

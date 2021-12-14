@@ -5,11 +5,7 @@
 source('fun/setup.R')
 
 # carregar funcoes
-source('fun/saude/saude.R')
-
-# Aplicar funcao filtro
-# saude_filter(2019)
-source('fun/saude/saude2.R')
+# source('fun/saude/saude.R')
 
 # # Aplicar funcao geocode
 # # saude_geocode(2017)
@@ -20,3 +16,9 @@ source('fun/saude/saude2.R')
 # source("fun/filter_geocode.R")
 # # lapply(X=2017:2019, geocode_filter, "saude")
 # lapply(X = 2019, geocode_filter, "saude")
+
+# Montar base de dados do CNES de saúde
+source('fun/saude/saude2.R')
+
+# Rever georreferenciamento dos estabelecimentos
+source('fun/saude/saude3.R')

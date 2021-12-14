@@ -53,7 +53,7 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
     
     # identifica resolucao utilizada
     # res <- str_extract(endereco_grade, "\\d{2}(?=_)")
-    res <- '08'
+    res <- '08' # Mudar também na variável hex_res, fora da função
     
     # gera centroides e faz snap
     # suprime warnings de calculo de centroides com lat long
@@ -104,7 +104,7 @@ c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OT
 
 # Guardar estatísticas resumidas
 # go <- rbindlist(c(a, b, c))
-hex_res = "08"
+hex_res = "08" # Mudar no meio da função também
 go <- rbindlist(c(c))
 go <- go[res == hex_res]
 go <- go %>%

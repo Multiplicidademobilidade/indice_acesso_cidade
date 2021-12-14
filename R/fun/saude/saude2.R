@@ -1,7 +1,6 @@
 
-#' A funcao 'saude_filter':
-#' 1) Lê os dados da base do CNES e faz filtros selecionando as colunas de interesse
-#' 2) Faz filtros selecionando os municipios de interesse, hospitais publicos, 
+#' 1) Ler os dados da base do CNES e faz filtros selecionando as colunas de interesse
+#' 2) Fazer filtros selecionando os municipios de interesse, hospitais publicos, 
 #' faz refactor dos niveis de atendimento e retira hospitais indesejados
 
 # # Links para baixar as bases de dados
@@ -69,7 +68,9 @@ tb_estab <- read_delim(sprintf('%s/tbEstabelecimento202001.csv', cnes_files_fold
 # código dos municípios em munis_list
 cnes_estab <- 
   tb_estab %>% 
-  mutate(IBGE = str_sub(.$CO_UNIDADE, start = 1, end = 6), .after = 'CO_UNIDADE')
+  mutate(IBGE = str_sub(.$CO_UNIDADE, start = 1, end = 6), .after = 'CO_UNIDADE') %>% 
+  # Remover coluna vazia de CO_TIPO_UNIDADE
+  dplyr::select(-CO_TIPO_UNIDADE)
 
 # Remover bases temporárias
 rm(tb_estab)

@@ -42,6 +42,7 @@ criar_pastas_censo_educacao <- function(ano){
 
 educacao_filter <- function(ano, download = FALSE) {
   # Estrutura de pastas
+  # ano = 2019
   files_folder <- "../../indice-mobilidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
@@ -52,6 +53,7 @@ educacao_filter <- function(ano, download = FALSE) {
            fread, select = c("CO_ENTIDADE", "TP_DEPENDENCIA", "TP_ETAPA_ENSINO", 
                              "IN_REGULAR", "IN_PROFISSIONALIZANTE")) %>%
     rbindlist()
+  
   
   # selecionar somente matriculas regulares
   matriculas <- matriculas[IN_REGULAR == 1 | IN_PROFISSIONALIZANTE == 1]
@@ -272,6 +274,12 @@ educacao_juntar_geocode_inep <- function(ano_base) {
                                    TRUE ~ no_entidade)) %>% 
     # Descartar a coluna 'escola'
     dplyr::select(-escola)
+  
+  # Retirar duas escolas que estão com code_muni de Maceió mas que são das
+  # cidades de Marechal Deodoro e Rio Largo 
+  escolas_coords_out <- 
+    escolas_coords_out %>% 
+    filter(co_entidade != 27036731 & co_entidade != 27038629)
   
   
   write_rds(escolas_coords_out, sprintf("%s/educacao_%s_filter_geocoded.rds", subfolder5, ano), compress = 'gz')

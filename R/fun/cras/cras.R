@@ -65,7 +65,7 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
                                        munis_info,
                                        all.x = TRUE,
                                        by = 'code_muni')
-  head(cras, 3)
+  # head(cras, 3)
   
   
   # Recodifica tipo de logradouro e indicador de Cadastramento no CADUnico
@@ -166,7 +166,7 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
     mutate(cras_rep = n()) %>%
     ungroup()
   
-  # Indicador se geocode está ok
+  # Indicador se geocode está ok - check == 0 significa que precisa rever geocode
   setDT(cras_fixed)[, check := ifelse(ndigitos <= 2 | cras_rep > 1, 0, 1)]
   table(cras_fixed$check)
   
@@ -177,91 +177,53 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
                            all.x = TRUE,
                            by = 'code_cras')
   
-  
-  # --------------------------------------------
-  # Esta seção precisa de revisão
-  # --------------------------------------------
-  # O arquivo original do IPEA criava um cras_wrong sem as colunas de lon e lat e
-  # assumia a pré-existência de um arquivo geocode_cras.csv. A falta das colunas
-  # de latlong fazia com que a checagem de cras_ok desse erro - a solução por
-  # enquanto foi criar cras_wrong com colunas de lat e lon == NA, o que faz
-  # com que elas sempre sejam NA. O código atual também faz a criação do arquivo
-  # .rds logo após rodar o Google Maps e verificar que o arquivo 'geocode_cras.csv'
-  # ainda não existe. Originalmente, ele era criado depois no script 1.7 - 
-  # supostamente, o arquivo que resultava daqui não teria os latlongs, que
-  # ficariam todos no arquivo 'geocode_cras.csv' e seriam anexados a ele. No
-  # momento de atualizar o indicador para os próximos anos, é preciso rever
-  # esta parte do código como um todo.
-  
-  intermediate <- cras[check == 1, .(code_cras,name_suas,email,telefone,code_muni,endereco,bairro,cep,name_muni,abrev_estado,lon,lat)]
-  cras_wrong <- cras[check == 0, .(code_cras,name_suas,email,telefone,code_muni,endereco,bairro,cep,name_muni,abrev_estado,lon = NA,lat = NA)]
-  
-  
-  
+
   # 5) Geocode CRAS defeituosos --------------------------------------------
   
-  # Verifica se algum CRAS defeituoso já foi geocodificado em anos anteriores
+  # Quais linhas estão ok?
+  intermediate <- cras[check == 1, .(code_cras,name_suas,email,telefone,code_muni,endereco,bairro,cep,name_muni,abrev_estado,lon,lat)]
+  # Quais linhas precisam de revisão (check == 0)?
+  # Estas linhas vão ser criadas sem as colunas de latlong, que virão do gmaps
+  cras_wrong <- cras[check == 0, .(code_cras,name_suas,email,telefone,code_muni,endereco,bairro,cep,name_muni,abrev_estado)]
   
-  # Lê historico de todos CRAS que estiveram errados e que um dia foram corrigidos
-  if ('geocode_cras.csv' %in% list.files(out_folder, recursive = FALSE, full.names = FALSE)){
-    # Se arquivo existe, dar merge com cras_wrong
-    message('Arquivo geocode_cras.csv encontrado em ', out_folder)
-    geocode_hist <- data.table::fread(sprintf('%s/geocode_cras.csv', out_folder))
-    # Merge com CRAS defeituosos
-    cras_wrong <- merge.data.table(cras_wrong, geocode_hist, all.x = TRUE, by = 'code_cras')
-  } else {
-    message('Arquivo geocode_cras.csv não presente na pasta ', out_folder)
-  }
   
-  # CRAS que ja foram corrigidos em rodadas passadas
-  cras_ok <- cras_wrong[!is.na(lat)]
-  
-  # Input geocode dos CRAS que ainda nao foram corrigidos
-  input_geocode <- cras_wrong[is.na(lat)]
-  
-  # prepara string de endereços - input para google maps
-  input_geocode[, input := 
-               paste(paste(paste(paste(endereco, bairro,sep = " - "),name_muni, sep=", "),abrev_estado,sep=" - "),cep,sep=", CEP ")]
-  
-  # lista de enderecos com problema
-  input <- input_geocode$input
+  # Criar coluna de endereço para geocode
+  cras_wrong <- 
+    cras_wrong %>% 
+    mutate(end_geocode = sprintf('%s - %s, %s - %s, CEP %s', endereco, bairro, name_muni, abrev_estado, cep))
   
   # registrar Google API Key
   my_api <- data.table::fread("../../api.txt", header = FALSE)
   register_google(key = my_api$V1)
   
   if (run_gmaps) {
-      message("Running gmaps, this may take a while")
+    message("Rodando gmaps, pode demorar um pouco...\n")
+    
+    # Fazer o geocode usando o ggmap e a coluna 'end_geocode'
+    geocode_ggmap <- geocode(location = cras_wrong$end_geocode, output = "more", source = "google")
       
-      coords_google <- lapply(input,geocode) %>% data.table::rbindlist()
-      
-      input_geocode <- input_geocode[, -c('lat', 'lon')] %>% dplyr::bind_cols(coords_google) %>% dplyr::select(-input)
-      
-      cras_ano <- dplyr::bind_rows(intermediate, cras_ok, input_geocode) %>% setDT(key = 'code_cras')
+    # Simplificar geocode_ggmap para juntar ao cras_wrong
+    geocode_ggmap <- geocode_ggmap %>% dplyr::select(c(lat, lon))
+    
+    # Juntar novo georreferenciamento ao cras_wrong
+    cras_wrong <- cras_wrong %>% dplyr::select(-end_geocode) %>% cbind(geocode_ggmap)
+     
+    # Juntar tudo em um único dataframe de saída 
+    cras_ano <- intermediate %>% rbind(cras_wrong)
       
   } else {
       
     # Arquivo final
-    cras_ano <- dplyr::bind_rows(intermediate, cras_ok) %>% setDT(key = 'code_cras')
+    message("\nAviso:")
+    message("O arquivo final exportado EXCLUI as linhas que estavam com problema no georreferenciamento.")
+    message("Considere rodar o script novamente com a opção run_gmaps = TRUE.\n")
+    cras_ano <- intermediate
     
     }
     
-     # 6) arquivos Finais  --------------------------------------------
   
-    # Update do histórico de geocode
-    if ('geocode_cras.csv' %in% list.files(out_folder, recursive = FALSE, full.names = FALSE)){
-      update <- cras_ano[code_cras %nin% geocode_hist$code_cras,.(code_cras,lon,lat)]
-      geocode_hist_final <- dplyr::bind_rows(geocode_hist, update) %>% setDT(key = 'code_cras')
-      # Salva arquivo atualizado
-      data.table::fwrite(geocode_hist_final, sprintf("%s/geocode_cras.csv", out_folder))
-    } else {
-      # Salva arquivo com geocodes na primeira versão
-      data.table::fwrite(cras_ano, sprintf("%s/geocode_cras.csv", out_folder))
-      write_rds(cras, sprintf("%s/%s/cras_%s_geocoded.rds", out_folder, ano, ano))
-    }
-    
-    # Salva arquivos
-    data.table::fwrite(cras_ano, sprintf("%s/%s/cras_%s.csv", out_folder, ano, ano))
+  # 6) Salvar arquivo final  --------------------------------------------
+  write_rds(cras_ano, sprintf("%s/%s/cras_%s_geocoded.rds", out_folder, ano, ano))
     
     
   }
