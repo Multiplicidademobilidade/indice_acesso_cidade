@@ -12,7 +12,7 @@ source('fun/setup.R')
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
 
-gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
+gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
   
   # sigla_muni <- "oco"; ano <- 2019
   
@@ -51,10 +51,6 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
         edu_total > 0
     ]
     
-    # identifica resolucao utilizada
-    # res <- str_extract(endereco_grade, "\\d{2}(?=_)")
-    res <- '08' # Mudar também na variável hex_res, fora da função
-    
     # gera centroides e faz snap
     # suprime warnings de calculo de centroides com lat long
     suppressWarnings(
@@ -78,12 +74,12 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
     snaps <- snaps[, .(id_hex, X = lon, Y = lat)]
     
     # salva resultado
-    arquivo_resultado <- sprintf('%s/points_%s_%s_%s.csv', subfolder15B, sigla_muni, res, ano)
+    arquivo_resultado <- sprintf('%s/points_%s_%s_%s.csv', subfolder15B, sigla_muni, hres, ano)
     data.table::fwrite(snaps, arquivo_resultado)
     
     resumo <- data.frame(sigla_muni = sigla_muni,
                          ano = ano,
-                         res = res,
+                         res = hres,
                          points_r5 = antes,
                          points_out = depois)
   }
@@ -97,14 +93,14 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
 }
 
 # Rodar a função
-ano = 2019
+ano <- 2019; res <- "08" # resolução do hexágono
 # a <- lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, gerar_pontos_OTP_muni, ano = 2017)
 # b <- lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, gerar_pontos_OTP_muni, ano = 2018)
-c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OTP_muni, ano = ano)
+c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OTP_muni, ano = ano, hres = res)
 
 # Guardar estatísticas resumidas
 # go <- rbindlist(c(a, b, c))
-hex_res = "08" # Mudar no meio da função também
+
 go <- rbindlist(c(c))
 go <- go[res == hex_res]
 go <- go %>%
