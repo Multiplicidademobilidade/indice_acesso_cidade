@@ -9,7 +9,7 @@ source('fun/setup.R')
 #' A funcao `agrupar_variaveis_hex` agrega as variáveis de emprego, educação, 
 #' saúde e demográficas das grades estísticas para os hexágonos de cada cidade
 
-agrupar_variaveis_hex <- function(ano, munis = "all") {
+agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
@@ -26,7 +26,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
   
   # 1.1) Saude
   # cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocoded_gmaps_gquality_corrected2.rds", subfolder6, ano)) 
-  cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocoded.rds", subfolder6, ano)) 
+  cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocode_revisto_gmaps_duas_etapas.rds", subfolder6, ano)) 
   
   # selecionar colunas
   cnes_data <- cnes_data %>% dplyr::select(cnes = CO_CNES, 
@@ -96,7 +96,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
     
     # Resoluções disponíveis
     # res <- c("08", "09")
-    res <- c("08")
+    # res <- c("08")
     
     # Pegar endereco das grades e hexágonos em todas resoluções
     grade_file <- sprintf("%s/grade_renda_cor_%s_%s.rds", subfolder13, sigla_muni, ano)
@@ -323,7 +323,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all") {
 
 # aplicar funcao -----------------
 # agrupar_variaveis_hex(ano = 2019, munis = 'vta')
-agrupar_variaveis_hex(ano = 2019, munis = 'all')
+agrupar_variaveis_hex(ano = 2019, munis = 'all', res = '08') # res pode ser uma lista: c('07', '08')
 
 
 

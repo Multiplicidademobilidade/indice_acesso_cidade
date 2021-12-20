@@ -51,8 +51,8 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
   max_walk_dist <- 1000   # meters
   max_trip_duration <- 180 # minutes
-  max_trip_duration_walk <- 60 # minutes
-  max_trip_duration_bike <- 90 # minutes
+  max_trip_duration_walk <- 30 # minutes
+  max_trip_duration_bike <- 30 # minutes
   departure_pico <- paste0(date, " 06:00:00")
   departure_fpico <- paste0(date, " 14:00:00")
   departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")

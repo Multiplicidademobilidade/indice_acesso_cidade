@@ -31,7 +31,7 @@ identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano, res = '0
   ttmatrix_teste <- ttmatrix_allmodes[mode == "bike"]
   
   
-  # abrir os pontos da resolucao 08 ~~~~
+  # abrir os pontos da resolucao 'res' ~~~~
   points_file <- sprintf("%s/points_%s_%s_%s.csv", subfolder15B, sigla_muni, res, ano)
   points <- fread(points_file)
   

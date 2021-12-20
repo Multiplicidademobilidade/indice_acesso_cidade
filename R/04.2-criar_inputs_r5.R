@@ -12,7 +12,7 @@ source('fun/setup.R')
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
 
-gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
+gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
   
   # sigla_muni <- "oco"; ano <- 2019
   
@@ -26,7 +26,7 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
   # status message
   message("Trabalhando na cidade ", sigla_muni, " no ano ", ano, "\n")
   
-  # lista grades relativas ao municipio - um arquivo para res. 8 e outro pra 9
+  # lista grades relativas ao municipio - um arquivo para res. 8 e outro pra 7
   grades_muni <- paste0(subfolder14, "/",
                         list.files(paste0(subfolder14), pattern = sigla_muni))
   
@@ -51,6 +51,9 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
         edu_total > 0
     ]
     
+    # identifica resolucao utilizada
+    res <- str_extract(endereco_grade, "0\\d{1}(?=_)")
+    
     # gera centroides e faz snap
     # suprime warnings de calculo de centroides com lat long
     suppressWarnings(
@@ -74,12 +77,12 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
     snaps <- snaps[, .(id_hex, X = lon, Y = lat)]
     
     # salva resultado
-    arquivo_resultado <- sprintf('%s/points_%s_%s_%s.csv', subfolder15B, sigla_muni, hres, ano)
+    arquivo_resultado <- sprintf('%s/points_%s_%s_%s.csv', subfolder15B, sigla_muni, res, ano)
     data.table::fwrite(snaps, arquivo_resultado)
     
     resumo <- data.frame(sigla_muni = sigla_muni,
                          ano = ano,
-                         res = hres,
+                         res = res,
                          points_r5 = antes,
                          points_out = depois)
   }
@@ -92,28 +95,40 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano, hres = '08') {
   
 }
 
+
+guardar_resumo <- function(resolution, ano, df){
+  print(resolution)
+  go_out <- df %>% filter(res == resolution)
+  go_out <- go_out %>%
+    mutate(points_perc = points_out/points_r5) %>%
+    rename(points_total = points_r5,
+           points_r5 = points_out)
+  
+  # googlesheets4::write_sheet(data = go,
+  #                            ss = "https://docs.google.com/spreadsheets/d/11pIp1Ioiua7NWDp41DKXMMWI_3JvmzonhNMoNpvR1aE/edit#gid=215944254",
+  #                            sheet = "points_snap")
+  files_folder <- "../../indice-mobilidade_dados"
+  subfolder15 <- sprintf("%s/15_otp/", files_folder)
+  write_delim(go_out, sprintf("%s/15_otp/02_points/resumo_pontos_%s_%s.csv", files_folder, resolution, ano), delim = ';')
+  
+}
+
+
+# Definir ano base para função e resoluções para guardar estatísticas resumidas
+ano_base <- 2019; resolucoes = c('07', '08')
+
 # Rodar a função
-ano <- 2019; res <- "08" # resolução do hexágono
 # a <- lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, gerar_pontos_OTP_muni, ano = 2017)
 # b <- lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, gerar_pontos_OTP_muni, ano = 2018)
-c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OTP_muni, ano = ano, hres = res)
+c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OTP_muni, ano = ano_base)
 
 # Guardar estatísticas resumidas
 # go <- rbindlist(c(a, b, c))
-
 go <- rbindlist(c(c))
-go <- go[res == hex_res]
-go <- go %>%
-  mutate(points_perc = points_out/points_r5) %>%
-  rename(points_total = points_r5,
-         points_r5 = points_out)
+lapply(resolucoes, guardar_resumo, ano = ano_base, df = go)
 
-# googlesheets4::write_sheet(data = go,
-#                            ss = "https://docs.google.com/spreadsheets/d/11pIp1Ioiua7NWDp41DKXMMWI_3JvmzonhNMoNpvR1aE/edit#gid=215944254",
-#                            sheet = "points_snap")
-files_folder <- "../../indice-mobilidade_dados"
-subfolder15 <- sprintf("%s/15_otp/", files_folder)
-write_delim(go, sprintf("%s/15_otp/02_points/resumo_pontos_%s_%s.csv", files_folder, hex_res, ano), delim = ';')
+
+
 
 
 
