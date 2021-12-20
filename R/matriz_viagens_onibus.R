@@ -25,7 +25,7 @@ preparar_matriz <- function(ano=2019, munis="all", resol=7){
   files_folder <- "../../indice-mobilidade_dados"
   #subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder10 <- sprintf("%s/10_matriz_viagens_onibus", files_folder)
+  subfolder10 <- sprintf("%s/16_matriz_viagens_onibus", files_folder)
   save_folderA <- sprintf("%s/%s/dataframes", subfolder10, ano)
   dir.create(save_folderA, recursive = TRUE, showWarnings = FALSE)
   
@@ -92,17 +92,11 @@ preparar_matriz <- function(ano=2019, munis="all", resol=7){
 }
 
 # Preciso fazer um por um
-files_folder = "../../indice-mobilidade_dados/10_matriz_viagens_onibus/2019/dataframes"
+files_folder = "../../indice-mobilidade_dados/16_matriz_viagens_onibus/2019/dataframes"
 
-preparar_matriz(munis = "ula")
 cidade <- "ula"
-
+preparar_matriz(munis = cidade)
 df <- read_rds(sprintf("%s/df_%s_07_2019.rds", files_folder, cidade))
-
-
-
-
-
 
 # ==================================
 
@@ -113,10 +107,10 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
   api_key <-  set.api.key("APIKEY") # Precisa da API KEY para funcionar
   
   # Criar estrutura de pasta
-  files_folder <- sprintf("../../indice-mobilidade_dados/XY_matriz_viagens_onibus/%s", ano)
+  files_folder <- sprintf("../../indice-mobilidade_dados/16_matriz_viagens_onibus/%s", ano)
   load_folder <- sprintf("%s/dataframes", files_folder)
   
-  if (ano %nin% list.dirs("../../indice-mobilidade_dados/XY_matriz_viagens_onibus", recursive = FALSE, full.names = FALSE)){
+  if (ano %nin% list.dirs("../../indice-mobilidade_dados/16_matriz_viagens_onibus", recursive = FALSE, full.names = FALSE)){
     dir.create(save_folderA)
   }
   
@@ -128,10 +122,6 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
     # Carregar dataframe
     file <- read_rds(sprintf("%s/df_%s_0%s_%s.rds", load_folder, sigla_munis, resol, ano))
     tic("Preparando strings")
-    
-    # Filtro de distância
-    file <- file %>%
-      dplyr::filter(distancia != 0 & distancia <= 5)
     
     # ===== PREPARANDO STRINGS =====
     # 1. Encontro o centro dos hexagonos
