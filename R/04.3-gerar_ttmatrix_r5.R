@@ -22,7 +22,7 @@ source('fun/setup.R')
 # sigla_muni <- 'rio-novo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
 
 
-calculate_ttmatrix <- function(sigla_muni, ano) {
+calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
   # sigla_muni <- "oco"; ano <- 2019
   
@@ -38,7 +38,7 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
   setup <- setup_r5(data_path = subfolder15A)
   
   # points
-  points <- fread(sprintf("%s/points_%s_08_2019.csv", subfolder15B, sigla_muni))
+  points <- fread(sprintf("%s/points_%s_%s_%s.csv", subfolder15B, sigla_muni, res, ano))
   colnames(points) <- c("id", "lon", "lat")
   
   # select date
@@ -46,7 +46,7 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
     date <- "2018-05-01"
   } else {
     # date <- selecionar_data_gtfs(sigla_muni, ano)
-    date <- "2019-05-08" # quarta-feira
+    date <- "2019-10-23" # quarta-feira
   }
   
   max_walk_dist <- 1000   # meters
@@ -90,7 +90,8 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
                                  mode = "WALK",
                                  departure_datetime = departure_datetime_pico,
                                  max_walk_dist = max_walk_dist,
-                                 max_trip_duration = max_trip_duration_walk)
+                                 max_trip_duration = max_trip_duration_walk,
+                                 walk_speed = 2.6) # com base em tabulações da OD 2007
   
   ttm_walk[, mode := "walk"]
   ttm_walk[, pico := 1]
@@ -101,7 +102,11 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
                                  destinations = points,
                                  mode = "BICYCLE",
                                  max_walk_dist = max_walk_dist,
-                                 max_trip_duration = max_trip_duration_bike)
+                                 max_trip_duration = max_trip_duration_bike,
+                                 # mantendo os padrões da função mas deixando
+                                 # os valores explícitos aqui
+                                 bike_speed = 12, 
+                                 max_lts = 2)
   
   ttm_bike[, mode := "bike"]
   ttm_bike[, pico := 1]
@@ -121,7 +126,7 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
   table(ttm$pico, useNA = 'always')
   
   # save ttmatrix/
-  fwrite(ttm, sprintf("%s/ttmatrix_%s_%s_r5.csv", subfolder15C, sigla_muni, ano))
+  fwrite(ttm, sprintf("%s/ttmatrix_%s_%s_%s_r5.csv", subfolder15C, sigla_muni, res, ano))
   
   
 }
@@ -135,4 +140,4 @@ calculate_ttmatrix <- function(sigla_muni, ano) {
 #      calculate_ttmatrix, ano = 2018)
 
 walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni,
-     calculate_ttmatrix, ano = 2019)
+     calculate_ttmatrix, ano = 2019, res = '08')

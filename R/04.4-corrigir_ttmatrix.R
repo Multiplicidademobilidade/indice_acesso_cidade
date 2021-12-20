@@ -10,9 +10,9 @@ source('fun/setup.R')
 # que nao tenha menos que 10 hex de acess.
 
 
-sigla_muni <- 'cur'; ano <- 2019
+# sigla_muni <- 'cur'; ano <- 2019
 
-identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano) {
+identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano, res = '08') {
   
   # status message
   message('Woking on city ', sigla_muni, ' at year ', ano)
@@ -25,14 +25,14 @@ identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano) {
   dir.create(subfolder15D, recursive = TRUE, showWarnings = FALSE)
   
   # Abrir ttmatrix
-  ttmatrix_allmodes <- fread(sprintf("%s/ttmatrix_%s_%s_r5.csv", subfolder15C, sigla_muni, ano))
+  ttmatrix_allmodes <- fread(sprintf("%s/ttmatrix_%s_%s_%s_r5.csv", subfolder15C, sigla_muni, res, ano))
   
   # pegar so bike
   ttmatrix_teste <- ttmatrix_allmodes[mode == "bike"]
   
   
   # abrir os pontos da resolucao 08 ~~~~
-  points_file <- sprintf("%s/points_%s_08_%s.csv", subfolder15B, sigla_muni, ano)
+  points_file <- sprintf("%s/points_%s_%s_%s.csv", subfolder15B, sigla_muni, res, ano)
   points <- fread(points_file)
   
   
@@ -200,7 +200,7 @@ identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano) {
 
   
   # salvar output corrigido
-  write_rds(ttmatrix_hex_fim, sprintf("%s/ttmatrix_fix_%s_%s.rds", subfolder15D, sigla_muni, ano))
+  write_rds(ttmatrix_hex_fim, sprintf("%s/ttmatrix_fix_%s_%s_%s.rds", subfolder15D, sigla_muni, res, ano))
   
   
 }
@@ -208,4 +208,6 @@ identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano) {
 
 
 # aplicar funcao ------------------------------------------------------------------------------
-walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, identificar_e_corrigir_extremos_acess_muni, ano = 2019)
+walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, 
+     identificar_e_corrigir_extremos_acess_muni, 
+     ano = 2019, res = '08')
