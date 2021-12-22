@@ -98,13 +98,15 @@ cidade <- "ula"
 preparar_matriz(munis = cidade)
 df <- read_rds(sprintf("%s/df_%s_07_2019.rds", files_folder, cidade))
 
+
+
 # ==================================
 
 # faz a leitura do arquivo .Rdata localizado na pasta dataframes
 # aplica filtros de acordo com a distancia especificada
 # faz as requisições
 mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
-  api_key <-  set.api.key("APIKEY") # Precisa da API KEY para funcionar
+  api_key <-  set.api.key("AIzaSyCOH4rvtara3oRGNXx7gecSKFV7n5VFgr4") # Precisa da API KEY para funcionar
   
   # Criar estrutura de pasta
   files_folder <- sprintf("../../indice-mobilidade_dados/16_matriz_viagens_onibus/%s", ano)
@@ -154,7 +156,7 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
       mutate(destino = str_c(lat_dest, long_dest, sep='+'))  
     # Seleciona colunas
     file <- file %>%
-      dplyr::select(id_hex, sigla_muni, pop_total, hex_dest, distancia, origem, destino)
+      dplyr::select(id_hex, pop_total, hex_dest, distancia, origem, destino)
     
     toc()
     
@@ -172,7 +174,7 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
       mode = "transit", # transporte publico
       shape = 'long', # or long # shape = long parece fazer mais sentido
       #departure = 'now', # pico e fora-pico?
-      dep_date = "2021-12-31",
+      dep_date = "2021-12-29", # COlocar uma data em março/2022
       dep_time = "06:00:00",
       combinations = 'pairwise', # Faz o calculo linha a linha
       key = api_key))
@@ -203,7 +205,9 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
 
 }
 
-# Executar funcao
+# Executar funcao  ------------
 mapeamento_distance_matrix(ano=2019, munis="nat")
 
+files_folder = "../../indice-mobilidade_dados/16_matriz_viagens_onibus/2019"
+file <- read_rds(sprintf("%s/matriztp_nat_07_2019.rds", files_folder))
 
