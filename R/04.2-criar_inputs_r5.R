@@ -120,7 +120,7 @@ ano_base <- 2019; resolucoes = c('07', '08')
 # Rodar a função
 # a <- lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, gerar_pontos_OTP_muni, ano = 2017)
 # b <- lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, gerar_pontos_OTP_muni, ano = 2018)
-c <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni, gerar_pontos_OTP_muni, ano = ano_base)
+c <- lapply(munis_list$munis_metro[ano_metro == ano_base]$abrev_muni, gerar_pontos_OTP_muni, ano = ano_base)
 
 # Guardar estatísticas resumidas
 # go <- rbindlist(c(a, b, c))
