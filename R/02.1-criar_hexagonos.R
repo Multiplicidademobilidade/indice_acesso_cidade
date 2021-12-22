@@ -5,12 +5,15 @@
 # carregar bibliotecas
 source('fun/setup.R')
 
+
 #### 1) Funcao para criar hexagonos ------------
 
-criar_hexagonos <- function(ano, munis = "all") {
+criar_hexagonos <- function(ano, res = '08', munis = "all") {
   
   # Select the correspondent munis_df
   # munis_df <- get(sprintf("munis_df_%s", ano))
+  
+  # sigla_muni <- 'nat'; ano <- '2019'; res = '07'; resolution = as.numeric(res)
   
   shape_to_hexagon <- function(sigla_muni) {
     
@@ -21,12 +24,23 @@ criar_hexagonos <- function(ano, munis = "all") {
     dir.create(subfolder12, recursive = TRUE, showWarnings = FALSE)
     
     # Leitura do(s) municipio(s)
-    #muni <- readr::read_rds(sprintf("~/repos/acesso_oport/data-raw/municipios/%s/municipio_%s_%s.rds", 
-                                   #ano, sigla_muni, ano) ) %>%
-    muni <- 
-      readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano) ) %>%
-      # Buffer para extender a area do municipio e assim evitar que os hexagonos nao considerem areas de borda
-      st_buffer(dist = 0.003)
+    muni_orig <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano) )
+    
+    # Buffer para extender a área do município e evitar que os hexágonos não 
+    # considerem áreas de borda - vamos fazer um buffer bem grande e depois
+    # descartar os que não intersecionam com o shape do município
+    if (res == '07'){
+      muni <- muni_orig %>% st_buffer(dist = 3000)
+    } else if (res == '08') {
+      muni <- muni_orig %>% st_buffer(dist = 1200)
+    } else {
+      stop(sprintf("Buffer para a resolução %s não definido. Defina no código e volte a rodar o script", res))
+    }
+    
+    # # Checagem dos buffers e grids
+    # out_path <- '../../indice-mobilidade_dados/00_Originais'
+    # st_write(muni_orig, sprintf('%s/01_shape_municipio.gpkg', out_path), driver = 'GPKG', append = FALSE)
+    # st_write(muni, sprintf('%s/02_cidade_com_buffer.gpkg', out_path), driver = 'GPKG', append = FALSE)
     
     # mapview(muni)
     
@@ -34,9 +48,8 @@ criar_hexagonos <- function(ano, munis = "all") {
     # A Tabela de resoluções H3 pode ser encontrada em: https://h3geo.org/docs/core-library/restable
     # res_todas <- c(7, 8, 9)
     # resolution <- res_todas[2] 
-    # Vamos usar a resolução 8
-    res_todas <- c(8) 
-    resolution <- res_todas[1]
+    res_todas <- as.numeric(res)
+    # resolution <- res_todas[1]
     
     # Criar grades hexagonais
     make_hex <- function(resolution) {
@@ -49,9 +62,18 @@ criar_hexagonos <- function(ano, munis = "all") {
           hex_ids <- polyfill(muni, res = resolution, simple = TRUE)
           
           # pass the h3 ids to return the hexagonal grid
+          hex_grid <- hex_ids %>% h3_to_polygon(simple = FALSE) 
+          # # Checagem dos buffers e grids
+          # st_write(hex_grid, sprintf('%s/03_hexgrid_grande.gpkg', out_path), driver = 'GPKG', append = FALSE)
+          
+          # Filtrar somente os hexágonos que intersecionam com o shape do município
+          hex_grid <- hex_grid %>% filter(st_intersects(hex_grid, muni_orig, sparse = FALSE))
+          # # Checagem dos buffers e grids
+          # st_write(hex_grid, sprintf('%s/04_hexgrid_filtrado.gpkg', out_path), driver = 'GPKG', append = FALSE)
+          
+          # Ajustes finais no hex_grid para exportar
           hex_grid <- 
-            hex_ids %>%  
-            h3_to_polygon(simple = FALSE) %>%
+            hex_grid %>%
             rename(id_hex = h3_address) %>%
             as_tibble() %>% 
             mutate(sigla_muni = sigla_muni)
@@ -63,6 +85,8 @@ criar_hexagonos <- function(ano, munis = "all") {
           
           # salvar ------------------------------------------------------------------
           write_rds(hex_grid, sprintf("%s/%s", subfolder12, out_file), compress = 'gz')
+          st_write(hex_grid, sprintf("%s/%s.gpkg", subfolder12, out_file), driver = 'GPKG', append = FALSE)
+          
           
       } else {
         message('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
@@ -89,5 +113,5 @@ criar_hexagonos <- function(ano, munis = "all") {
 
 
 #### 2) Aplicar funcao ------------
-criar_hexagonos(ano = 2019, munis = 'all')
+criar_hexagonos(ano = 2019, res = '08', munis = 'all')
 
