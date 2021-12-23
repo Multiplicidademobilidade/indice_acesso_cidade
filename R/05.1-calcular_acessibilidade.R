@@ -7,7 +7,7 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE --------------------------------------------------------------
 
-# sigla_muni <- "nat"; ano <- 2019; res <- '07'; BFCA <- FALSE
+sigla_muni <- "nat"; ano <- 2019; res <- '07'; BFCA <- FALSE
 
 
 calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
@@ -17,7 +17,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
+  subfolder14 <- sprintf("%s/14_hex_agrPegados/%s", files_folder, ano)
   subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
   subfolder16 <- sprintf("%s/16_ttmatrix_motorizados/%s", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
@@ -29,8 +29,8 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   ttmatrix_ativos <- readr::read_rds(sprintf('%s/ttmatrix_fix_%s_%s_%s.rds',
                                              subfolder15D, sigla_muni, res, ano))
   
-  # traz os tempos dos modos coletivos em segundos, calculados pelo gmaps
-  ttmatrix_motorizados <- 
+  # traz os tempos do modo ônibus em segundos, calculados pelo gmaps
+  ttmatrix_onibus <- 
     readr::read_rds(sprintf('%s/matriztp_%s_%s_%s.rds',
                             subfolder16, sigla_muni, res, ano)) %>% 
     # Padronizar nomes das colunas e ajeitar dados para rbind()
@@ -40,14 +40,27 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
                   mode = 'transit',
                   pico = 1,
                   city = sigla_muni,
-                  ano = ano) %>% 
-    dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia, 
-                     Time.Time, Distance.Distance, Status.status))
+                  ano = ano) #%>% 
+    # dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia, 
+    #                  Time.Time, Distance.Distance, Status.status))
   
-  # TODO - importar matriz de tempo de automóveis
+  # traz os tempos médios do modo carro, calculados pela 99 a partir da média 
+  # de tempo das viagens iniciadas às 6h, 7h e 8h 
+  ttmatrix_carro <- 
+    readr::read_delim(sprintf('%s/ttmatrix_car_%s_%s_%s.csv',
+                              subfolder16, sigla_muni, res, ano), delim = ';') %>% 
+    # Padronizar nomes das colunas e ajeitar dados para rbind()
+    dplyr::mutate(origin = id_origem,
+                  destination = id_destino,
+                  travel_time = dur_minutes,
+                  mode = 'car',
+                  pico = 1,
+                  city = sigla_muni,
+                  ano = ano) %>% 
+    dplyr::select(-c(id_origem, id_destino, dur_minutes))
   
   # juntar todas as matrizes de tempo
-  ttmatrix <- ttmatrix_motorizados %>% rbind(ttmatrix_ativos)
+  ttmatrix <- ttmatrix_ativos %>% rbind(ttmatrix_onibus) %>% rbind(ttmatrix_carro)
   
   
   # o limite de tempo a ser observado para o cálculo das acessibilidades é

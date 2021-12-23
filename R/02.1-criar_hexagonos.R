@@ -20,6 +20,7 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
     # Estrutura de pastas
     files_folder <- "../../indice-mobilidade_dados"
     subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
+    subfolder11  <- sprintf("%s/11_malha_viaria/2021/%s", files_folder, sigla_muni)
     subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
     dir.create(subfolder12, recursive = TRUE, showWarnings = FALSE)
     
@@ -83,6 +84,75 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
           
           # mapview(select(hex_grid, geometry))
           
+          
+          # --------------------------------------------------------------------
+          #  Mover centróides dos hexágonos para ponto mais próximo no viário
+          # --------------------------------------------------------------------
+          
+          # hex_grid <- hex_grid %>% slice(10:10)
+          
+          # Abrir viário do municipio (rede OSM)
+          map_file <- sprintf("%s/%s_%s.osm.pbf", subfolder11, sigla_muni, ano)
+          viario_muni <- read_sf(map_file, 'lines')
+          
+          # Isolar somente tipos de ruas em que circulam veículos
+          # ver https://wiki.openstreetmap.org/wiki/Key:highway
+          non_road_types <- c('track', 'escape, ', 'raceway', 'footway', 
+                              'service', 'unclassified',
+                              'bridleway', 'steps', 'corridor', 'path', 
+                              'proposed', 'construction')
+          viario_muni <- viario_muni %>% filter(highway %nin% non_road_types & !is.na(highway))
+          
+          
+          # Pegar centróide do viário mais próximo ao centróide do hexágono
+          pegar_viario_mais_proximo <- function(hex_geom, muni_streets){
+            
+            # Calcular o centróide do hexágono
+            centroide <- st_centroid(hex_geom) %>% st_sfc(crs = 4326)
+            
+            # Recortar as ruas do shape do OSM que estão dentro do hexágono
+            ruas_recortadas <- muni_streets %>% filter(st_intersects(muni_streets, hex_geom, sparse = FALSE))
+            
+            # Pegar a via (feature) mais próxima ao centróide do hexágono - o
+            # resultado é o index da feature mais próxima
+            idx_vmp <- st_nearest_feature(centroide, ruas_recortadas)
+            # print(idx_vmp)
+            
+            if (is.na(idx_vmp)){
+              # Se viário não foi encontrado, criar ponto de latlong 0.0 como placeholder
+              geometry = st_sfc(st_point(c(0, 0)))
+              new_centroid <- st_sf(geometry, crs = 4326)
+              # Transformar em dataframe para padronizar resultados
+              new_centroid <- new_centroid %>% as.data.frame() %>% cbind(centroide)
+              
+            } else {
+              # Se foi encontrada, isolar linha com o feature mais próximo e pegar seu centróide
+              new_centroid <- ruas_recortadas %>% slice(idx_vmp:idx_vmp) %>% st_centroid()
+              # Transformar em dataframe para padronizar resultados
+              new_centroid <- new_centroid %>% dplyr::select(geometry) %>% as.data.frame() %>% cbind(centroide)
+              
+            }
+            # print(new_centroid)
+
+            return(new_centroid)
+            
+          }
+          
+          # Pegar coordenadas do ponto viário mais próximo aos centróides dos hexágonos
+          # e dos próprios centróides dos hexágonos
+          new_centroids <- 
+            lapply(hex_grid$geometry, pegar_viario_mais_proximo, muni_streets = viario_muni) %>% 
+            rbindlist() %>% 
+            setNames(c('ponto_viario', 'centroide'))
+          
+          # Juntar resultados ao hex_grid
+          hex_grid <- hex_grid %>% cbind(new_centroids)
+          
+          # Checar resultados
+          # hex_grid %>% as.data.frame() %>% dplyr::select(-c(geometry, ponto_viario)) %>% st_as_sf() %>% mapview()
+          # hex_grid %>% as.data.frame() %>% dplyr::select(-c(geometry, centroide)) %>% st_as_sf() %>% mapview()
+          
+          
           # salvar ------------------------------------------------------------------
           write_rds(hex_grid, sprintf("%s/%s", subfolder12, out_file), compress = 'gz')
           st_write(hex_grid, sprintf("%s/%s.gpkg", subfolder12, out_file), driver = 'GPKG', append = FALSE)
@@ -113,5 +183,5 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
 
 
 #### 2) Aplicar funcao ------------
-criar_hexagonos(ano = 2019, res = '08', munis = 'all')
+criar_hexagonos(ano = 2019, res = '07', munis = 'all')
 
