@@ -7,7 +7,7 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE --------------------------------------------------------------
 
-sigla_muni <- "nat"; ano <- 2019; res <- '07'; BFCA <- FALSE
+# sigla_muni <- "nat"; ano <- 2019; res <- '07'; BFCA <- FALSE
 
 
 calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
@@ -17,7 +17,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
-  subfolder14 <- sprintf("%s/14_hex_agrPegados/%s", files_folder, ano)
+  subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
   subfolder16 <- sprintf("%s/16_ttmatrix_motorizados/%s", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
@@ -40,9 +40,9 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
                   mode = 'transit',
                   pico = 1,
                   city = sigla_muni,
-                  ano = ano) #%>% 
-    # dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia, 
-    #                  Time.Time, Distance.Distance, Status.status))
+                  ano = ano) %>% 
+    dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia,
+                     Time.Time, Distance.Distance, Status.status))
   
   # traz os tempos médios do modo carro, calculados pela 99 a partir da média 
   # de tempo das viagens iniciadas às 6h, 7h e 8h 
@@ -64,8 +64,9 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   
   
   # o limite de tempo a ser observado para o cálculo das acessibilidades é
-  # de 30 min - descartar todas as linhas com travel_time maior do que isso
-  ttmatrix <- ttmatrix %>% filter(travel_time <= 30)
+  # de 60 min - descartar todas as linhas com travel_time maior do que isso.
+  # Para modos ativos, o limite será 30 min, mas este filtro será feito adiante
+  ttmatrix <- ttmatrix %>% filter(travel_time <= 60)
 
   
   
@@ -188,8 +189,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
     # cras
     "CT")
   # criar dummy para tt
-  # tt <- c(1, 2, 3, 4)
-  tt <- c(1, 2)
+  tt <- c(1, 2, 3, 4)
   
   # Grid resulta em:
   #  acess_sigla- atividade_sigla - tt_sigla - tt_tp - tt_ativo - junto_tp - junto_ativo - atividade_nome
@@ -201,16 +201,19 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
     mutate(tt_tp = case_when(
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
+      tt_sigla == 3 ~ 45,
+      tt_sigla == 4 ~ 60,
       # tt_sigla == 1 ~ 30,
       # tt_sigla == 2 ~ 60,
       # tt_sigla == 3 ~ 90,
       # tt_sigla == 4 ~ 120
     )) %>%
     mutate(tt_ativo = case_when(
+      # Linhas para tt_ativo com tempos maiores do que 30 serão retiradas depois
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
-      # tt_sigla == 3 ~ 45,
-      # tt_sigla == 4 ~ 60
+      tt_sigla == 3 ~ 45,
+      tt_sigla == 4 ~ 60
     )) %>%
     mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
     mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
@@ -261,46 +264,24 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   to_make_cma_ativo <- setNames(codigo_cma_ativo, sub('^([[:alnum:]]*) =.*', '\\1', codigo_cma_ativo))
   
   
-  # so aplicar a acessibilidade para os modos da cidade
-  # modo_year <- sprintf("modo_%s", ano)
-  modo <- munis_list$munis_modo[abrev_muni == sigla_muni & ano_modo == ano]$modo # todos
+  # aplicar a acessibilidade para os modos da cidade
   
-  # if (modo == "todos") {
+  # para transporte publico e carro
+  acess_cma_tp <- ttmatrix[mode %in% c("transit", "car"),
+                           lapply(to_make_cma_tp, function(x) eval(parse(text = x)))
+                           , by=.(city, mode, origin, pico, quintil, decil)]
   
-    # para transporte publico e carro
-    acess_cma_tp <- ttmatrix[mode %in% c("transit", "car"),
-                             lapply(to_make_cma_tp, function(x) eval(parse(text = x)))
-                             , by=.(city, mode, origin, pico, quintil, decil)]
-    
-    # para modos ativos
-    acess_cma_ativo <- ttmatrix[mode %in% c("bike", "walk"), 
-                                lapply(to_make_cma_ativo, function(x) eval(parse(text = x)))
-                                , by=.(city, mode, origin, pico, quintil, decil)]
-    
-    # juntar os cma
-    acess_cma <- rbind(acess_cma_tp, acess_cma_ativo,
-                       fill = TRUE)
-    
-    # } else {
-    #   
-    #   
-    #   # para  carro
-    #   acess_cma_carro <- ttmatrix[mode %in% c("car"),
-    #                            lapply(to_make_cma_tp, function(x) eval(parse(text = x)))
-    #                            , by=.(city, mode, origin, pico, quintil, decil)]
-    #   
-    #   # so para modos ativos
-    #   acess_cma_ativo <- ttmatrix[, 
-    #                         lapply(to_make_cma_ativo, function(x) eval(parse(text = x)))
-    #                         , by=.(city, mode, origin, pico, quintil, decil)]
-    #   
-    #   # rbind
-    #   acess_cma <- rbind(acess_cma_carro, acess_cma_ativo,
-    #                      fill = TRUE)
-    #   
-# }
+  # para modos ativos
+  acess_cma_ativo <- ttmatrix[mode %in% c("bike", "walk"), 
+                              lapply(to_make_cma_ativo, function(x) eval(parse(text = x)))
+                              , by=.(city, mode, origin, pico, quintil, decil)]
   
   
+  # Transformar todos os valores das colunas 45 e 60 para NA nos modos ativos
+  # acess_cma_ativo <- acess_cma_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
+  
+  # juntar os cma
+  acess_cma <- rbind(acess_cma_tp, acess_cma_ativo, fill = TRUE)
   
   
   
@@ -312,8 +293,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
                      "PB", "PA", "PI", "PN", 
                      "I1", "I2", "I3", "I4", "I5", "I6", "I7")
   # criar dummy para tt
-  # tt <- c(1, 2, 3, 4)
-  tt <- c(1, 2)
+  tt <- c(1, 2, 3, 4)
   
   # acess_sigla atividade_sigla tt_sigla tt_tp tt_ativo junto_tp junto_ativo atividade_nome
   # CMP         PT              1        30    15       CMPPT30  CMPPT15     pop_total
@@ -323,16 +303,19 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
     mutate(tt_tp = case_when(
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
+      tt_sigla == 3 ~ 45,
+      tt_sigla == 4 ~ 60,
       # tt_sigla == 1 ~ 30,
       # tt_sigla == 2 ~ 60,
       # tt_sigla == 3 ~ 90,
       # tt_sigla == 4 ~ 120
     )) %>%
     mutate(tt_ativo = case_when(
+      # Linhas para tt_ativo com tempos maiores do que 30 serão retiradas depois
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
-      # tt_sigla == 3 ~ 45,
-      # tt_sigla == 4 ~ 60
+      tt_sigla == 3 ~ 45,
+      tt_sigla == 4 ~ 60
     )) %>%
     mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
     mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
@@ -380,9 +363,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   to_make_cmp_ativo <- setNames(codigo_cmp_ativo, sub('^([[:alnum:]]*) =.*', '\\1', codigo_cmp_ativo))
   
   
-  # so aplicar a acessibilidade para os modos da cidade
-  
-  # if (modo == "todos") {
+  # aplicar a acessibilidade para os modos da cidade
   
   # para transporte publico e carro
   acess_cmp_tp <- ttmatrix[mode %in% c("transit", "car"),
@@ -395,25 +376,12 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
                               , by=.(city, mode, destination, pico)]
   
   
+  # Transformar todos os valores das colunas 45 e 60 para NA nos modos ativos
+  # acess_cmp_ativo <- acess_cmp_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
+  
   # juntar os cmp
   acess_cmp <- rbind(acess_cmp_tp, acess_cmp_ativo, fill = TRUE)  
   
-  # } else {
-  #   
-  #   # para carro
-  #   acess_cmp_car <- ttmatrix[mode %in% c("car"),
-  #                             lapply(to_make_cmp_tp, function(x) eval(parse(text = x)))
-  #                             , by=.(city, mode, destination, pico)]
-  #   
-  #   # so para modos ativos
-  #   acess_cmp_ativo <- ttmatrix[, 
-  #                               lapply(to_make_cmp_ativo, function(x) eval(parse(text = x)))
-  #                               , by=.(city, mode, destination, pico)]
-  #   
-  #   # juntar os acess
-  #   acess_cmp <- rbind(acess_cmp_car, acess_cmp_ativo, fill = TRUE)  
-  #   
-  # }
   
   
   # 5) Calcular acessibilidade tempo minimo ---------------
@@ -454,6 +422,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   acess_tmi <- ttmatrix[, lapply(to_make_tmi, function(x) eval(parse(text = x)))
                         , by=.(city, mode, origin, pico)]
   
+  
   # hexagonos_sf <- st_sf(hexagonos_sf)
   # 
   # ggplot() + geom_sf(data=hexagonos_sf ,fill='gray') +
@@ -475,8 +444,8 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
                      "MT", "MI", "MF", "MM")
   
   # criar dummy para tt
-  # tt_sigla <- c(1, 2, 3, 4)
-  tt_sigla <- c(1, 2)
+  tt_sigla <- c(1, 2, 3, 4)
+  
   
   grid_bfc <- expand.grid(acess_bfc, atividade_bfc, tt_sigla, stringsAsFactors = FALSE) %>%
     rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
@@ -484,6 +453,8 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
     mutate(tt = case_when(
       tt_sigla == 1 ~ 10,
       tt_sigla == 2 ~ 30,
+      tt_sigla == 3 ~ 45,
+      tt_sigla == 4 ~ 60,
       # tt_sigla == 1 ~ 10,
       # tt_sigla == 2 ~ 40,
       # tt_sigla == 3 ~ 100,
@@ -548,6 +519,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   # atividade <- "edu_total"
   calculate_bfc <- function(atividade) {
     
+    # atividade <- 'saude_total'
     
     # subset the grid of this activity
     grid_bfc1 <- filter(grid_bfc, atividade_nome == atividade)
