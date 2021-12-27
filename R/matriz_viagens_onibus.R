@@ -1,21 +1,22 @@
 
 # Esse script contem duas funções:
 
-# A primeira pega a matriz de hexágonos e prepara um dataframe contendo todas as 
-# origens, destinos, distâncias e strings para a API. 
+# A primeira pega a matriz de hexagonos, prepara um dataframe contendo todas as 
+# origens, destinos e filtra de acordo com a distancia, populacao e oportunidades
+# Os resultados sao salvos num dataframe auxiliar
 
-# A segunda carrega o dataframe, pode aplicar os filtros que definirmos e faz as
-# requisições na API, salvando o resultado num novo .Rdata
+# A segunda carrega o dataframe auxiliar, transforma o latlong dos centroides em
+# uma string para a API e faz as requisicoes, salvando o arquivo ao final
 
 # A API Distance Matrix retorna:
 # Distancia (m), Tempo total (s) e Status (OK ou ROUTE_NOT_FOUND)
 
-# SETUP
+#### 0) Setup ------------
 source('fun/setup.R')
 library(gmapsdistance) # Distance Matrix API
 library(tictoc)
 
-
+#### 1) Funcao para preparar uma matriz de entrada ------------
 # Recebe o .rds dos hexágonos e prepara uma matriz de origens e destinos
 preparar_matriz <- function(ano=2019, munis="all", resol=7){
   
@@ -24,6 +25,7 @@ preparar_matriz <- function(ano=2019, munis="all", resol=7){
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   #subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
+  subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano) # Nao esta sendo utilizado
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolder10 <- sprintf("%s/16_matriz_viagens_onibus", files_folder)
   save_folderA <- sprintf("%s/%s/dataframes", subfolder10, ano)
@@ -98,54 +100,61 @@ cidade <- "ula"
 preparar_matriz(munis = cidade)
 df <- read_rds(sprintf("%s/df_%s_07_2019.rds", files_folder, cidade))
 
-
-
 # ==================================
+
+#### 2) Funcao para realizar as requisições na API ------------
 
 # faz a leitura do arquivo .Rdata localizado na pasta dataframes
 # aplica filtros de acordo com a distancia especificada
 # faz as requisições
-mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
-  api_key <-  set.api.key("AIzaSyCOH4rvtara3oRGNXx7gecSKFV7n5VFgr4") # Precisa da API KEY para funcionar
+map_distance_matrix <- function(ano, munis="all", resol="07"){
+  api_key <-  set.api.key("API_KEY") # Precisa da API KEY para funcionar
   
   # Criar estrutura de pasta
-  files_folder <- sprintf("../../indice-mobilidade_dados/16_matriz_viagens_onibus/%s", ano)
-  load_folder <- sprintf("%s/dataframes", files_folder)
+  files_folder <- sprintf("../../indice-mobilidade_dados")
+  subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano) # É preciso carregar os hex_muni de novo para trazer os centroides corrigidos
+  subfolder16 <- sprintf("%s/16_matriz_viagens_onibus/%s", files_folder, ano)
+  df_folder <- sprintf("%s/dataframes", subfolder16)
   
   if (ano %nin% list.dirs("../../indice-mobilidade_dados/16_matriz_viagens_onibus", recursive = FALSE, full.names = FALSE)){
-    dir.create(save_folderA)
+    dir.create(subfolder16)
   }
   
-  if ("dataframes" %nin% list.dirs(files_folder, recursive = FALSE, full.names = FALSE)){
-    dir.create(save_folder)
+  if ("dataframes" %nin% list.dirs(subfolder16, recursive = FALSE, full.names = FALSE)){
+    dir.create(df_folder)
   }
 
   fazer_requisicao <- function(sigla_munis){
-    # Carregar dataframe
-    file <- read_rds(sprintf("%s/df_%s_0%s_%s.rds", load_folder, sigla_munis, resol, ano))
+    # Carregar dataframes
+    file <- read_rds(sprintf("%s/df_%s_%s_%s.rds", df_folder, sigla_munis, resol, ano)) 
     tic("Preparando strings")
+    # Teste com 5 linhas
+    #file <- head(file, 10)
     
-    # ===== PREPARANDO STRINGS =====
-    # 1. Encontro o centro dos hexagonos
+    file_aux <- read_rds(sprintf("%s/hex_%s_%s_%s.rds", subfolder12, sigla_munis, resol, ano))%>%
+      dplyr::select(id_hex, ponto_viario)%>%
+      st_drop_geometry()%>%
+      mutate(ponto_viario = ifelse(as.character(ponto_viario) == "c(0, 0)", h3_to_point(id_hex), ponto_viario))
+    
+    # Agora eu vou fazer dois joins, um pra origem e outro pra destino
     # Origem
     file <- file %>%
-      #mutate(center_orig = st_centroid(geometry))
-      mutate(center_orig = h3_to_point(id_hex))
+      left_join(file_aux, by="id_hex")%>%
+      rename(ponto_origem = ponto_viario)
     # Destino
     file <- file %>%
-      #mutate(geometry_dest = h3_to_polygon(hex_dest)) %>%
-      #mutate(center_dest = st_centroid(geometry_dest))
-      mutate(center_dest = h3_to_point(hex_dest))
+      left_join(file_aux, by = c("hex_dest" = "id_hex"))%>%
+      rename(ponto_destino = ponto_viario)
     
     # 2. Separo Lat e Long
     # Origem
     file <- file %>%
-      mutate(lat_orig = unlist(map(file$center_orig,2)),
-             long_orig = unlist(map(file$center_orig,1)))
+      mutate(lat_orig = unlist(map(file$ponto_origem,2)),
+             long_orig = unlist(map(file$ponto_origem,1)))
     #    # Destino
     file <- file %>%
-      mutate(lat_dest = unlist(map(file$center_dest,2)),
-             long_dest = unlist(map(file$center_dest,1)))
+      mutate(lat_dest = unlist(map(file$ponto_destino,2)),
+             long_dest = unlist(map(file$ponto_destino,1)))
     #    
     #    # 3. Junto numa string para o padrao da API
     #    # Origem
@@ -156,7 +165,11 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
       mutate(destino = str_c(lat_dest, long_dest, sep='+'))  
     # Seleciona colunas
     file <- file %>%
-      dplyr::select(id_hex, pop_total, hex_dest, distancia, origem, destino)
+      dplyr::select(id_hex, pop_total, oportunidades, hex_dest, distancia, origem, destino)
+    
+    # Para o problema de BHO, eliminou-se o hexágono da base
+#    file <- file %>% 
+#      dplyr::filter(id_hex != "87a881a58ffffff" & hex_dest != "87a881a58ffffff")
     
     toc()
     
@@ -173,21 +186,23 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
       destination = destination,
       mode = "transit", # transporte publico
       shape = 'long', # or long # shape = long parece fazer mais sentido
-      #departure = 'now', # pico e fora-pico?
-      dep_date = "2021-12-29", # COlocar uma data em março/2022
-      dep_time = "06:00:00",
+      #departure = 'now', 
+      dep_date = "2022-02-16", # dois meses no futuro parece ser o limite
+      dep_time = "07:00:00",~
       combinations = 'pairwise', # Faz o calculo linha a linha
       key = api_key))
     
     toc()
     
-    
+    # Seleciona e organiza colunas para salvar
     matriz <- merge(file, matriz, by.x = c("origem", "destino"), by.y = c("Time.or", "Time.de"))%>%
-      dplyr::select(-c(Distance.or, Distance.de, Status.or, Status.de))
+      dplyr::select(-c(Distance.or, Distance.de, Status.or, Status.de))%>%
+      dplyr::rename(distancia_hex = distancia, tempo_viagem = Time.Time, distancia_viagem = Distance.Distance, status = Status.status)%>%
+      dplyr::select(c(id_hex, pop_total, hex_dest, oportunidades, distancia_hex, origem, destino, tempo_viagem, distancia_viagem, status))
      
   # 4.0 Salvar
    write_rds(matriz, 
-             sprintf("%s/matriztp_%s_0%s_%s.rds", files_folder, sigla_munis, resol, ano), compress = 'gz')
+             sprintf("%s/matriztp_%s_%s_%s.rds", subfolder16, sigla_munis, resol, ano), compress = 'gz')
     #save(matriz, file=sprintf("%s/df_%s_0%s_%s.Rdata", files_folder, sigla_munis, resol, ano))
 
    return(matriz)
@@ -201,13 +216,12 @@ mapeamento_distance_matrix <- function(ano, munis="all", resol="7"){
   
   lapply(X = x, FUN = fazer_requisicao)
 
-
-
 }
 
 # Executar funcao  ------------
-mapeamento_distance_matrix(ano=2019, munis="nat")
+map_distance_matrix(ano=2019, munis="bho")
 
+# ==================================
 files_folder = "../../indice-mobilidade_dados/16_matriz_viagens_onibus/2019"
-file <- read_rds(sprintf("%s/matriztp_nat_07_2019.rds", files_folder))
+file <- read_rds(sprintf("%s/matriztp_bho_07_2019.rds", files_folder))
 
