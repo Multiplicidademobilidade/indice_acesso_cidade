@@ -10,9 +10,6 @@ source('fun/setup.R')
 
 criar_hexagonos <- function(ano, res = '08', munis = "all") {
   
-  # Select the correspondent munis_df
-  # munis_df <- get(sprintf("munis_df_%s", ano))
-  
   # sigla_muni <- 'nat'; ano <- '2019'; res = '07'; resolution = as.numeric(res)
   
   shape_to_hexagon <- function(sigla_muni) {
@@ -39,7 +36,7 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
     }
     
     # # Checagem dos buffers e grids
-    # out_path <- '../../indice-mobilidade_dados/00_Originais'
+    out_path <- '../../indice-mobilidade_dados/00_Originais'
     # st_write(muni_orig, sprintf('%s/01_shape_municipio.gpkg', out_path), driver = 'GPKG', append = FALSE)
     # st_write(muni, sprintf('%s/02_cidade_com_buffer.gpkg', out_path), driver = 'GPKG', append = FALSE)
     
@@ -73,12 +70,45 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
         # # Checagem dos buffers e grids
         # st_write(hex_grid, sprintf('%s/04_hexgrid_filtrado.gpkg', out_path), driver = 'GPKG', append = FALSE)
         
+        
+        # --------------------------------------------------------------------
+        #  Calcular centróides somente das áreas que estão no município
+        # --------------------------------------------------------------------
+        
+        # Pegar áreas dos hexágonos que intersecionam com shape do município
+        hex_muni <- hex_grid %>% st_intersection(muni_orig)
+        # st_write(hex_muni, sprintf('%s/05_hexmuni.gpkg', out_path), driver = 'GPKG', append = FALSE)
+        
+        # Calcular centróide somente para essas áreas
+        hex_muni_centroid <- hex_muni %>% st_centroid()
+        # st_write(hex_muni_centroid, sprintf('%s/06_hexmuni_centroid.gpkg', out_path), driver = 'GPKG', append = FALSE)
+        
+        # Alguns centróides podem ter caído fora do shape do município - separar
+        # os que caíram dentro dos que caíram fora
+        centroide_dentro_muni <- hex_muni_centroid %>% filter(st_intersects(hex_muni_centroid, muni_orig, sparse = FALSE))
+        centroide_fora_muni <- hex_muni_centroid %>% filter(!st_intersects(hex_muni_centroid, muni_orig, sparse = FALSE))
+        
+        # Para os que caíram fora, usar st_point_on_surface() em vez de st_centroid()
+        # https://stackoverflow.com/questions/52522872/r-sf-package-centroid-within-polygon
+        point_on_surface_fora_muni <- hex_muni %>% filter(hex_muni$h3_address %in% centroide_fora_muni$h3_address) %>% st_point_on_surface()
+        # st_write(point_on_surface_fora_muni, sprintf('%s/07_hexmuni_point_on_surface.gpkg', out_path), driver = 'GPKG', append = FALSE)
+        
+        # Juntar os dois resultados
+        centroides_muni <- 
+          centroide_dentro_muni %>% 
+          rbind(point_on_surface_fora_muni) %>% 
+          as.data.frame() %>% 
+          mutate(centroides_muni = as.character(geometry)) %>% 
+          dplyr::select(id_hex = h3_address, centroides_muni)
+        
+        
         # Ajustes finais no hex_grid para exportar
         hex_grid <- 
           hex_grid %>%
           rename(id_hex = h3_address) %>%
           as_tibble() %>% 
-          mutate(sigla_muni = sigla_muni)
+          mutate(sigla_muni = sigla_muni) %>% 
+          left_join(centroides_muni, by = 'id_hex')
         
         # delete possible duplicates
         hex_grid <- distinct(hex_grid, id_hex, .keep_all = TRUE) %>% st_sf()
@@ -87,13 +117,39 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
         
         
         # --------------------------------------------------------------------
-        #  Mover centróides dos hexágonos para ponto mais próximo no viário
+        #  Calcular pontos mais próximos do centróide no viário
         # --------------------------------------------------------------------
         # Rodar apenas quando a resolução for menor do que 8
         if (resolution < 8){
           # Abrir viário do municipio (rede OSM)
           map_file <- sprintf("%s/%s_%s.osm.pbf", subfolder11, sigla_muni, ano)
-          viario_muni <- read_sf(map_file, 'lines')
+          
+          # Arquivo de viário para o município pode ser muito grande e não ler 
+          # inteiro com o read_sf() abaixo. Em especial, isso vai acontecer com
+          # São Paulo - todos os arquivos de malha viária das cidades têm menos
+          # de 25 MB, enquanto o de SP tem quase 120 MB. Na dúvida, vamos ler
+          # todos esses arquivos como .gpkg para garantir que o viário seja lido
+          # em sua totalidade
+          # viario_muni <- read_sf(map_file, layer = 'lines') # não usar
+          
+          # Ler arquivos de viário como .gpkg. Sobre este tema, ver:
+          # https://github.com/ropensci/osmextract/issues/12
+          read_from_gpkg <- function(path) {
+            gpkg_file <- paste0(tempfile(), ".gpkg")
+            gdal_utils(
+              util = "vectortranslate",
+              source = path, 
+              destination = gpkg_file, 
+              options = c("-f", "GPKG", "lines")
+            )
+            res <- st_read(gpkg_file, quiet = TRUE)
+            names(res)[which(names(res) == "geom")] <- "geometry"
+            st_geometry(res) <- "geometry"
+            res
+          }
+          
+          viario_muni <- read_from_gpkg(map_file)
+          
           
           # Isolar somente tipos de ruas em que circulam veículos
           # ver https://wiki.openstreetmap.org/wiki/Key:highway
@@ -121,6 +177,9 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
           # Pegar centróide do viário mais próximo ao centróide do hexágono
           pegar_viario_mais_proximo <- function(hex_geom, muni_streets){
             
+            # hex_geom <- hex_grid %>% as.data.frame() %>% filter(id_hex == '87a810176ffffff') %>% dplyr::select(geometry) %>% pull()
+            # muni_streets = viario_muni
+            
             # Calcular o centróide do hexágono
             centroide <- st_centroid(hex_geom) %>% st_sfc(crs = 4326)
             
@@ -134,16 +193,29 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
             
             if (is.na(idx_vmp)){
               # Se viário não foi encontrado, criar ponto de latlong 0.0 como placeholder
-              geometry = st_sfc(st_point(c(0, 0)))
-              new_centroid <- st_sf(geometry, crs = 4326)
+              # geometry = st_sfc(st_point(c(0, 0)))
+              # new_centroid <- st_sf(geometry, crs = 4326)
               # Transformar em dataframe para padronizar resultados
-              new_centroid <- new_centroid %>% as.data.frame() %>% cbind(centroide)
+              # new_centroid <- new_centroid %>% as.data.frame() %>% cbind(centroide)
+              
+              # Retornar como dataframe, com as colunas de centróide e placeholder de ponto_viário como character
+              new_centroid <- 
+                as.data.frame(centroide) %>% 
+                mutate(ponto_viario = 'c(0, 0)', centroide = as.character(geometry)) %>% 
+                dplyr::select(-geometry)
               
             } else {
               # Se foi encontrada, isolar linha com o feature mais próximo e pegar seu centróide
               new_centroid <- ruas_recortadas %>% slice(idx_vmp:idx_vmp) %>% st_centroid()
-              # Transformar em dataframe para padronizar resultados
-              new_centroid <- new_centroid %>% dplyr::select(geometry) %>% as.data.frame() %>% cbind(centroide)
+              
+              # Retornar como dataframe, com as colunas de centróide e ponto_viário como character
+              new_centroid <- 
+                new_centroid %>% 
+                as.data.frame() %>% 
+                dplyr::select(ponto_viario = geometry) %>% 
+                cbind(centroide) %>% 
+                mutate(across(everything(), ~ as.character(.))) %>% 
+                rename(centroide = geometry)
               
             }
             # print(new_centroid)
@@ -156,8 +228,7 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
           # e dos próprios centróides dos hexágonos
           new_centroids <- 
             lapply(hex_grid$geometry, pegar_viario_mais_proximo, muni_streets = viario_muni) %>% 
-            rbindlist() %>% 
-            setNames(c('ponto_viario', 'centroide'))
+            rbindlist()
           
           # Juntar resultados ao hex_grid
           hex_grid <- hex_grid %>% cbind(new_centroids)
@@ -172,10 +243,14 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
             mutate(centroide = as.character(centroide),
                    centroide = str_replace(centroide, 'c\\(', ''),
                    centroide = str_replace(centroide, '\\)', ''),
+                   centroides_muni = as.character(centroides_muni),
+                   centroides_muni = str_replace(centroides_muni, 'c\\(', ''),
+                   centroides_muni = str_replace(centroides_muni, '\\)', ''),
                    ponto_viario = as.character(ponto_viario),
                    ponto_viario = str_replace(ponto_viario, 'c\\(', ''),
                    ponto_viario = str_replace(ponto_viario, '\\)', '')) %>%
             separate(centroide, into = c('long_centroide', 'lat_centroide'), sep = ', ', remove = TRUE) %>%
+            separate(centroides_muni, into = c('long_centroides_muni', 'lat_centroides_muni'), sep = ', ', remove = TRUE) %>%
             separate(ponto_viario, into = c('long_viario', 'lat_viario'), sep = ', ', remove = TRUE)
           
           write_delim(hex_grid_csv, sprintf("%s/%s.csv", subfolder12, out_file), delim = ';')

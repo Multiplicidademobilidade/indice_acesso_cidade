@@ -278,7 +278,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   
   
   # Transformar todos os valores das colunas 45 e 60 para NA nos modos ativos
-  # acess_cma_ativo <- acess_cma_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
+  acess_cma_ativo <- acess_cma_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
   
   # juntar os cma
   acess_cma <- rbind(acess_cma_tp, acess_cma_ativo, fill = TRUE)
@@ -377,7 +377,7 @@ calcular_acess_muni <- function(sigla_muni, ano, res = '08', BFCA = FALSE) {
   
   
   # Transformar todos os valores das colunas 45 e 60 para NA nos modos ativos
-  # acess_cmp_ativo <- acess_cmp_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
+  acess_cmp_ativo <- acess_cmp_ativo %>% mutate(across(matches('[46]'), ~replace(., is.numeric(.), NA)))
   
   # juntar os cmp
   acess_cmp <- rbind(acess_cmp_tp, acess_cmp_ativo, fill = TRUE)  
