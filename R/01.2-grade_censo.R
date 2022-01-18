@@ -71,8 +71,10 @@ criar_grade_muni_all <- function(ano, munis = "all") {
       write_rds(grade_muni, sprintf("%s/%s", subfolder3A, out_file), compress = 'gz')
       
     } else {
-        message('Arquivo para a cidade ', sigla, " já existe, pulando...\n")}
+        message('Arquivo para a cidade ', sigla, " já existe, pulando...\n")
     }
+    
+  }
 
   # Aplicar função
   if (munis == "all") {
