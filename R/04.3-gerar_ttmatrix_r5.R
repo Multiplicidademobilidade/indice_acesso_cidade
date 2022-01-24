@@ -7,24 +7,11 @@
 options(java.parameters = '-Xmx14G')
 library(r5r)
 source('fun/setup.R')
-# source("fun/selecionar_data_gtfs.R")
-
-
-# sigla_muni <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'poa'; ano <- 2019; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'for'; ano <- 2017
-# sigla_muni <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'spo'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'rio'; ano <- 2019; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'rio'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'rio'; ano <- 2018; modo <- c("WALK", "TRANSIT")
-# sigla_muni <- 'rio-novo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
 
 
 calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
-  # sigla_muni <- "oco"; ano <- 2019
+  # sigla_muni <- "spo"; ano <- 2019; res <- '07'
   
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
@@ -42,12 +29,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   colnames(points) <- c("id", "lon", "lat")
   
   # select date
-  if (sigla_muni == "spo" & ano == 2017) {
-    date <- "2018-05-01"
-  } else {
-    # date <- selecionar_data_gtfs(sigla_muni, ano)
-    date <- "2019-10-23" # quarta-feira
-  }
+  date <- "2019-10-23"
   
   max_walk_dist <- 1000   # meters
   max_trip_duration <- 180 # minutes
@@ -84,6 +66,83 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   # ttm_fpico[, mode := "transit"]
   # ttm_fpico[, pico := 0]
   
+  # Calcular para modo carro somente se resolução for abaixo de 8
+  if (strtoi(res) < 8){
+    # Criar faixas de horário para o cálculo de viagens de automóvel
+    car_times <- c(paste0(date, " 06:00:00"), paste0(date, " 06:30:00"),
+                   paste0(date, " 07:00:00"), paste0(date, " 07:30:00"), 
+                   paste0(date, " 08:00:00"), paste0(date, " 01:00:00"))
+    # car_times <- c(paste0(date, " 07:00:00"), paste0(date, " 14:30:00"), paste0(date, " 01:00:00"))
+    
+    # Calcular matriz de tempos de viagem para um horário específico de saída
+    calculate_car_times <- function(car_datetime){
+      # Transformar horários no formato POSIXct
+      start_date <- as.POSIXct(car_datetime, format = "%Y-%m-%d %H:%M:%S")
+      print(start_date)
+      
+      # Calcular tempos pelo r5r
+      tmp_car_matrix <- travel_time_matrix(r5r_core = setup,
+                                           origins = points,
+                                           destinations = points,
+                                           mode = "CAR",
+                                           departure_datetime = start_date,
+                                           max_trip_duration = 60,
+                                           verbose = FALSE) 
+      
+      r5r::stop_r5()
+      
+      return(tmp_car_matrix)
+    }
+    
+    
+    # Criar dataframe temporário para guardar resultados
+    tmp_df <- data.frame(fromId = character(),
+                         toId = character(),
+                         travel_time = numeric(),
+                         stringsAsFactors = FALSE)
+    
+    # Calcular para todas as faixas de tempo, atualizar resultados em tmp_df
+    for (car_time in car_times){
+      boo <- calculate_car_times(car_time)
+      tmp_df <- tmp_df %>% rbind(boo)
+    }
+  }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  # Calcular para modo carro somente se resolução for abaixo de 8
+  if (strtoi(res) < 8){
+    ttm_car <- travel_time_matrix(r5r_core = setup,
+                                  origins = points,
+                                  destinations = points,
+                                  mode = "CAR",
+                                  departure_datetime = departure_datetime_pico,
+                                  max_trip_duration = 60)
+    
+    ttm_car[, mode := "car_r5r"]
+    ttm_car[, pico := 1]
+  }
+  
   ttm_walk <- travel_time_matrix(r5r_core = setup,
                                  origins = points,
                                  destinations = points,
@@ -113,7 +172,11 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
   # juntar matrizes
   # ttm <- rbind(ttm_pico, ttm_fpico, ttm_walk, ttm_bike)
-  ttm <- rbind(ttm_walk, ttm_bike)
+  if (strtoi(res) < 8){
+    ttm <- rbind(ttm_walk, ttm_bike, ttm_car)
+  } else {
+    ttm <- rbind(ttm_walk, ttm_bike)
+  }
   
   # rename columns
   ttm <- ttm %>% rename(origin = fromId, destination = toId) %>% setDT()

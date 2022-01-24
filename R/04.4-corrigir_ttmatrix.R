@@ -10,7 +10,7 @@ source('fun/setup.R')
 # que nao tenha menos que 10 hex de acess.
 
 
-# sigla_muni <- 'cur'; ano <- 2019
+# sigla_muni <- 'nat'; ano <- 2019; res = '07'
 
 identificar_e_corrigir_extremos_acess_muni <- function(sigla_muni, ano, res = '08') {
   

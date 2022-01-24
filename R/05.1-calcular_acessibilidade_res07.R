@@ -26,7 +26,8 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
+  subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
+  # subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
   subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus", files_folder, ano)
   subfolder16C  <- sprintf("%s/16_ttmatrix_motorizados/%s/02_automovel", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
@@ -34,24 +35,59 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # 1) Abrir tttmatrix ---------------------------------------------------
   
-  # traz os tempos dos modos ativos em minutos, calculados pelo r5r
-  ttmatrix_ativos <- readr::read_rds(sprintf('%s/ttmatrix_fix_%s_%s_%s.rds',
-                                             subfolder15D, sigla_muni, res, ano))
+  # traz os tempos dos modos ativos em minutos, calculados pelo r5r - o arquivo
+  # inclui os tempos para o modo carro calculados pelo 5r5. Estes tempos de
+  # automóvel serão usados caso haja tempos NA na base fornecida pela 99 
+  # ttmatrix_ativos <- readr::read_rds(sprintf('%s/ttmatrix_fix_%s_%s_%s.rds',
+  #                                            subfolder15D, sigla_muni, res, ano))
+  ttmatrix_ativos <- readr::read_delim(sprintf('%s/ttmatrix_%s_%s_%s_r5.csv',
+                                             subfolder15C, sigla_muni, res, ano))
   
-  # traz os tempos do modo ônibus em segundos, calculados pelo gmaps
+  # Separar matrizes de modos ativos e de automóvel
+  ttmatrix_carro_r5r <- ttmatrix_ativos %>% filter(mode == 'car_r5r')
+  ttmatrix_ativos    <- ttmatrix_ativos %>% filter(mode != 'car_r5r')
+  
+  
+  # traz os tempos do modo ônibus em segundos, calculados pelo gmaps - versão
+  # para quando os tempos resultantes estão guardados no dataframe
+  # ttmatrix_onibus <-
+  #   readr::read_rds(sprintf('%s/matriztp_%s_%s_%s.rds',
+  #                           subfolder16B, sigla_muni, res, ano)) %>%
+  #   # Padronizar nomes das colunas e ajeitar dados para rbind()
+  #   dplyr::mutate(origin = id_hex,
+  #                 destination = hex_dest,
+  #                 travel_time = Time / 60,
+  #                 mode = 'transit',
+  #                 pico = 1,
+  #                 city = sigla_muni,
+  #                 ano = ano) %>%
+  #   dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia,
+  #                    oportunidades, Time, Distance, Status, ID))
+  
+  # traz os tempos do modo ônibus em segundos, calculados pelo gmaps - versão
+  # para quando o que está guardado no dataframe é uma marcação de faixa de tempo
   ttmatrix_onibus <- 
     readr::read_rds(sprintf('%s/matriztp_%s_%s_%s.rds',
                             subfolder16B, sigla_muni, res, ano)) %>% 
-    # Padronizar nomes das colunas e ajeitar dados para rbind()
-    dplyr::mutate(origin = id_hex,
-                  destination = hex_dest,
-                  travel_time = Time.Time / 60,
-                  mode = 'transit',
-                  pico = 1,
-                  city = sigla_muni,
-                  ano = ano) %>% 
-    dplyr::select(-c(origem, destino, id_hex, pop_total, hex_dest, distancia,
-                     Time.Time, Distance.Distance, Status.status))
+    # Criar uma coluna de travel_time, que na prática para este caso 
+    # significaria o tempo máximo - rotas não encontradas vaõ ficar como NA
+    mutate(travel_time = case_when(T15 == '1' ~ paste0('15'),
+                                   T30 == '1' ~ paste0('30'),
+                                   T45 == '1' ~ paste0('45'),
+                                   T60 == '1' ~ paste0('60'),
+                                   T60_== '1' ~ paste0('99')),
+           travel_time = as.numeric(travel_time),
+           # Criar colunas de padronização da base frente aos demais modos
+           mode = 'transit',
+           pico = 1,
+           city = sigla_muni,
+           ano = ano) %>% 
+    dplyr::select(-c(origem, destino, pop_total, oportunidades, distancia, 
+                     status, T15, T30, T45, T60, T60_)) %>% 
+    rename(origin = id_hex,
+           destination = hex_dest)
+    
+  
   
   # traz os tempos médios do modo carro, calculados pela 99 a partir da média 
   # de tempo das viagens iniciadas às 6h, 7h e 8h 
@@ -59,14 +95,54 @@ calcular_acess_muni <- function(sigla_muni, ano) {
     readr::read_delim(sprintf('%s/ttmatrix_car_%s_%s_%s.csv',
                               subfolder16C, sigla_muni, res, ano), delim = ';') %>% 
     # Padronizar nomes das colunas e ajeitar dados para rbind()
-    dplyr::mutate(origin = id_origem,
-                  destination = id_destino,
-                  travel_time = dur_minutes,
-                  mode = 'car',
-                  pico = 1,
-                  city = sigla_muni,
-                  ano = ano) %>% 
-    dplyr::select(-c(id_origem, id_destino, dur_minutes))
+    mutate(origin = id_origem,
+           destination = id_destino,
+           travel_time_99 = dur_minutes,
+           mode = 'car',
+           pico = 1,
+           city = sigla_muni,
+           ano = ano) %>% 
+    dplyr::select(-c(id_origem, id_destino, dur_minutes)) %>% 
+    # Criar coluna de id para comparar com ttmatrix_carro_r5r
+    mutate(id = str_c(origin, destination, sep = '-'))
+    
+  # Ajustar ttmatrix_carro_r5r
+  ttmatrix_carro_r5r <- 
+    ttmatrix_carro_r5r %>% 
+    # Criar coluna de id em ttmatrix_carro_r5r para comparar com ttmatrix_carro
+    mutate(id = str_c(origin, destination, sep = '-')) %>% 
+    # Filtrar somente linhas que também estão em ttmatrix_carro
+    filter(.$id %in% ttmatrix_carro$id) %>% 
+    # Simplificar dataframe para join
+    dplyr::select(id, travel_time_r5r = travel_time)
+  
+  # Juntar tempos calculados pela 99 e pelo r5r
+  ttmatrix_carro <- ttmatrix_carro %>% left_join(ttmatrix_carro_r5r, by = 'id') %>% dplyr::select(-id)
+  
+  
+  
+  
+  # Apagar
+  ttmatrix_carro_r5r %>% group_by(id) %>% tally() %>% filter(n>1)
+  ttmatrix_carro <- ttmatrix_carro %>% mutate(travel_time_99 = case_when(origin!='87818a592ffffff' & destination != '878199965ffffff' ~ travel_time_99))
+  
+  # Checar diferença entre os tempos calculados
+  ttmatrix_carro %>% mutate(dif = abs(travel_time_r5r - travel_time_99))
+  
+  # Criar coluna de travel_time: onde tem tempo calculado pela 99, é este tempo;
+  # onde não tem, o tempo é o calculado pelo r5r
+  ttmatrix_carro <- 
+    ttmatrix_carro %>% 
+    mutate(travel_time = case_when(is.na(travel_time_99) ~ travel_time_r5r,
+                                   TRUE ~ travel_time_99),
+           .after = 'destination')
+  
+  # Simplificar dataframe
+  ttmatrix_carro <- ttmatrix_carro %>% dplyr::select(-c(travel_time_r5r, travel_time_99))
+  
+  
+  
+  
   
   # juntar todas as matrizes de tempo
   ttmatrix <- ttmatrix_ativos %>% rbind(ttmatrix_onibus) %>% rbind(ttmatrix_carro)
