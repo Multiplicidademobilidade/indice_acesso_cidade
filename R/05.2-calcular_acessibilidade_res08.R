@@ -26,15 +26,15 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
+  subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
   dir.create(subfolder17, recursive = TRUE, showWarnings = FALSE)
   
   # 1) Abrir tttmatrix ---------------------------------------------------
   
   # traz os tempos dos modos ativos em minutos, calculados pelo r5r
-  ttmatrix <- readr::read_rds(sprintf('%s/ttmatrix_fix_%s_%s_%s.rds',
-                                      subfolder15D, sigla_muni, res, ano))
+  ttmatrix <- readr::read_delim(sprintf('%s/ttmatrix_%s_%s_%s_r5.csv',
+                                        subfolder15C, sigla_muni, res, ano))
   
   # o limite de tempo a ser observado para o cálculo das acessibilidades é
   # de 60 min - descartar todas as linhas com travel_time maior do que isso.
@@ -311,7 +311,7 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # 7) Juntar os arquivos de acess ------------------------------------------------
   
-  # Juntar os tres (left_join)
+  # Juntar as acessibilidades (left_join)
   acess <- merge(acess_cma, acess_cmp,
                  all.x = TRUE,
                  by.x = c("city", "mode", "origin", "pico"),

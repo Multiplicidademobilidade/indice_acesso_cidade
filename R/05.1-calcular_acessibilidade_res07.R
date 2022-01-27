@@ -27,7 +27,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   files_folder <- "../../indice-mobilidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
-  # subfolder15D <- sprintf("%s/15_otp/04_ttmatrix_fixed/%s", files_folder, ano)
   subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus", files_folder, ano)
   subfolder16C  <- sprintf("%s/16_ttmatrix_motorizados/%s/02_automovel", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
