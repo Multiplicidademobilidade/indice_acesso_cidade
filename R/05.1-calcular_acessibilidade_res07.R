@@ -122,11 +122,11 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   
   # Apagar
-  ttmatrix_carro_r5r %>% group_by(id) %>% tally() %>% filter(n>1)
-  ttmatrix_carro <- ttmatrix_carro %>% mutate(travel_time_99 = case_when(origin!='87818a592ffffff' & destination != '878199965ffffff' ~ travel_time_99))
+  # ttmatrix_carro_r5r %>% group_by(id) %>% tally() %>% filter(n>1)
+  # ttmatrix_carro <- ttmatrix_carro %>% mutate(travel_time_99 = case_when(origin!='87818a592ffffff' & destination != '878199965ffffff' ~ travel_time_99))
   
   # Checar diferença entre os tempos calculados
-  ttmatrix_carro %>% mutate(dif = abs(travel_time_r5r - travel_time_99))
+  # ttmatrix_carro %>% mutate(dif = abs(travel_time_r5r - travel_time_99))
   
   # Criar coluna de travel_time: onde tem tempo calculado pela 99, é este tempo;
   # onde não tem, o tempo é o calculado pelo r5r
@@ -536,4 +536,4 @@ if (future::supportsMulticore()) {
 }
 
 furrr::future_walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
-
+furrr::future_walk('nat', calcular_acess_muni, ano = 2019)

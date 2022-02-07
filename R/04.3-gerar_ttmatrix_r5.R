@@ -35,6 +35,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   max_trip_duration <- 180 # minutes
   max_trip_duration_walk <- 30 # minutes
   max_trip_duration_bike <- 30 # minutes
+  max_trip_duration_car  <- 60 # minutes
   departure_pico <- paste0(date, " 07:00:00")
   departure_fpico <- paste0(date, " 14:00:00")
   departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")
@@ -66,66 +67,51 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   # ttm_fpico[, mode := "transit"]
   # ttm_fpico[, pico := 0]
   
-  # Calcular para modo carro somente se resolução for abaixo de 8
-  if (strtoi(res) < 8){
-    # Criar faixas de horário para o cálculo de viagens de automóvel
-    car_times <- c(paste0(date, " 06:00:00"), paste0(date, " 06:30:00"),
-                   paste0(date, " 07:00:00"), paste0(date, " 07:30:00"), 
-                   paste0(date, " 08:00:00"), paste0(date, " 01:00:00"))
-    # car_times <- c(paste0(date, " 07:00:00"), paste0(date, " 14:30:00"), paste0(date, " 01:00:00"))
-    
-    # Calcular matriz de tempos de viagem para um horário específico de saída
-    calculate_car_times <- function(car_datetime){
-      # Transformar horários no formato POSIXct
-      start_date <- as.POSIXct(car_datetime, format = "%Y-%m-%d %H:%M:%S")
-      print(start_date)
-      
-      # Calcular tempos pelo r5r
-      tmp_car_matrix <- travel_time_matrix(r5r_core = setup,
-                                           origins = points,
-                                           destinations = points,
-                                           mode = "CAR",
-                                           departure_datetime = start_date,
-                                           max_trip_duration = 60,
-                                           verbose = FALSE) 
-      
-      r5r::stop_r5()
-      
-      return(tmp_car_matrix)
-    }
-    
-    
-    # Criar dataframe temporário para guardar resultados
-    tmp_df <- data.frame(fromId = character(),
-                         toId = character(),
-                         travel_time = numeric(),
-                         stringsAsFactors = FALSE)
-    
-    # Calcular para todas as faixas de tempo, atualizar resultados em tmp_df
-    for (car_time in car_times){
-      boo <- calculate_car_times(car_time)
-      tmp_df <- tmp_df %>% rbind(boo)
-    }
-  }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  
+  
+  
+  
+  # # Calcular para modo carro somente se resolução for abaixo de 8
+  # if (strtoi(res) < 8){
+  #   # Criar faixas de horário para o cálculo de viagens de automóvel
+  #   car_times <- c(paste0(date, " 06:00:00"), paste0(date, " 06:30:00"),
+  #                  paste0(date, " 07:00:00"), paste0(date, " 07:30:00"), 
+  #                  paste0(date, " 08:00:00"), paste0(date, " 01:00:00"))
+  #   # car_times <- c(paste0(date, " 07:00:00"), paste0(date, " 14:30:00"), paste0(date, " 01:00:00"))
+  #   
+  #   # Calcular matriz de tempos de viagem para um horário específico de saída
+  #   calculate_car_times <- function(car_datetime){
+  #     # Transformar horários no formato POSIXct
+  #     start_date <- as.POSIXct(car_datetime, format = "%Y-%m-%d %H:%M:%S")
+  #     print(start_date)
+  #     
+  #     # Calcular tempos pelo r5r
+  #     tmp_car_matrix <- travel_time_matrix(r5r_core = setup,
+  #                                          origins = points,
+  #                                          destinations = points,
+  #                                          mode = "CAR",
+  #                                          departure_datetime = start_date,
+  #                                          max_trip_duration = 60,
+  #                                          verbose = FALSE) 
+  #     
+  #     r5r::stop_r5()
+  #     
+  #     return(tmp_car_matrix)
+  #   }
+  #   
+  #   
+  #   # Criar dataframe temporário para guardar resultados
+  #   tmp_df <- data.frame(fromId = character(),
+  #                        toId = character(),
+  #                        travel_time = numeric(),
+  #                        stringsAsFactors = FALSE)
+  #   
+  #   # Calcular para todas as faixas de tempo, atualizar resultados em tmp_df
+  #   for (car_time in car_times){
+  #     boo <- calculate_car_times(car_time)
+  #     tmp_df <- tmp_df %>% rbind(boo)
+  #   }
+  # }
     
     
     
@@ -137,7 +123,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
                                   destinations = points,
                                   mode = "CAR",
                                   departure_datetime = departure_datetime_pico,
-                                  max_trip_duration = 60)
+                                  max_trip_duration = max_trip_duration_car)
     
     ttm_car[, mode := "car_r5r"]
     ttm_car[, pico := 1]
@@ -195,12 +181,6 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
 }
 
 
-# apply function
-# walk(munis_list$munis_metro[ano_metro == 2017]$abrev_muni,
-#      calculate_ttmatrix, ano = 2017)
-# 
-# walk(munis_list$munis_metro[ano_metro == 2018]$abrev_muni,
-#      calculate_ttmatrix, ano = 2018)
-
+# rodar função
 walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni,
      calculate_ttmatrix, ano = 2019, res = '08')

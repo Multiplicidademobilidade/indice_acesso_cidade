@@ -13,7 +13,6 @@ source('fun/setup.R')
 
 # sigla_muni <- "nat"; ano <- 2019; res <- '08'
 
-
 calcular_acess_muni <- function(sigla_muni, ano) {
   
   # Forçar resolução para 08. Para resolução 07, usar script anterior; para 
@@ -360,4 +359,5 @@ if (future::supportsMulticore()) {
 
 
 furrr::future_walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
+# furrr::future_walk('nat', calcular_acess_muni, ano = 2019)
 
