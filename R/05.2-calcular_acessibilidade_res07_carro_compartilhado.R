@@ -10,7 +10,7 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE --------------------------------------------------------------
 
-# sigla_muni <- "nat"; ano <- 2019; res <- '07'
+# sigla_muni <- "vta"; ano <- 2019; res <- '07'
 
 
 calcular_acess_muni <- function(sigla_muni, ano) {
@@ -100,10 +100,12 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # de um hexágono de origem
   modify_non_neighbors_times <- function(orig, matriz_tt, n_vizinhos, atraso) {
 
-    # orig <- '87818a59effffff'; matriz_tt <- ttmatrix_carro_r5r; n_vizinhos <- raio_vizinhos; atraso <- fator_atraso
+    # orig <- '87a810000ffffff'; matriz_tt <- ttmatrix_carro_r5r; n_vizinhos <- raio_vizinhos; atraso <- fator_atraso
 
     # Descobrir os hexágonos vizinhos
     neighbors <- h3jsr::get_kring(orig, ring_size = n_vizinhos)[[1]][-1]
+    # Adicionar o próprio hexágono na lista com os vizinhos
+    neighbors <- c(neighbors, orig)
 
     # Separar entre conjuntos de hexágonos vizinhos e não vizinhos
     vizinhos     <- matriz_tt %>% filter(origin == orig &  destination %in% neighbors)
@@ -134,8 +136,8 @@ calcular_acess_muni <- function(sigla_muni, ano) {
     mutate(mode = 'shared_car') %>% 
     arrange(origin, destination)
 
-
-
+  
+  
   # O limite de tempo a ser observado para o cálculo das acessibilidades é
   # de 60 min - descartar todas as linhas com travel_time maior do que isso
   ttmatrix <- ttmatrix_carro_compart %>% filter(travel_time <= 60)
