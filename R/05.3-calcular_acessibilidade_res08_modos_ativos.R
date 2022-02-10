@@ -185,7 +185,7 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # para modos ativos
   acess_cma <- ttmatrix[mode %in% c("bike", "walk"), 
                         lapply(to_make_cma_ativo, function(x) eval(parse(text = x)))
-                        , by=.(city, mode, origin, pico, quintil, decil)]
+                        , by = .(city, mode, origin, pico, quintil, decil)]
   
   
   # Retirar todas as colunas com tempos 45 e 60 para os modos ativos
@@ -252,61 +252,13 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # para modos ativos
   acess_cmp <- ttmatrix[mode %in% c("bike", "walk"), 
                         lapply(to_make_cmp_ativo, function(x) eval(parse(text = x)))
-                        , by=.(city, mode, destination, pico)]
+                        , by = .(city, mode, destination, pico)]
   
   
   # Retirar todas as colunas com tempos 45 e 60 para os modos ativos
   acess_cmp <- acess_cmp %>% dplyr::select(-matches('[46]'))
   
   
-  # 5) Calcular acessibilidade tempo minimo ---------------
-  # (aqui eh feito junto para os dois modos)
-  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-
-  # acess_tmi <- "TMI"
-  # atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "CT")
-  # 
-  # grid_tmi <- 
-  #   expand.grid(acess_tmi, atividade_tmi, stringsAsFactors = FALSE) %>%
-  #   rename(acess_sigla = Var1, atividade_sigla = Var2) %>%
-  #   mutate(junto = paste0(acess_sigla, atividade_sigla)) %>%
-  #   mutate(atividade_nome = case_when(atividade_sigla == "ST" ~ "saude_total",
-  #                                     atividade_sigla == "SB" ~ "saude_baixa",
-  #                                     atividade_sigla == "SM" ~ "saude_media",
-  #                                     atividade_sigla == "SA" ~ "saude_alta",
-  #                                     atividade_sigla == "ET" ~ "edu_total",
-  #                                     atividade_sigla == "EI" ~ "edu_infantil",
-  #                                     atividade_sigla == "EF" ~ "edu_fundamental",
-  #                                     atividade_sigla == "EM" ~ "edu_medio",
-  #                                     atividade_sigla == "EI" ~ "edu_infantil",
-  #                                     atividade_sigla == "CT" ~ "cras_total"))
-  # 
-  # 
-  # # gerar o codigo para calcular as oportunidades
-  # # "TMIST = min(travel_time[which(saude_total >= 1)])"
-  # codigo_tmi <- sprintf("%s = min(travel_time[which(%s >= 1)])", 
-  #                       grid_tmi$junto, 
-  #                       grid_tmi$atividade_nome)
-  # 
-  # 
-  # # gerar os nomes das variaveis
-  # to_make_tmi <- setNames(codigo_tmi, sub('^([[:alnum:]]*) =.*', '\\1', codigo_tmi))
-  # 
-  # 
-  # # calcular acessibilidade
-  # acess_tmi <- ttmatrix[, lapply(to_make_tmi, function(x) eval(parse(text = x)))
-  #                       , by=.(city, mode, origin, pico)]
-  # 
-  # 
-  # # hexagonos_sf <- st_sf(hexagonos_sf)
-  # # 
-  # # ggplot() + geom_sf(data=hexagonos_sf ,fill='gray') +
-  # #  geom_sf(data=subset(hexagonos_sf, saude_media>0) , aes(fill=saude_media))
-  # # 
-  # # ggplot() + geom_sf(data=hexagonos_sf ,fill='gray') +
-  # #   geom_sf(data=subset(hexagonos_sf, saude_baixa>0) , aes(fill=saude_baixa))
-  # # 
-  # # 
   
   # 7) Juntar os arquivos de acess ------------------------------------------------
   
@@ -317,10 +269,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
                  # como o cmp eh calculado para os destinos, o join eh para destination
                  by.y = c("city", "mode", "destination", "pico"))
   
-  # acess <- merge(acess, acess_tmi,
-  #                all.x = TRUE,
-  #                by.x = c("city", "mode", "origin", "pico"),
-  #                by.y = c("city", "mode", "origin", "pico"))
   
   
   # Transformar para sf
@@ -338,9 +286,9 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # 8) Salvar output --------------------------------------
   
-  path_out <- sprintf("%s/acess_%s_%s_%s", subfolder17, sigla_muni, res, ano)
+  path_out <- sprintf("%s/acess_%s_%s_modos_ativos_%s", subfolder17, res, sigla_muni, ano)
   write_rds(acess_sf, sprintf('%s.rds', path_out))
-  write_delim(acess_sf, sprintf('%s.csv', path_out), delim = ';')
+  # write_delim(acess_sf, sprintf('%s.csv', path_out), delim = ';')
   st_write(acess_sf, sprintf('%s.gpkg', path_out), driver = 'GPKG', append = FALSE)
   
   # gc colletc
@@ -358,6 +306,6 @@ if (future::supportsMulticore()) {
 }
 
 
-furrr::future_walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
+walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
 # furrr::future_walk('nat', calcular_acess_muni, ano = 2019)
 
