@@ -1,7 +1,6 @@
 ## Script para o calculo do Indice de Mobilidade (IM)
 
 # Indice de mobilidade
-
 source('fun/setup.R')
 library(scales)
 
@@ -72,7 +71,8 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
                       'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT15', 'CMATT30', 'CMATT45', 'CMATT60',
                       'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')
       
-      # Agrega populacoes
+      # Agrega populacoes 
+      # CORRIGIR NOMENCLATURA
       data_bus$pop_negra <- data_bus$cor_negra + data_bus$cor_indigena
       data_bus$pop_branca <- data_bus$cor_branca + data_bus$cor_amarela
       
@@ -114,8 +114,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
 #      data_bus$popn_perc_n <- (data_bus$popn_perc - min(data_bus$popn_perc, na.rm = TRUE))/(max(data_bus$popn_perc, na.rm=TRUE)-min(data_bus$popn_perc, na.rm=TRUE))
       
 #      data_bus$pop_total_n <- rescale(data_bus$pop_total, na.rm=TRUE) 
-      data_bus$pop_total_n <- (data_bus$pop_total - min(data_bus$pop_total, na.rm = TRUE))/(max(data_bus$pop_total, na.rm=TRUE)-min(data_bus$pop_total, na.rm=TRUE))
-      data_bus$pop_negra_n <- rescale(data_bus$pop_negra, na.rm=TRUE)
+      data_bus$pop_total_n <- (data_bus$pop_branca - min(data_bus$pop_branca, na.rm = TRUE))/(max(data_bus$pop_branca, na.rm=TRUE)-min(data_bus$pop_branca, na.rm=TRUE))
+      data_bus$pop_negra_n <- (data_bus$pop_negra - min(data_bus$pop_negra, na.rm = TRUE))/(max(data_bus$pop_negra, na.rm=TRUE)-min(data_bus$pop_negra, na.rm=TRUE))
+      
+      #data_bus$pop_negra_n <- rescale(data_bus$pop_negra, na.rm=TRUE)
       
             # 4.0 Calculo do IM
       # Onibus
@@ -191,8 +193,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
 #    data_carro$popn_perc_n <- (data_carro$popn_perc - min(data_carro$popn_perc, na.rm = TRUE))/(max(data_carro$popn_perc, na.rm=TRUE)-min(data_carro$popn_perc, na.rm=TRUE))
     
 #    data_carro$pop_total_n <- rescale(data_carro$pop_total, na.rm=TRUE) 
-    data_carro$pop_total_n <- (data_carro$pop_total - min(data_carro$pop_total, na.rm = TRUE))/(max(data_carro$pop_total, na.rm=TRUE)-min(data_carro$pop_total, na.rm=TRUE))
-    data_carro$pop_negra_n <- rescale(data_carro$pop_negra, na.rm=TRUE)
+    data_carro$pop_total_n <- (data_carro$pop_branca - min(data_carro$pop_branca, na.rm = TRUE))/(max(data_carro$pop_branca, na.rm=TRUE)-min(data_carro$pop_branca, na.rm=TRUE))
+    data_carro$pop_negra_n <- (data_carro$pop_negra - min(data_carro$pop_negra, na.rm = TRUE))/(max(data_carro$pop_negra, na.rm=TRUE)-min(data_carro$pop_negra, na.rm=TRUE))
+    
+   # data_carro$pop_negra_n <- rescale(data_carro$pop_negra, na.rm=TRUE)
     
       if (pop == "pop_total"){
         data_carro$A_edu <-(data_carro$E_perc)*data_carro$pop_total_n
@@ -266,8 +270,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
  
     # Normalizando apenas a populacao do hex
 #     data_walk$pop_total_n <- rescale(data_walk$pop_total, na.rm=TRUE)   
-     data_walk$pop_total_n <- (data_walk$pop_total - min(data_walk$pop_total, na.rm = TRUE))/(max(data_walk$pop_total, na.rm=TRUE)-min(data_walk$pop_total, na.rm=TRUE))
-     data_walk$pop_negra_n <- rescale(data_walk$pop_negra, na.rm=TRUE)
+     data_walk$pop_total_n <- (data_walk$pop_branca - min(data_walk$pop_branca, na.rm = TRUE))/(max(data_walk$pop_branca, na.rm=TRUE)-min(data_walk$pop_branca, na.rm=TRUE))
+     data_walk$pop_negra_n <- (data_walk$pop_negra - min(data_walk$pop_negra, na.rm = TRUE))/(max(data_walk$pop_negra, na.rm=TRUE)-min(data_walk$pop_negra, na.rm=TRUE))
+     
+     #data_walk$pop_negra_n <- rescale(data_walk$pop_negra, na.rm=TRUE)
      
     if (pop == "pop_total"){
       data_walk$A_edu <-(data_walk$E_perc)*data_walk$pop_total_n
@@ -326,8 +332,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Normalizando apenas a populacao do hex
     #data_bike$pop_total_n <- rescale(data_bike$pop_total, na.rm=TRUE) 
-    data_bike$pop_total_n <- (data_bike$pop_total - min(data_bike$pop_total, na.rm = TRUE))/(max(data_bike$pop_total, na.rm=TRUE)-min(data_bike$pop_total, na.rm=TRUE))
-    data_bike$pop_negra_n <- rescale(data_bike$pop_negra, na.rm=TRUE)
+    data_bike$pop_total_n <- (data_bike$pop_branca - min(data_bike$pop_branca, na.rm = TRUE))/(max(data_bike$pop_branca, na.rm=TRUE)-min(data_bike$pop_branca, na.rm=TRUE))
+    data_bike$pop_negra_n <- (data_bike$pop_negra - min(data_bike$pop_negra, na.rm = TRUE))/(max(data_bike$pop_negra, na.rm=TRUE)-min(data_bike$pop_negra, na.rm=TRUE))
+    
+    #data_bike$pop_negra_n <- rescale(data_bike$pop_negra, na.rm=TRUE)
     
     if (pop == 'pop_total'){
       data_bike$A_edu <-(data_bike$E_perc)*data_bike$pop_total_n
@@ -354,20 +362,20 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     # 4.1 IM por modo de transporte
     # Onibus
     if (muni %nin% skip_bus){
-      im_bus <- (im_bus_edu + im_bus_saude + im_bus_trab)/3
+      im_bus <- (im_bus_edu*3 + im_bus_saude*2 + im_bus_trab*5)/10
       p_bus <- 1
     }else{
       im_bus <- 0
       p_bus <- 0
     }
     # Carro
-    im_car <- (im_car_edu + im_car_saude + im_car_trab)/3
+    im_car <- (im_car_edu*3 + im_car_saude*2 + im_car_trab*5)/10
     p_car <- 1
     # A pe
-    im_walk <- (im_walk_edu + im_walk_saude + im_walk_trab)/3
+    im_walk <- (im_walk_edu*3 + im_walk_saude*2 + im_walk_trab*5)/10
     p_walk <- 2
     # Bicicleta
-    im_bike <- (im_bike_edu + im_bike_saude + im_bike_trab)/3
+    im_bike <- (im_bike_edu*3 + im_bike_saude*2 + im_bike_trab*5)/10
     p_bike <- 2
     
     # 4.2 IM consolidado
@@ -402,7 +410,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Ajusta o nome do arquivo
     #write_csv(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
-    write_csv2(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
+    write_csv2(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_7_%s.csv', save_folder, pop))
     
   }
   # Retorna o dataframe
@@ -424,10 +432,8 @@ subfolder19 <- sprintf("%s/19_indice_mobilidade/2019", files_folder)
 im <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_pop_total_pop.csv', subfolder19))
 im2 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_pop_negra_pop.csv', subfolder19))
 
-im3 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_2_pop_total.csv', subfolder19))
-im4 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_3_pop_negra.csv', subfolder19))
-
-
+im3 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_7_pop_total.csv', subfolder19))
+im4 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_7_pop_negra.csv', subfolder19))
 
 
 
