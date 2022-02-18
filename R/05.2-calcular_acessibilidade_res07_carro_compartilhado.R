@@ -10,7 +10,7 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE --------------------------------------------------------------
 
-# sigla_muni <- "vta"; ano <- 2019; res <- '07'
+# sigla_muni <- "man"; ano <- 2019; res <- '07'
 
 
 calcular_acess_muni <- function(sigla_muni, ano) {
@@ -86,7 +86,7 @@ calcular_acess_muni <- function(sigla_muni, ano) {
            fator_congest = as.double(fator_congest))
   
   
-  # Pegar quantos hexágonos vizinho serão considerados para a cidade
+  # Pegar quantos hexágonos vizinhos serão considerados para a cidade
   raio_vizinhos <- ajustes %>% filter(muni == sigla_muni) %>% dplyr::select(hex_max) %>% pull()
   
   # Pegar o fator de atraso por congestionamento para a cidade
@@ -96,8 +96,9 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   origens <- ttmatrix_carro_r5r %>% dplyr::select(origin) %>% distinct()
   
   
-  # Atualiza os tempos de viagens para hexágonos vizinho e não vizinhos, a partir
-  # de um hexágono de origem
+  # Atualiza os tempos de viagens de um hexágono de origem para seus hexágonos 
+  # vizinhos (incluindo um fator de congestionamento) e não vizinhos (marcando
+  # o tempo igual a 999 de modo que seja retirado das análises)
   modify_non_neighbors_times <- function(orig, matriz_tt, n_vizinhos, atraso) {
 
     # orig <- '87a810000ffffff'; matriz_tt <- ttmatrix_carro_r5r; n_vizinhos <- raio_vizinhos; atraso <- fator_atraso
@@ -137,13 +138,20 @@ calcular_acess_muni <- function(sigla_muni, ano) {
     arrange(origin, destination)
 
   
-  
   # O limite de tempo a ser observado para o cálculo das acessibilidades é
   # de 60 min - descartar todas as linhas com travel_time maior do que isso
   ttmatrix <- ttmatrix_carro_compart %>% filter(travel_time <= 60)
-
-
-
+  
+  
+  # # Testar se filtro que limita o acesso do hexágono a um raio de x vizinhos funcionou
+  # subfolder12  <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
+  # hexagonos <- 
+  #   read_rds(sprintf('%s/hex_%s_%s_%s.rds', subfolder12, sigla_muni, res, ano)) %>% 
+  #   dplyr::select(destination = id_hex, geometry)
+  # orig <- ttmatrix %>% sample_n(1) %>% dplyr::select(origin) %>% pull()
+  # ttmatrix %>% filter(origin == orig) %>% left_join(hexagonos, by = 'destination') %>% st_as_sf() %>% mapview()
+  
+  
   # 2) Agregar dados de uso do solo à ttmatrix --------------------------
   
   # Pegar arquivo com os hexagonos com as atividades (oportunidades)
@@ -186,6 +194,19 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # Merge dados de destino na matrix de tempo de viagem
   ttmatrix <- ttmatrix %>% left_join(hex_dest, by = c("destination" = "id_hex"))
+  
+  
+  # Na geração da matrix de ônibus, retiramos hexágonos de origem que possuíam 
+  # população igual a zero e de destino que tinham zero oportunidades. Uma vez
+  # que a base 'ttmatrix' já está agora com os dados de população associados às
+  # origem e os dados de oportunidades associados aos destinos, podemos usar
+  # aqui o mesmo filtro.
+  ttmatrix <- 
+    ttmatrix %>% 
+    mutate(oport_total = empregos_total + saude_total + edu_total + cras_total,
+           .after = 'pop_total') %>% 
+    filter(pop_total > 0 & oport_total > 0)
+  
   
   # Transformar em data.table para cálculos de acessibilidade
   ttmatrix <- ttmatrix %>% setDT()
@@ -403,11 +424,11 @@ calcular_acess_muni <- function(sigla_muni, ano) {
 
 # 2. APLICAR PARA TODAS AS CIDADES --------------------------------------------------------------
 # Parallel processing using future.apply
-if (future::supportsMulticore()) {
-  future::plan(future::multicore)
-} else {
-  future::plan(future::multisession)
-}
+# if (future::supportsMulticore()) {
+#   future::plan(future::multicore)
+# } else {
+#   future::plan(future::multisession)
+# }
+# furrr::future_walk('nat', calcular_acess_muni, ano = 2019)
 
 walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
-# furrr::future_walk('nat', calcular_acess_muni, ano = 2019)
