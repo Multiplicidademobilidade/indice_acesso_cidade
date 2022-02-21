@@ -34,11 +34,12 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
   # Usaremos a matriz de dados agregados e a matriz de acessibilidade
   
   dados_indice <- data.frame(matrix(nrow = 0, ncol = 21))
-  colnames(dados_indice) <- c('municipio','IM', 'IM_edu', 'IM_saude', 'IM_trab',
-                              'IM_bus', 'IM_bus_edu', 'IM_bus_saude', 'IM_bus_trab',
-                              'IM_walk', 'IM_walk_edu', 'IM_walk_saude', 'IM_walk_trab',
-                              'IM_bike', 'IM_bike_edu', 'IM_bike_saude', 'IM_bike_trab', 
-                              'IM_car', 'IM_car_edu', 'IM_car_saude', 'IM_car_trab'
+  colnames(dados_indice) <- c('municipio','IM', #'IM_edu', 'IM_saude', 'IM_trab',
+                              'IM_bus', 'IM_walk', 'IM_bike', 'IM_car',
+                              'IM_bus_edu', 'IM_bus_saude', 'IM_bus_trab',
+                              'IM_walk_edu', 'IM_walk_saude', 'IM_walk_trab',
+                              'IM_bike_edu', 'IM_bike_saude', 'IM_bike_trab', 
+                              'IM_car_edu', 'IM_car_saude', 'IM_car_trab'
                               )
   # Comecando
   for (muni in muni_list){
@@ -69,13 +70,23 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
         drop_na(any_of('mode'))%>%
         dplyr::select('id_hex', 'sigla_muni', 'cor_branca', 'cor_amarela','cor_indigena','cor_negra', 'pop_total',
                       'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT15', 'CMATT30', 'CMATT45', 'CMATT60',
-                      'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')
+                      'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')%>%
+        dplyr::filter(pop_total>0)
       
       # Agrega populacoes 
       # CORRIGIR NOMENCLATURA
-      data_bus$pop_negra <- data_bus$cor_negra + data_bus$cor_indigena
-      data_bus$pop_branca <- data_bus$cor_branca + data_bus$cor_amarela
+      data_bus$pop_total_q <- ifelse(data_bus$pop_total >= quantile(data_bus$pop_total, .75), 4,
+                                     ifelse(data_bus$pop_total >= quantile(data_bus$pop_total, 0.5), 3, 
+                                            ifelse(data_bus$pop_total >= quantile(data_bus$pop_total, 0.25), 2,1)))
       
+      data_bus$perc_negra <- data_bus$cor_negra/data_bus$pop_total
+      data_bus$perc_negra_q <- ifelse(data_bus$perc_negra >= quantile(data_bus$perc_negra, .75), 4,
+                                     ifelse(data_bus$perc_negra >= quantile(data_bus$perc_negra, 0.5), 3, 
+                                            ifelse(data_bus$perc_negra >= quantile(data_bus$perc_negra, 0.25), 2,1)))
+      
+      data_bus$cor_negra_q <- ifelse(data_bus$cor_negra >= quantile(data_bus$cor_negra, .75), 4,
+                                        ifelse(data_bus$cor_negra >= quantile(data_bus$cor_negra, 0.5), 3, 
+                                               ifelse(data_bus$cor_negra >= quantile(data_bus$cor_negra, 0.25), 2,1)))
       
       # Definicao do entorno
       # A partir de cada hexagono sera estabelecido um entorno, onde serao agrupados o total de oportunidades por tipo
@@ -90,58 +101,55 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
         data_bus[i,]$edu_entorno <- sum(data_bus[data_bus$id_hex %in% viz_bus[[i]],]$edu_total)
         data_bus[i,]$trab_entorno <- sum(data_bus[data_bus$id_hex %in% viz_bus[[i]],]$empregos_total)
         
-        if(data_bus[i,]$edu_entorno == 0){
-          data_bus[i,]$edu_entorno <- data_bus[i,]$CMAET30+1
-        }
-        if(data_bus[i,]$saude_entorno == 0){
-          data_bus[i,]$saude_entorno <- data_bus[i,]$CMAST30+1
-        }
-        if(data_bus[i,]$trab_entorno == 0){
-          data_bus[i,]$trab_entorno <- data_bus[i,]$CMATT30+1
-        }
+#        if(data_bus[i,]$edu_entorno == 0){
+#          #data_bus[i,]$edu_entorno <- data_bus[i,]$CMAET30+1
+#        }
+#        if(data_bus[i,]$saude_entorno == 0){
+#          #data_bus[i,]$saude_entorno <- data_bus[i,]$CMAST30+1
+#        }
+#        if(data_bus[i,]$trab_entorno == 0){
+#          #data_bus[i,]$trab_entorno <- data_bus[i,]$CMATT30+1
+#        }
       }
+      
+      data_bus$saude_entorno <- ifelse(data_bus$saude_entorno == 0, 1, data_bus$saude_entorno)
+      data_bus$edu_entorno <- ifelse(data_bus$edu_entorno == 0, 1, data_bus$edu_entorno)
+      data_bus$trab_entorno <- ifelse(data_bus$trab_entorno == 0, 1, data_bus$trab_entorno)
+      
       # Calculo do razao CMA/Oportunidades no entorno
       data_bus$E_perc <- data_bus$CMAET60/data_bus$edu_entorno
       data_bus$S_perc <- data_bus$CMAST60/data_bus$saude_entorno
       data_bus$T_perc <- data_bus$CMATT60/data_bus$trab_entorno
       
-      # Normalizacao
-      # Normalizaremos a populacao para minimizar a diferenca entre o porte das cidades
-      
-#      data_bus$pop_perc <- (data_bus$pop_total)/sum(data_bus$pop_total)
-#      data_bus$pop_perc_n <- (data_bus$pop_perc - min(data_bus$pop_perc, na.rm = TRUE))/(max(data_bus$pop_perc, na.rm=TRUE)-min(data_bus$pop_perc, na.rm=TRUE))
-#      data_bus$popn_perc <- (data_bus$pop_negra)/sum(data_bus$pop_negra)
-#      data_bus$popn_perc_n <- (data_bus$popn_perc - min(data_bus$popn_perc, na.rm = TRUE))/(max(data_bus$popn_perc, na.rm=TRUE)-min(data_bus$popn_perc, na.rm=TRUE))
-      
-#      data_bus$pop_total_n <- rescale(data_bus$pop_total, na.rm=TRUE) 
-      data_bus$pop_total_n <- (data_bus$pop_branca - min(data_bus$pop_branca, na.rm = TRUE))/(max(data_bus$pop_branca, na.rm=TRUE)-min(data_bus$pop_branca, na.rm=TRUE))
-      data_bus$pop_negra_n <- (data_bus$pop_negra - min(data_bus$pop_negra, na.rm = TRUE))/(max(data_bus$pop_negra, na.rm=TRUE)-min(data_bus$pop_negra, na.rm=TRUE))
-      
-      #data_bus$pop_negra_n <- rescale(data_bus$pop_negra, na.rm=TRUE)
-      
-            # 4.0 Calculo do IM
+      data_bus$E_perc <- ifelse(data_bus$E_perc>1, 1, data_bus$E_perc)
+      data_bus$S_perc <- ifelse(data_bus$S_perc>1, 1, data_bus$S_perc)
+      data_bus$T_perc <- ifelse(data_bus$T_perc>1, 1, data_bus$T_perc)
+
+     # 4.0 Calculo do IM
       # Onibus
       if (pop == "pop_total"){
-        data_bus$A_edu <-(data_bus$E_perc)*data_bus$pop_total_n
-        data_bus$A_saude <-(data_bus$S_perc)*data_bus$pop_total_n
-        data_bus$A_trab <-(data_bus$T_perc)*data_bus$pop_total_n
+        data_bus$A_edu <-(data_bus$E_perc)*data_bus$pop_total_q
+        data_bus$A_saude <-(data_bus$S_perc)*data_bus$pop_total_q
+        data_bus$A_trab <-(data_bus$T_perc)*data_bus$pop_total_q
         
-        #data_bus$A_edu <- ((data_bus$E_perc)*data_bus$pop_total_n)/sum(data_bus$pop_total_n)
-        #data_bus$A_saude <- ((data_bus$S_perc)*data_bus$pop_total_n)/sum(data_bus$pop_total_n)
-        #data_bus$A_trab <- ((data_bus$T_perc)*data_bus$pop_total_n)/sum(data_bus$pop_total_n)
-        
-#        data_bus$A_edu <-(data_bus$E_perc)*data_bus$pop_perc_n
-#        data_bus$A_saude <-(data_bus$S_perc)*data_bus$pop_perc_n
-#        data_bus$A_trab <-(data_bus$T_perc)*data_bus$pop_perc_n
+        im_bus_edu <- sum(data_bus$A_edu)/sum(data_bus$pop_total_q)
+        im_bus_saude <- sum(data_bus$A_saude)/sum(data_bus$pop_total_q)
+        im_bus_trab <- sum(data_bus$A_trab)/sum(data_bus$pop_total_q)
+      
       }else{ # pop == pop_negra
-        data_bus$A_edu <-(data_bus$E_perc)*data_bus$pop_negra_n
-        data_bus$A_saude <-(data_bus$S_perc)*data_bus$pop_negra_n
-        data_bus$A_trab <-(data_bus$T_perc)*data_bus$pop_negra_n
+        data_bus$A_edu <-(data_bus$E_perc)*data_bus$perc_negra_q
+        data_bus$A_saude <-(data_bus$S_perc)*data_bus$perc_negra_q
+        data_bus$A_trab <-(data_bus$T_perc)*data_bus$perc_negra_q
+        
+        im_bus_edu <- sum(data_bus$A_edu)/sum(data_bus$perc_negra_q)
+        im_bus_saude <- sum(data_bus$A_saude)/sum(data_bus$perc_negra_q)
+        im_bus_trab <- sum(data_bus$A_trab)/sum(data_bus$perc_negra_q)
       }
       
-      im_bus_edu <- mean(data_bus$A_edu)
-      im_bus_saude <- mean(data_bus$A_saude)
-      im_bus_trab <- mean(data_bus$A_trab)
+      # antes era mean(data_bus$A_edu)
+      #im_bus_edu <- sum(data_bus$A_edu)/sum(data_bus$cor_negra_q)
+      #im_bus_saude <- sum(data_bus$A_saude)/sum(data_bus$cor_negra_q)
+      #im_bus_trab <- sum(data_bus$A_trab)/sum(data_bus$cor_negra_q)
       
     }else{ # Para as cidades sem dados de onibus
       im_bus_edu <- 0
@@ -154,11 +162,25 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       drop_na(any_of('mode'))%>%
       dplyr::select('id_hex', 'sigla_muni', 'cor_branca', 'cor_amarela','cor_indigena','cor_negra', 'pop_total',
                     'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT15', 'CMATT30', 'CMATT45', 'CMATT60',
-                    'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')
+                    'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')%>%
+      dplyr::filter(pop_total>0)
     
     # Agrega populacoes
-    data_carro$pop_negra <- data_carro$cor_negra + data_carro$cor_indigena
-    data_carro$pop_branca <- data_carro$cor_branca + data_carro$cor_amarela
+    #data_carro$pop_negra <- data_carro$cor_negra + data_carro$cor_indigena
+    #data_carro$pop_branca <- data_carro$cor_branca + data_carro$cor_amarela
+    
+    data_carro$pop_total_q <- ifelse(data_carro$pop_total >= quantile(data_carro$pop_total, .75), 4,
+                                   ifelse(data_carro$pop_total >= quantile(data_carro$pop_total, 0.5), 3, 
+                                          ifelse(data_carro$pop_total >= quantile(data_carro$pop_total, 0.25), 2,1)))
+    
+    data_carro$cor_negra_q <- ifelse(data_carro$cor_negra >= quantile(data_carro$cor_negra, .75), 4,
+                                   ifelse(data_carro$cor_negra >= quantile(data_carro$cor_negra, 0.5), 3, 
+                                          ifelse(data_carro$cor_negra >= quantile(data_carro$cor_negra, 0.25), 2,1)))
+    
+    data_carro$perc_negra <- data_carro$cor_negra/data_carro$pop_total
+    data_carro$perc_negra_q <- ifelse(data_carro$perc_negra >= quantile(data_carro$perc_negra, .75), 4,
+                                    ifelse(data_carro$perc_negra >= quantile(data_carro$perc_negra, 0.5), 3, 
+                                           ifelse(data_carro$perc_negra >= quantile(data_carro$perc_negra, 0.25), 2,1)))
     
     data_carro$saude_entorno <- 0
     data_carro$edu_entorno <- 0
@@ -171,55 +193,48 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       data_carro[i,]$edu_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$edu_total)
       data_carro[i,]$trab_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$empregos_total)
       
-      if(data_carro[i,]$edu_entorno == 0){
-        data_carro[i,]$edu_entorno <- data_carro[i,]$CMAET30+1
-      }
-      if(data_carro[i,]$saude_entorno == 0){
-        data_carro[i,]$saude_entorno <- data_carro[i,]$CMAST30+1
-      }
-      if(data_carro[i,]$trab_entorno == 0){
-        data_carro[i,]$trab_entorno <- data_carro[i,]$CMATT30+1
-      }
+#      if(data_carro[i,]$edu_entorno == 0){
+#        data_carro[i,]$edu_entorno <- data_carro[i,]$CMAET30+1
+#      }
+#      if(data_carro[i,]$saude_entorno == 0){
+#        data_carro[i,]$saude_entorno <- data_carro[i,]$CMAST30+1
+#      }
+#      if(data_carro[i,]$trab_entorno == 0){
+#        data_carro[i,]$trab_entorno <- data_carro[i,]$CMATT30+1
+ #     }
     }
     
-    data_carro$E_perc <- data_carro$CMAET60/data_carro$edu_entorno
-    data_carro$S_perc <- data_carro$CMAST60/data_carro$saude_entorno
-    data_carro$T_perc <- data_carro$CMATT60/data_carro$trab_entorno
-
-    # Normalizacao
-#    data_carro$pop_perc <- (data_carro$pop_total)/sum(data_carro$pop_total)
-#    data_carro$pop_perc_n <- (data_carro$pop_perc - min(data_carro$pop_perc, na.rm = TRUE))/(max(data_carro$pop_perc, na.rm=TRUE)-min(data_carro$pop_perc, na.rm=TRUE))
-#    data_carro$popn_perc <- (data_carro$pop_negra)/sum(data_carro$pop_negra)
-#    data_carro$popn_perc_n <- (data_carro$popn_perc - min(data_carro$popn_perc, na.rm = TRUE))/(max(data_carro$popn_perc, na.rm=TRUE)-min(data_carro$popn_perc, na.rm=TRUE))
+    data_carro$saude_entorno <- ifelse(data_carro$saude_entorno == 0, 1, data_carro$saude_entorno)
+    data_carro$edu_entorno <- ifelse(data_carro$edu_entorno == 0, 1, data_carro$edu_entorno)
+    data_carro$trab_entorno <- ifelse(data_carro$trab_entorno == 0, 1, data_carro$trab_entorno)
     
-#    data_carro$pop_total_n <- rescale(data_carro$pop_total, na.rm=TRUE) 
-    data_carro$pop_total_n <- (data_carro$pop_branca - min(data_carro$pop_branca, na.rm = TRUE))/(max(data_carro$pop_branca, na.rm=TRUE)-min(data_carro$pop_branca, na.rm=TRUE))
-    data_carro$pop_negra_n <- (data_carro$pop_negra - min(data_carro$pop_negra, na.rm = TRUE))/(max(data_carro$pop_negra, na.rm=TRUE)-min(data_carro$pop_negra, na.rm=TRUE))
+    data_carro$E_perc <- data_carro$CMAET30/data_carro$edu_entorno
+    data_carro$S_perc <- data_carro$CMAST30/data_carro$saude_entorno
+    data_carro$T_perc <- data_carro$CMATT30/data_carro$trab_entorno
     
-   # data_carro$pop_negra_n <- rescale(data_carro$pop_negra, na.rm=TRUE)
+    data_carro$E_perc <- ifelse(data_carro$E_perc>1, 1, data_carro$E_perc)
+    data_carro$S_perc <- ifelse(data_carro$S_perc>1, 1, data_carro$S_perc)
+    data_carro$T_perc <- ifelse(data_carro$T_perc>1, 1, data_carro$T_perc)
     
-      if (pop == "pop_total"){
-        data_carro$A_edu <-(data_carro$E_perc)*data_carro$pop_total_n
-        data_carro$A_saude <-(data_carro$S_perc)*data_carro$pop_total_n
-        data_carro$A_trab <-(data_carro$T_perc)*data_carro$pop_total_n
+    if (pop == "pop_total"){
+        data_carro$A_edu <-(data_carro$E_perc)*data_carro$pop_total_q
+        data_carro$A_saude <-(data_carro$S_perc)*data_carro$pop_total_q
+        data_carro$A_trab <-(data_carro$T_perc)*data_carro$pop_total_q
         
-      #data_carro$A_edu <- ((data_carro$E_perc)*data_carro$pop_total_n)/sum(data_carro$pop_total_n)
-      #data_carro$A_saude <- ((data_carro$S_perc)*data_carro$pop_total_n)/sum(data_carro$pop_total_n)
-      #data_carro$A_trab <- ((data_carro$T_perc)*data_carro$pop_total_n)/sum(data_carro$pop_total_n)
-      
-#      data_carro$A_edu <-(data_carro$E_perc)*data_carro$pop_perc_n
-#      data_carro$A_saude <-(data_carro$S_perc)*data_carro$pop_perc_n
-#      data_carro$A_trab <-(data_carro$T_perc)*data_carro$pop_perc_n
+        im_car_edu <- sum(data_carro$A_edu)/sum(data_carro$pop_total_q)
+        im_car_saude <- sum(data_carro$A_saude)/sum(data_carro$pop_total_q)
+        im_car_trab <- sum(data_carro$A_trab)/sum(data_carro$pop_total_q)
+
     }else{
-      data_carro$A_edu <-(data_carro$E_perc)*data_carro$pop_negra_n
-      data_carro$A_saude <-(data_carro$S_perc)*data_carro$pop_negra_n
-      data_carro$A_trab <-(data_carro$T_perc)*data_carro$pop_negra_n
+      data_carro$A_edu <-(data_carro$E_perc)*data_carro$perc_negra_q
+      data_carro$A_saude <-(data_carro$S_perc)*data_carro$perc_negra_q
+      data_carro$A_trab <-(data_carro$T_perc)*data_carro$perc_negra_q
+      
+      im_car_edu <- sum(data_carro$A_edu)/sum(data_carro$perc_negra_q)
+      im_car_saude <- sum(data_carro$A_saude)/sum(data_carro$perc_negra_q)
+      im_car_trab <- sum(data_carro$A_trab)/sum(data_carro$perc_negra_q)
     }
     
-    im_car_edu <- mean(data_carro$A_edu)
-    im_car_saude <- mean(data_carro$A_saude)
-    im_car_trab <- mean(data_carro$A_trab)
-
     # 3.2 Ativos
     data_ativos <- data_ativos%>%
       drop_na(any_of('mode'))%>%
@@ -230,9 +245,24 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     # Agrega populacoes
     data_ativos$pop_negra <- data_ativos$cor_negra + data_ativos$cor_indigena
     data_ativos$pop_branca <- data_ativos$cor_branca + data_ativos$cor_amarela
+  
     
     # Separa em walk e bike e calcula percentuais 
-    data_walk <- dplyr::filter(data_ativos, mode=='walk')
+    data_walk <- dplyr::filter(data_ativos, mode=='walk')%>%
+      dplyr::filter(pop_total>0)
+    
+    data_walk$pop_total_q <- ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, .75), 4,
+                                     ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, 0.5), 3, 
+                                            ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, 0.25), 2,1)))
+    
+    data_walk$cor_negra_q <- ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, .75), 4,
+                                      ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, 0.5), 3, 
+                                             ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, 0.25), 2,1)))
+    
+    data_walk$perc_negra <- data_walk$cor_negra/data_walk$pop_total
+    data_walk$perc_negra_q <- ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, .75), 4,
+                                      ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, 0.5), 3, 
+                                             ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, 0.25), 2,1)))
     
     #walk
     data_walk$saude_entorno <- 0
@@ -246,127 +276,147 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       data_walk[i,]$edu_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$edu_total)
       data_walk[i,]$trab_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$empregos_total)
       
-      if(data_walk[i,]$edu_entorno == 0){
-        data_walk[i,]$edu_entorno <- data_walk[i,]$CMAET30+1
-      }
-      if(data_walk[i,]$saude_entorno == 0){
-        data_walk[i,]$saude_entorno <- data_walk[i,]$CMAST30+1
-      }
-      if(data_walk[i,]$trab_entorno == 0){
-        data_walk[i,]$trab_entorno <- data_walk[i,]$CMATT30+1
-      }
+#      if(data_walk[i,]$edu_entorno == 0){
+#        data_walk[i,]$edu_entorno <- data_walk[i,]$CMAET30+1
+#      }
+#      if(data_walk[i,]$saude_entorno == 0){
+#        data_walk[i,]$saude_entorno <- data_walk[i,]$CMAST30+1
+#      }
+#      if(data_walk[i,]$trab_entorno == 0){
+#        data_walk[i,]$trab_entorno <- data_walk[i,]$CMATT30+1
+#      }
     }
+    
+    data_walk$saude_entorno <- ifelse(data_walk$saude_entorno == 0, 1, data_walk$saude_entorno)
+    data_walk$edu_entorno <- ifelse(data_walk$edu_entorno == 0, 1, data_walk$edu_entorno)
+    data_walk$trab_entorno <- ifelse(data_walk$trab_entorno == 0, 1, data_walk$trab_entorno)
     
     data_walk$E_perc <- data_walk$CMAET30/data_walk$edu_entorno
     data_walk$S_perc <- data_walk$CMAST30/data_walk$saude_entorno
     data_walk$T_perc <- data_walk$CMATT30/data_walk$trab_entorno
-    # Normalizacao
-    # pop total
-#    data_walk$pop_perc <- (data_walk$pop_total)/sum(data_walk$pop_total)
-#    data_walk$pop_perc_n <- (data_walk$pop_perc - min(data_walk$pop_perc, na.rm = TRUE))/(max(data_walk$pop_perc, na.rm=TRUE)-min(data_walk$pop_perc, na.rm=TRUE))
-#    # pop negra
-#    data_walk$popn_perc <- (data_walk$pop_negra)/sum(data_walk$pop_negra)
-#    data_walk$popn_perc_n <- (data_walk$popn_perc - min(data_walk$popn_perc, na.rm = TRUE))/(max(data_walk$popn_perc, na.rm=TRUE)-min(data_walk$popn_perc, na.rm=TRUE))
- 
-    # Normalizando apenas a populacao do hex
-#     data_walk$pop_total_n <- rescale(data_walk$pop_total, na.rm=TRUE)   
-     data_walk$pop_total_n <- (data_walk$pop_branca - min(data_walk$pop_branca, na.rm = TRUE))/(max(data_walk$pop_branca, na.rm=TRUE)-min(data_walk$pop_branca, na.rm=TRUE))
-     data_walk$pop_negra_n <- (data_walk$pop_negra - min(data_walk$pop_negra, na.rm = TRUE))/(max(data_walk$pop_negra, na.rm=TRUE)-min(data_walk$pop_negra, na.rm=TRUE))
-     
-     #data_walk$pop_negra_n <- rescale(data_walk$pop_negra, na.rm=TRUE)
+    
+    data_walk$E_perc <- ifelse(data_walk$E_perc>1, 1, data_walk$E_perc)
+    data_walk$S_perc <- ifelse(data_walk$S_perc>1, 1, data_walk$S_perc)
+    data_walk$T_perc <- ifelse(data_walk$T_perc>1, 1, data_walk$T_perc)
      
     if (pop == "pop_total"){
-      data_walk$A_edu <-(data_walk$E_perc)*data_walk$pop_total_n
-      data_walk$A_saude <-(data_walk$S_perc)*data_walk$pop_total_n
-      data_walk$A_trab <-(data_walk$T_perc)*data_walk$pop_total_n
+      data_walk$A_edu <-(data_walk$E_perc)*data_walk$pop_total_q
+      data_walk$A_saude <-(data_walk$S_perc)*data_walk$pop_total_q
+      data_walk$A_trab <-(data_walk$T_perc)*data_walk$pop_total_q
       
-      #data_walk$A_edu <- ((data_walk$E_perc)*data_walk$pop_total_n)/sum(data_walk$pop_total_n)
-      #data_walk$A_saude <- ((data_walk$S_perc)*data_walk$pop_total_n)/sum(data_walk$pop_total_n)
-      #data_walk$A_trab <- ((data_walk$T_perc)*data_walk$pop_total_n)/sum(data_walk$pop_total_n)
-      
-#      data_walk$A_edu <-(data_walk$E_perc)*data_walk$pop_perc_n
-#      data_walk$A_saude <-(data_walk$S_perc)*data_walk$pop_perc_n
-#     data_walk$A_trab <-(data_walk$T_perc)*data_walk$pop_perc_n
+      im_walk_edu <- sum(data_walk$A_edu)/sum(data_walk$pop_total_q)
+      im_walk_saude <- sum(data_walk$A_saude)/sum(data_walk$pop_total_q)
+      im_walk_trab <- sum(data_walk$A_trab)/sum(data_walk$pop_total_q)
+
     }else{
-      data_walk$A_edu <-(data_walk$E_perc)*data_walk$pop_negra_n
-      data_walk$A_saude <-(data_walk$S_perc)*data_walk$pop_negra_n
-      data_walk$A_trab <-(data_walk$T_perc)*data_walk$pop_negra_n
+      data_walk$A_edu <-(data_walk$E_perc)*data_walk$perc_negra_q
+      data_walk$A_saude <-(data_walk$S_perc)*data_walk$perc_negra_q
+      data_walk$A_trab <-(data_walk$T_perc)*data_walk$perc_negra_q
+      
+      im_walk_edu <- sum(data_walk$A_edu)/sum(data_walk$perc_negra_q)
+      im_walk_saude <- sum(data_walk$A_saude)/sum(data_walk$perc_negra_q)
+      im_walk_trab <- sum(data_walk$A_trab)/sum(data_walk$perc_negra_q)
     }
     
-    im_walk_edu <- mean(data_walk$A_edu)
-    im_walk_saude <- mean(data_walk$A_saude)
-    im_walk_trab <- mean(data_walk$A_trab)
-    
     #bike
-    data_bike <- dplyr::filter(data_ativos, mode=='bike')
+    data_bike <- dplyr::filter(data_ativos, mode=='bike')%>%
+      dplyr::filter(pop_total>0)
+    
     data_bike$saude_entorno <- 0
     data_bike$edu_entorno <- 0
     data_bike$trab_entorno <- 0
     
+    data_bike$pop_total_q <- ifelse(data_bike$pop_total >= quantile(data_bike$pop_total, .75), 4,
+                                    ifelse(data_bike$pop_total >= quantile(data_bike$pop_total, 0.5), 3, 
+                                           ifelse(data_bike$pop_total >= quantile(data_bike$pop_total, 0.25), 2,1)))
+    
+    data_bike$cor_negra_q <- ifelse(data_bike$cor_negra >= quantile(data_bike$cor_negra, .75), 4,
+                                    ifelse(data_bike$cor_negra >= quantile(data_bike$cor_negra, 0.5), 3, 
+                                           ifelse(data_bike$cor_negra >= quantile(data_bike$cor_negra, 0.25), 2,1)))
+    
+    data_bike$perc_negra <- data_bike$cor_negra/data_bike$pop_total
+    data_bike$perc_negra_q <- ifelse(data_bike$perc_negra >= quantile(data_bike$perc_negra, .75), 4,
+                                     ifelse(data_bike$perc_negra >= quantile(data_bike$perc_negra, 0.5), 3, 
+                                            ifelse(data_bike$perc_negra >= quantile(data_bike$perc_negra, 0.25), 2,1)))
+    
     viz_bike <- get_kring(h3_address = data_bike$id_hex, ring_size = 10, simple = TRUE)
+    
     for(i in 1:nrow(data_bike)){
       
       data_bike[i,]$saude_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$saude_total)
       data_bike[i,]$edu_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$edu_total)
       data_bike[i,]$trab_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$empregos_total)
       
-      if(data_bike[i,]$edu_entorno == 0){
-        data_bike[i,]$edu_entorno <- data_bike[i,]$CMAET30+1
-      }
-      if(data_bike[i,]$saude_entorno == 0){
-        data_bike[i,]$saude_entorno <- data_bike[i,]$CMAST30+1
-      }
-      if(data_bike[i,]$trab_entorno == 0){
-        data_bike[i,]$trab_entorno <- data_bike[i,]$CMATT30+1
-      }
+#      if(data_bike[i,]$edu_entorno == 0){
+#        data_bike[i,]$edu_entorno <- data_bike[i,]$CMAET30+1
+#      }
+#      if(data_bike[i,]$saude_entorno == 0){
+#        data_bike[i,]$saude_entorno <- data_bike[i,]$CMAST30+1
+#     }
+#      if(data_bike[i,]$trab_entorno == 0){
+#        data_bike[i,]$trab_entorno <- data_bike[i,]$CMATT30+1
+#      }
     }
+    data_bike$saude_entorno <- ifelse(data_bike$saude_entorno == 0, 1, data_bike$saude_entorno)
+    data_bike$edu_entorno <- ifelse(data_bike$edu_entorno == 0, 1, data_bike$edu_entorno)
+    data_bike$trab_entorno <- ifelse(data_bike$trab_entorno == 0, 1, data_bike$trab_entorno)
     
     data_bike$E_perc <- data_bike$CMAET30/data_bike$edu_entorno
     data_bike$S_perc <- data_bike$CMAST30/data_bike$saude_entorno
     data_bike$T_perc <- data_bike$CMATT30/data_bike$trab_entorno
-    # Normalizacao
-#    data_bike$pop_perc <- (data_bike$pop_total)/sum(data_bike$pop_total)
-#    data_bike$pop_perc_n <- (data_bike$pop_perc - min(data_bike$pop_perc, na.rm = TRUE))/(max(data_bike$pop_perc, na.rm=TRUE)-min(data_bike$pop_perc, na.rm=TRUE))
-#    data_bike$popn_perc <- (data_bike$pop_negra)/sum(data_bike$pop_negra)
-#    data_bike$popn_perc_n <- (data_bike$popn_perc - min(data_bike$popn_perc, na.rm = TRUE))/(max(data_bike$popn_perc, na.rm=TRUE)-min(data_bike$popn_perc, na.rm=TRUE))
     
-    # Normalizando apenas a populacao do hex
-    #data_bike$pop_total_n <- rescale(data_bike$pop_total, na.rm=TRUE) 
-    data_bike$pop_total_n <- (data_bike$pop_branca - min(data_bike$pop_branca, na.rm = TRUE))/(max(data_bike$pop_branca, na.rm=TRUE)-min(data_bike$pop_branca, na.rm=TRUE))
-    data_bike$pop_negra_n <- (data_bike$pop_negra - min(data_bike$pop_negra, na.rm = TRUE))/(max(data_bike$pop_negra, na.rm=TRUE)-min(data_bike$pop_negra, na.rm=TRUE))
-    
-    #data_bike$pop_negra_n <- rescale(data_bike$pop_negra, na.rm=TRUE)
+    data_bike$E_perc <- ifelse(data_bike$E_perc>1, 1, data_bike$E_perc)
+    data_bike$S_perc <- ifelse(data_bike$S_perc>1, 1, data_bike$S_perc)
+    data_bike$T_perc <- ifelse(data_bike$T_perc>1, 1, data_bike$T_perc)
     
     if (pop == 'pop_total'){
-      data_bike$A_edu <-(data_bike$E_perc)*data_bike$pop_total_n
-      data_bike$A_saude <-(data_bike$S_perc)*data_bike$pop_total_n
-      data_bike$A_trab <-(data_bike$T_perc)*data_bike$pop_total_n
+      data_bike$A_edu <-(data_bike$E_perc)*data_bike$pop_total_q
+      data_bike$A_saude <-(data_bike$S_perc)*data_bike$pop_total_q
+      data_bike$A_trab <-(data_bike$T_perc)*data_bike$pop_total_q
       
-      #data_bike$A_edu <- ((data_bike$E_perc)*data_bike$pop_total_n)/sum(data_bike$pop_total_n)
-      #data_bike$A_saude <- ((data_bike$S_perc)*data_bike$pop_total_n)/sum(data_bike$pop_total_n)
-      #data_bike$A_trab <- ((data_bike$T_perc)*data_bike$pop_total_n)/sum(data_bike$pop_total_n)
+      im_bike_edu <- sum(data_bike$A_edu)/sum(data_bike$pop_total_q)
+      im_bike_saude <- sum(data_bike$A_saude)/sum(data_bike$pop_total_q)
+      im_bike_trab <- sum(data_bike$A_trab)/sum(data_bike$pop_total_q)
       
-#      data_bike$A_edu <-(data_bike$E_perc)*data_bike$pop_perc_n
-#      data_bike$A_saude <-(data_bike$S_perc)*data_bike$pop_perc_n
-#      data_bike$A_trab <-(data_bike$T_perc)*data_bike$pop_perc_n
     }else{
-      data_bike$A_edu <-(data_bike$E_perc)*data_bike$pop_negra_n
-      data_bike$A_saude <-(data_bike$S_perc)*data_bike$pop_negra_n
-      data_bike$A_trab <-(data_bike$T_perc)*data_bike$pop_negra_n
+      data_bike$A_edu <-(data_bike$E_perc)*data_bike$perc_negra_q
+      data_bike$A_saude <-(data_bike$S_perc)*data_bike$perc_negra_q
+      data_bike$A_trab <-(data_bike$T_perc)*data_bike$perc_negra_q
+      
+      im_bike_edu <- sum(data_bike$A_edu)/sum(data_bike$perc_negra_q)
+      im_bike_saude <- sum(data_bike$A_saude)/sum(data_bike$perc_negra_q)
+      im_bike_trab <- sum(data_bike$A_trab)/sum(data_bike$perc_negra_q)
     }
     
-    im_bike_edu <- mean(data_bike$A_edu)
-    im_bike_saude <- mean(data_bike$A_saude)
-    im_bike_trab <- mean(data_bike$A_trab)
-    
     # 4.1 IM por modo de transporte
+    
+    # Onibus 
+    # 60 minutos
+    # Res 7
+    # Entorno = 10 hex
+    
+    # CArro
+    # 30 minutos
+    # Res 7
+    # Entorno = 10 hex
+    
+    # Bike
+    # 30 minutos
+    # Res 8
+    # Entorno = 10 hex
+    
+    # Walk
+    # 30 minutos
+    # Res 8
+    # Entorno = 4 hex
+    
     # Onibus
     if (muni %nin% skip_bus){
       im_bus <- (im_bus_edu*3 + im_bus_saude*2 + im_bus_trab*5)/10
       p_bus <- 1
     }else{
       im_bus <- 0
-      p_bus <- 0
+      p_bus <- 1
     }
     # Carro
     im_car <- (im_car_edu*3 + im_car_saude*2 + im_car_trab*5)/10
@@ -395,14 +445,17 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     print(paste("Acessibilidade - carro compart.:", im_car))
     print(paste("indice de mobilidade:", indice_mobilidade))
     
-    df <- data.frame(municipio = muni, IM = indice_mobilidade, IM_edu = im_edu, IM_saude = im_saude, IM_trab = im_trab,
+    df <- data.frame(municipio = muni, IM = indice_mobilidade, #IM_edu = im_edu, IM_saude = im_saude, IM_trab = im_trab,
                      IM_bus = im_bus,
-                     IM_bus_edu = im_bus_edu, IM_bus_saude = im_bus_saude, IM_bus_trab = im_bus_trab, 
-                     IM_walk = im_walk, 
-                     IM_walk_edu = im_walk_edu, IM_walk_saude = im_walk_saude, IM_walk_trab = im_walk_trab, 
+                     IM_walk = im_walk,
                      IM_bike = im_bike,
-                     IM_bike_edu = im_bike_edu, IM_bike_saude = im_bike_saude, IM_bike_trab = im_bike_trab, 
                      IM_car = im_car,
+                     IM_bus_edu = im_bus_edu, IM_bus_saude = im_bus_saude, IM_bus_trab = im_bus_trab, 
+                      
+                     IM_walk_edu = im_walk_edu, IM_walk_saude = im_walk_saude, IM_walk_trab = im_walk_trab, 
+                     
+                     IM_bike_edu = im_bike_edu, IM_bike_saude = im_bike_saude, IM_bike_trab = im_bike_trab, 
+                     
                      IM_car_edu = im_car_edu, IM_car_saude = im_car_saude, IM_car_trab = im_car_trab
                      )
     
@@ -410,7 +463,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Ajusta o nome do arquivo
     #write_csv(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
-    write_csv2(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_7_%s.csv', save_folder, pop))
+    write_csv2(dados_indice, sprintf('%s/indice_mobilidade_quantil_perc_%s_2.csv', save_folder, pop))
     
   }
   # Retorna o dataframe
@@ -429,8 +482,9 @@ indice_mobilidade_entorno(muni_list = munis, ano=2019, pop="pop_negra")
 files_folder <- "../../indice-mobilidade_dados"
 subfolder19 <- sprintf("%s/19_indice_mobilidade/2019", files_folder)
 
-im <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_pop_total_pop.csv', subfolder19))
-im2 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_pop_negra_pop.csv', subfolder19))
+im2 <- read_delim(sprintf('%s/indice_mobilidade_quantil_perc_pop_negra_2.csv', subfolder19))
+
+im2 <- read_delim(sprintf('%s/indice_mobilidade_quantil_pop_negra.csv', subfolder19))
 
 im3 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_7_pop_total.csv', subfolder19))
 im4 <- read_delim(sprintf('%s/indice_mobilidade_pop_normalizado_7_pop_negra.csv', subfolder19))
