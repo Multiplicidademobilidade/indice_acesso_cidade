@@ -3,6 +3,66 @@
 # Indice de mobilidade
 source('fun/setup.R')
 library(scales)
+muni <- 'nat'
+ano <- 2019
+
+files_folder <- "../../indice-mobilidade_dados"
+subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
+subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
+
+file3 <- readRDS(sprintf('%s/hex_agregado_%s_08_2019.rds', subfolder14, muni))%>%
+  st_drop_geometry()
+file4 <- readRDS(sprintf('%s/acess_08_%s_modos_ativos_2019.rds', subfolder17, muni))
+file4_i <- readRDS(sprintf('%s/acess_ideal_08_%s_modos_ativos_2019.rds', subfolder17, muni))
+data_ativos <- left_join(file3, file4, by = c('id_hex' = 'origin'))
+data_ativos_i <- left_join(file3, file4_i, by = c('id_hex' = 'origin'))
+
+data_walk <- dplyr::filter(data_ativos, mode=='walk')%>%
+  dplyr::filter(pop_total>0)
+
+data_walk_i <- dplyr::filter(data_ativos_i, mode=='walk')%>%
+  dplyr::select('id_hex', 'CMATT30_', 'CMAST30_', 'CMAET30_')
+
+data_walk <- left_join(data_walk, data_walk_i, by = 'id_hex')
+
+data_walk$pop_total_q <- ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, .75), 4,
+                                ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, 0.5), 3, 
+                                       ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, 0.25), 2,1)))
+
+data_walk$cor_negra_q <- ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, .75), 4,
+                                ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, 0.5), 3, 
+                                       ifelse(data_walk$cor_negra >= quantile(data_walk$cor_negra, 0.25), 2,1)))
+
+data_walk$perc_negra <- data_walk$cor_negra/data_walk$pop_total
+data_walk$perc_negra_q <- ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, .75), 4,
+                                 ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, 0.5), 3, 
+                                        ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, 0.25), 2,1)))
+
+data_walk$E_perc <- data_walk$CMAET30/data_walk$CMAET30_
+data_walk$S_perc <- data_walk$CMAST30/data_walk$CMAST30_
+data_walk$T_perc <- data_walk$CMATT30/data_walk$CMATT30_
+
+data_walk$E_perc <- ifelse(data_walk$E_perc>1, 1, data_walk$E_perc)
+data_walk$S_perc <- ifelse(data_walk$S_perc>1, 1, data_walk$S_perc)
+data_walk$T_perc <- ifelse(data_walk$T_perc>1, 1, data_walk$T_perc)
+
+data_ativos <- data_ativos%>%
+  drop_na(any_of('mode'))%>%
+  dplyr::select('id_hex', 'sigla_muni', 'cor_branca', 'cor_amarela','cor_indigena','cor_negra', 'pop_total',
+                'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT30',
+                'CMAST30', 'CMAET30')
+
+data_ativos_i<- data_ativos_i%>%
+  drop_na(any_of('mode'))%>%
+  dplyr::filter(pop_total>0)%>%
+  dplyr::select('id_hex', 'mode', 'CMATT30', 'CMAST30', 'CMAET30')
+
+setnames(data_ativos_i, old = c('CMATT30', 'CMAST30', 'CMAET30'), new = c('CMATT30_', 'CMAST30_', 'CMAET30_'))
+
+
+
+
+
 
 indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
   # Essa funcao calcula o indice de todas as cidades e organiza os resultados em um dataframe que sera salvo em .csv
@@ -53,15 +113,19 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       data_bus <- left_join(file1, file2, by = c('id_hex' = 'origin'))
     }
     
-    # Carro compartilhado (res = 7)
-    file5 <- readRDS(sprintf('%s/acess_07_%s_carro_compart_2019.rds', subfolder17, muni))
-    data_carro <- left_join(file1, file5, by = c('id_hex' = 'origin'))
-    
     # Ativos (res = 8)
     file3 <- readRDS(sprintf('%s/hex_agregado_%s_08_2019.rds', subfolder14, muni))%>%
       st_drop_geometry()
     file4 <- readRDS(sprintf('%s/acess_08_%s_modos_ativos_2019.rds', subfolder17, muni))
+    file4_i <- readRDS(sprintf('%s/acess_ideal_08_%s_modos_ativos_2019.rds', subfolder17, muni))
     data_ativos <- left_join(file3, file4, by = c('id_hex' = 'origin'))
+    data_ativos_i <- left_join(file3, file4_i, by = c('id_hex' = 'origin'))
+    
+    # Carro compartilhado (res = 7)
+    file5 <- readRDS(sprintf('%s/acess_07_%s_carro_compart_2019.rds', subfolder17, muni))
+    file5_i <- readRDS(sprintf('%s/acess_ideal_07_%s_carro_compart_2019.rds', subfolder17, muni))
+    data_carro <- left_join(file1, file5, by = c('id_hex' = 'origin'))
+    data_carro_i <- left_join(file1, file5_i, by = c('id_hex' = 'origin'))
     
     # 3.0 Selecao de colunas relevantes
     # 3.1 Onibus
@@ -166,9 +230,21 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     data_carro <- data_carro%>%
       drop_na(any_of('mode'))%>%
       dplyr::select('id_hex', 'sigla_muni', 'cor_branca', 'cor_amarela','cor_indigena','cor_negra', 'pop_total',
-                    'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT15', 'CMATT30', 'CMATT45', 'CMATT60',
-                    'CMAST15', 'CMAST30', 'CMAST45', 'CMAST60', 'CMAET15', 'CMAET30', 'CMAET45', 'CMAET60')%>%
+                    'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT30',
+                    'CMAST30', 'CMAET30')%>%
       dplyr::filter(pop_total>0)
+    
+    data_carro_i<- data_carro_i%>%
+      drop_na(any_of('mode'))%>%
+      dplyr::filter(pop_total>0)%>%
+      dplyr::select('id_hex', 'CMATT30', 'CMAST30', 'CMAET30')
+    setnames(data_carro_i, old = c('CMATT30', 'CMAST30', 'CMAET30'), new = c('CMATT30_', 'CMAST30_', 'CMAET30_'))
+    
+    data_carro_i$CMAET30_ <- ifelse(data_carro_i$CMAET30_ == 0, 1, data_carro_i$CMAET30_)
+    data_carro_i$CMAST30_ <- ifelse(data_carro_i$CMAST30_ == 0, 1, data_carro_i$CMAST30_)
+    data_carro_i$CMATT30_ <- ifelse(data_carro_i$CMATT30_ == 0, 1, data_carro_i$CMATT30_)
+      
+    data_carro <- left_join(data_carro, data_carro_i, by = 'id_hex')
     
     # Agrega populacoes
     #data_carro$pop_negra <- data_carro$cor_negra + data_carro$cor_indigena
@@ -187,17 +263,17 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
                                     ifelse(data_carro$perc_negra >= quantile(data_carro$perc_negra, 0.5), 3, 
                                            ifelse(data_carro$perc_negra >= quantile(data_carro$perc_negra, 0.25), 2,1)))
     
-    data_carro$saude_entorno <- 0
-    data_carro$edu_entorno <- 0
-    data_carro$trab_entorno <- 0
+#    data_carro$saude_entorno <- 0
+#    data_carro$edu_entorno <- 0
+#    data_carro$trab_entorno <- 0
     
-    viz_car <- get_kring(h3_address = data_carro$id_hex, ring_size = 10, simple = TRUE)
-    for(i in 1:nrow(data_carro)){
-      
-      data_carro[i,]$saude_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$saude_total)
-      data_carro[i,]$edu_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$edu_total)
-      data_carro[i,]$trab_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$empregos_total)
-      
+#    viz_car <- get_kring(h3_address = data_carro$id_hex, ring_size = 10, simple = TRUE)
+#    for(i in 1:nrow(data_carro)){
+#      
+#      data_carro[i,]$saude_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$saude_total)
+#      data_carro[i,]$edu_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$edu_total)
+#      data_carro[i,]$trab_entorno <- sum(data_carro[data_carro$id_hex %in% viz_car[[i]],]$empregos_total)
+#      
 #      if(data_carro[i,]$edu_entorno == 0){
 #        data_carro[i,]$edu_entorno <- data_carro[i,]$CMAET30+1
 #      }
@@ -207,15 +283,19 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
 #      if(data_carro[i,]$trab_entorno == 0){
 #        data_carro[i,]$trab_entorno <- data_carro[i,]$CMATT30+1
  #     }
-    }
+ #   }
     
-    data_carro$saude_entorno <- ifelse(data_carro$saude_entorno == 0, 1, data_carro$saude_entorno)
-    data_carro$edu_entorno <- ifelse(data_carro$edu_entorno == 0, 1, data_carro$edu_entorno)
-    data_carro$trab_entorno <- ifelse(data_carro$trab_entorno == 0, 1, data_carro$trab_entorno)
+#    data_carro$saude_entorno <- ifelse(data_carro$saude_entorno == 0, 1, data_carro$saude_entorno)
+#    data_carro$edu_entorno <- ifelse(data_carro$edu_entorno == 0, 1, data_carro$edu_entorno)
+#    data_carro$trab_entorno <- ifelse(data_carro$trab_entorno == 0, 1, data_carro$trab_entorno)
     
-    data_carro$E_perc <- data_carro$CMAET30/data_carro$edu_entorno
-    data_carro$S_perc <- data_carro$CMAST30/data_carro$saude_entorno
-    data_carro$T_perc <- data_carro$CMATT30/data_carro$trab_entorno
+#    data_carro$E_perc <- data_carro$CMAET30/data_carro$edu_entorno
+#    data_carro$S_perc <- data_carro$CMAST30/data_carro$saude_entorno
+#    data_carro$T_perc <- data_carro$CMATT30/data_carro$trab_entorno
+    
+    data_carro$E_perc <- data_carro$CMAET30/data_carro$CMAET30_
+    data_carro$S_perc <- data_carro$CMAST30/data_carro$CMAST30_
+    data_carro$T_perc <- data_carro$CMATT30/data_carro$CMATT30_
     
     data_carro$E_perc <- ifelse(data_carro$E_perc>1, 1, data_carro$E_perc)
     data_carro$S_perc <- ifelse(data_carro$S_perc>1, 1, data_carro$S_perc)
@@ -248,8 +328,19 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     data_ativos <- data_ativos%>%
       drop_na(any_of('mode'))%>%
       dplyr::select('id_hex', 'sigla_muni', 'cor_branca', 'cor_amarela','cor_indigena','cor_negra', 'pop_total',
-                    'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT15', 'CMATT30',
-                    'CMAST15', 'CMAST30', 'CMAET15', 'CMAET30')
+                    'empregos_total', 'saude_total', 'edu_total', 'mode', 'CMATT30',
+                    'CMAST30', 'CMAET30')
+    
+    data_ativos_i<- data_ativos_i%>%
+      drop_na(any_of('mode'))%>%
+      dplyr::filter(pop_total>0)%>%
+      dplyr::select('id_hex', 'mode', 'CMATT30', 'CMAST30', 'CMAET30')
+      
+    setnames(data_ativos_i, old = c('CMATT30', 'CMAST30', 'CMAET30'), new = c('CMATT30_', 'CMAST30_', 'CMAET30_'))
+    
+    data_ativos_i$CMAET30_ <- ifelse(data_ativos_i$CMAET30_ == 0, 1, data_ativos_i$CMAET30_)
+    data_ativos_i$CMAST30_ <- ifelse(data_ativos_i$CMAST30_ == 0, 1, data_ativos_i$CMAST30_)
+    data_ativos_i$CMATT30_ <- ifelse(data_ativos_i$CMATT30_ == 0, 1, data_ativos_i$CMATT30_)
     
     # Agrega populacoes
     data_ativos$pop_negra <- data_ativos$cor_negra + data_ativos$cor_indigena
@@ -259,6 +350,11 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     # Separa em walk e bike e calcula percentuais 
     data_walk <- dplyr::filter(data_ativos, mode=='walk')%>%
       dplyr::filter(pop_total>0)
+    
+    data_walk_i <- dplyr::filter(data_ativos_i, mode=='walk')%>%
+      dplyr::select('id_hex', 'CMATT30_', 'CMAST30_', 'CMAET30_')
+    
+    data_walk <- left_join(data_walk, data_walk_i, by = 'id_hex')
     
     data_walk$pop_total_q <- ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, .75), 4,
                                      ifelse(data_walk$pop_total >= quantile(data_walk$pop_total, 0.5), 3, 
@@ -274,16 +370,16 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
                                              ifelse(data_walk$perc_negra >= quantile(data_walk$perc_negra, 0.25), 2,1)))
     
     #walk
-    data_walk$saude_entorno <- 0
-    data_walk$edu_entorno <- 0
-    data_walk$trab_entorno <- 0
+#    data_walk$saude_entorno <- 0
+#    data_walk$edu_entorno <- 0
+#    data_walk$trab_entorno <- 0
     
-    viz_walk <- get_kring(h3_address = data_walk$id_hex, ring_size = 4, simple = TRUE)
-    for(i in 1:nrow(data_walk)){
-      
-      data_walk[i,]$saude_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$saude_total)
-      data_walk[i,]$edu_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$edu_total)
-      data_walk[i,]$trab_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$empregos_total)
+#    viz_walk <- get_kring(h3_address = data_walk$id_hex, ring_size = 4, simple = TRUE)
+#    for(i in 1:nrow(data_walk)){
+#      
+#      data_walk[i,]$saude_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$saude_total)
+#      data_walk[i,]$edu_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$edu_total)
+#      data_walk[i,]$trab_entorno <- sum(data_walk[data_walk$id_hex %in% viz_walk[[i]],]$empregos_total)
       
 #      if(data_walk[i,]$edu_entorno == 0){
 #        data_walk[i,]$edu_entorno <- data_walk[i,]$CMAET30+1
@@ -294,15 +390,19 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
 #      if(data_walk[i,]$trab_entorno == 0){
 #        data_walk[i,]$trab_entorno <- data_walk[i,]$CMATT30+1
 #      }
-    }
+#    }
     
-    data_walk$saude_entorno <- ifelse(data_walk$saude_entorno == 0, 1, data_walk$saude_entorno)
-    data_walk$edu_entorno <- ifelse(data_walk$edu_entorno == 0, 1, data_walk$edu_entorno)
-    data_walk$trab_entorno <- ifelse(data_walk$trab_entorno == 0, 1, data_walk$trab_entorno)
+#    data_walk$saude_entorno <- ifelse(data_walk$saude_entorno == 0, 1, data_walk$saude_entorno)
+#    data_walk$edu_entorno <- ifelse(data_walk$edu_entorno == 0, 1, data_walk$edu_entorno)
+#    data_walk$trab_entorno <- ifelse(data_walk$trab_entorno == 0, 1, data_walk$trab_entorno)
     
-    data_walk$E_perc <- data_walk$CMAET30/data_walk$edu_entorno
-    data_walk$S_perc <- data_walk$CMAST30/data_walk$saude_entorno
-    data_walk$T_perc <- data_walk$CMATT30/data_walk$trab_entorno
+#   data_walk$E_perc <- data_walk$CMAET30/data_walk$edu_entorno
+#    data_walk$S_perc <- data_walk$CMAST30/data_walk$saude_entorno
+#    data_walk$T_perc <- data_walk$CMATT30/data_walk$trab_entorno
+    
+    data_walk$E_perc <- data_walk$CMAET30/data_walk$CMAET30_
+    data_walk$S_perc <- data_walk$CMAST30/data_walk$CMAST30_
+    data_walk$T_perc <- data_walk$CMATT30/data_walk$CMATT30_
     
     data_walk$E_perc <- ifelse(data_walk$E_perc>1, 1, data_walk$E_perc)
     data_walk$S_perc <- ifelse(data_walk$S_perc>1, 1, data_walk$S_perc)
@@ -335,9 +435,14 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     data_bike <- dplyr::filter(data_ativos, mode=='bike')%>%
       dplyr::filter(pop_total>0)
     
-    data_bike$saude_entorno <- 0
-    data_bike$edu_entorno <- 0
-    data_bike$trab_entorno <- 0
+    data_bike_i <- dplyr::filter(data_ativos_i, mode=='bike')%>%
+      dplyr::select('id_hex', 'CMATT30_', 'CMAST30_', 'CMAET30_')
+    
+    data_bike <- left_join(data_bike, data_bike_i, by = 'id_hex')
+    
+#    data_bike$saude_entorno <- 0
+#    data_bike$edu_entorno <- 0
+#    data_bike$trab_entorno <- 0
     
     data_bike$pop_total_q <- ifelse(data_bike$pop_total >= quantile(data_bike$pop_total, .75), 4,
                                     ifelse(data_bike$pop_total >= quantile(data_bike$pop_total, 0.5), 3, 
@@ -352,13 +457,12 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
                                      ifelse(data_bike$perc_negra >= quantile(data_bike$perc_negra, 0.5), 3, 
                                             ifelse(data_bike$perc_negra >= quantile(data_bike$perc_negra, 0.25), 2,1)))
     
-    viz_bike <- get_kring(h3_address = data_bike$id_hex, ring_size = 10, simple = TRUE)
+#    viz_bike <- get_kring(h3_address = data_bike$id_hex, ring_size = 10, simple = TRUE)
     
-    for(i in 1:nrow(data_bike)){
-      
-      data_bike[i,]$saude_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$saude_total)
-      data_bike[i,]$edu_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$edu_total)
-      data_bike[i,]$trab_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$empregos_total)
+#    for(i in 1:nrow(data_bike)){
+#      data_bike[i,]$saude_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$saude_total)
+#      data_bike[i,]$edu_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$edu_total)
+#      data_bike[i,]$trab_entorno <- sum(data_bike[data_bike$id_hex %in% viz_bike[[i]],]$empregos_total)
       
 #      if(data_bike[i,]$edu_entorno == 0){
 #        data_bike[i,]$edu_entorno <- data_bike[i,]$CMAET30+1
@@ -369,14 +473,18 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
 #      if(data_bike[i,]$trab_entorno == 0){
 #        data_bike[i,]$trab_entorno <- data_bike[i,]$CMATT30+1
 #      }
-    }
-    data_bike$saude_entorno <- ifelse(data_bike$saude_entorno == 0, 1, data_bike$saude_entorno)
-    data_bike$edu_entorno <- ifelse(data_bike$edu_entorno == 0, 1, data_bike$edu_entorno)
-    data_bike$trab_entorno <- ifelse(data_bike$trab_entorno == 0, 1, data_bike$trab_entorno)
+#    }
+#    data_bike$saude_entorno <- ifelse(data_bike$saude_entorno == 0, 1, data_bike$saude_entorno)
+#    data_bike$edu_entorno <- ifelse(data_bike$edu_entorno == 0, 1, data_bike$edu_entorno)
+#    data_bike$trab_entorno <- ifelse(data_bike$trab_entorno == 0, 1, data_bike$trab_entorno)
     
-    data_bike$E_perc <- data_bike$CMAET30/data_bike$edu_entorno
-    data_bike$S_perc <- data_bike$CMAST30/data_bike$saude_entorno
-    data_bike$T_perc <- data_bike$CMATT30/data_bike$trab_entorno
+#    data_bike$E_perc <- data_bike$CMAET30/data_bike$edu_entorno
+#    data_bike$S_perc <- data_bike$CMAST30/data_bike$saude_entorno
+#    data_bike$T_perc <- data_bike$CMATT30/data_bike$trab_entorno
+    
+    data_bike$E_perc <- data_bike$CMAET30/data_bike$CMAET30_
+    data_bike$S_perc <- data_bike$CMAST30/data_bike$CMAST30_
+    data_bike$T_perc <- data_bike$CMATT30/data_bike$CMATT30_
     
     data_bike$E_perc <- ifelse(data_bike$E_perc>1, 1, data_bike$E_perc)
     data_bike$S_perc <- ifelse(data_bike$S_perc>1, 1, data_bike$S_perc)
@@ -481,7 +589,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Ajusta o nome do arquivo
     #write_csv(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
-    write_csv(dados_indice, sprintf('%s/indice_mobilidade_%s_final.csv', save_folder, pop))
+    write_csv(dados_indice, sprintf('%s/indice_mobilidade_%s_revisado.csv', save_folder, pop))
     
   }
   # Retorna o dataframe
@@ -493,16 +601,16 @@ munis <- c('nat','rec')
 munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "jpa", "man", "nat", "rec",
                  "rio", "sne", "sjc", "spo", "tsa", "ula", "vta")
 
-indice_mobilidade_entorno(muni_list = munis, ano=2019, pop="pop_negra")
+indice_mobilidade_entorno(muni_list = munis, ano=2019, pop="media")
 
 # Para acessar os resultados:
 
 files_folder <- "../../indice-mobilidade_dados"
 subfolder19 <- sprintf("%s/19_indice_mobilidade/2019", files_folder)
 
-im <- read_delim(sprintf('%s/indice_mobilidade_pop_negra_final.csv', subfolder19))
+im_pop_negra <- read_delim(sprintf('%s/indice_mobilidade_pop_negra_revisado.csv', subfolder19))
 
-im_media <- read_delim(sprintf('%s/indice_mobilidade_media_final.csv', subfolder19))
+im_media <- read_delim(sprintf('%s/indice_mobilidade_media_revisado.csv', subfolder19))
 
 im2 <- read_delim(sprintf('%s/indice_mobilidade_quantil_pop_negra.csv', subfolder19))
 
