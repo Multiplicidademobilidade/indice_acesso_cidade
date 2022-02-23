@@ -136,7 +136,12 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
         im_bus_saude <- sum(data_bus$A_saude)/sum(data_bus$pop_total_q)
         im_bus_trab <- sum(data_bus$A_trab)/sum(data_bus$pop_total_q)
       
-      }else{ # pop == pop_negra
+      }else if(pop == "media"){
+        im_bus_edu <- mean(data_bus$E_perc)
+        im_bus_saude <- mean(data_bus$S_perc)
+        im_bus_trab <- mean(data_bus$T_perc)
+      }
+      else{ # pop == pop_negra
         data_bus$A_edu <-(data_bus$E_perc)*data_bus$perc_negra_q
         data_bus$A_saude <-(data_bus$S_perc)*data_bus$perc_negra_q
         data_bus$A_trab <-(data_bus$T_perc)*data_bus$perc_negra_q
@@ -225,6 +230,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
         im_car_saude <- sum(data_carro$A_saude)/sum(data_carro$pop_total_q)
         im_car_trab <- sum(data_carro$A_trab)/sum(data_carro$pop_total_q)
 
+    }else if(pop == "media"){
+      im_car_edu <- mean(data_carro$E_perc)
+      im_car_saude <- mean(data_carro$S_perc)
+      im_car_trab <- mean(data_carro$T_perc)
     }else{
       data_carro$A_edu <-(data_carro$E_perc)*data_carro$perc_negra_q
       data_carro$A_saude <-(data_carro$S_perc)*data_carro$perc_negra_q
@@ -308,6 +317,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       im_walk_saude <- sum(data_walk$A_saude)/sum(data_walk$pop_total_q)
       im_walk_trab <- sum(data_walk$A_trab)/sum(data_walk$pop_total_q)
 
+    }else if(pop == "media"){
+      im_walk_edu <- mean(data_walk$E_perc)
+      im_walk_saude <- mean(data_walk$S_perc)
+      im_walk_trab <- mean(data_walk$T_perc)
     }else{
       data_walk$A_edu <-(data_walk$E_perc)*data_walk$perc_negra_q
       data_walk$A_saude <-(data_walk$S_perc)*data_walk$perc_negra_q
@@ -378,6 +391,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
       im_bike_saude <- sum(data_bike$A_saude)/sum(data_bike$pop_total_q)
       im_bike_trab <- sum(data_bike$A_trab)/sum(data_bike$pop_total_q)
       
+    }else if(pop == "media"){
+      im_bike_edu <- mean(data_bike$E_perc)
+      im_bike_saude <- mean(data_bike$S_perc)
+      im_bike_trab <- mean(data_bike$T_perc)
     }else{
       data_bike$A_edu <-(data_bike$E_perc)*data_bike$perc_negra_q
       data_bike$A_saude <-(data_bike$S_perc)*data_bike$perc_negra_q
@@ -389,13 +406,14 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     }
     
     # 4.1 IM por modo de transporte
+    # Considerar PNMU
     
     # Onibus 
     # 60 minutos
     # Res 7
     # Entorno = 10 hex
     
-    # CArro
+    # Carro
     # 30 minutos
     # Res 7
     # Entorno = 10 hex
@@ -413,10 +431,10 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     # Onibus
     if (muni %nin% skip_bus){
       im_bus <- (im_bus_edu*3 + im_bus_saude*2 + im_bus_trab*5)/10
-      p_bus <- 1
+      p_bus <- 3;
     }else{
       im_bus <- 0
-      p_bus <- 1
+      p_bus <- 3
     }
     # Carro
     im_car <- (im_car_edu*3 + im_car_saude*2 + im_car_trab*5)/10
@@ -426,7 +444,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     p_walk <- 2
     # Bicicleta
     im_bike <- (im_bike_edu*3 + im_bike_saude*2 + im_bike_trab*5)/10
-    p_bike <- 2
+    p_bike <- 4
     
     # 4.2 IM consolidado
     # Por enquanto usamos a media aritmetica
@@ -463,7 +481,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Ajusta o nome do arquivo
     #write_csv(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
-    write_csv2(dados_indice, sprintf('%s/indice_mobilidade_quantil_perc_%s_2.csv', save_folder, pop))
+    write_csv(dados_indice, sprintf('%s/indice_mobilidade_%s_final.csv', save_folder, pop))
     
   }
   # Retorna o dataframe
@@ -482,7 +500,9 @@ indice_mobilidade_entorno(muni_list = munis, ano=2019, pop="pop_negra")
 files_folder <- "../../indice-mobilidade_dados"
 subfolder19 <- sprintf("%s/19_indice_mobilidade/2019", files_folder)
 
-im2 <- read_delim(sprintf('%s/indice_mobilidade_quantil_perc_pop_negra_2.csv', subfolder19))
+im <- read_delim(sprintf('%s/indice_mobilidade_pop_negra_final.csv', subfolder19))
+
+im_media <- read_delim(sprintf('%s/indice_mobilidade_media_final.csv', subfolder19))
 
 im2 <- read_delim(sprintf('%s/indice_mobilidade_quantil_pop_negra.csv', subfolder19))
 
