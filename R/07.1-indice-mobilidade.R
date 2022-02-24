@@ -539,20 +539,20 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     # Onibus
     if (muni %nin% skip_bus){
       im_bus <- (im_bus_edu*3 + im_bus_saude*2 + im_bus_trab*5)/10
-      p_bus <- 3;
+      p_bus <- 5;
     }else{
       im_bus <- 0
-      p_bus <- 3
+      p_bus <- 5
     }
     # Carro
     im_car <- (im_car_edu*3 + im_car_saude*2 + im_car_trab*5)/10
     p_car <- 1
     # A pe
     im_walk <- (im_walk_edu*3 + im_walk_saude*2 + im_walk_trab*5)/10
-    p_walk <- 2
+    p_walk <- 1
     # Bicicleta
     im_bike <- (im_bike_edu*3 + im_bike_saude*2 + im_bike_trab*5)/10
-    p_bike <- 4
+    p_bike <- 3
     
     # 4.2 IM consolidado
     # Por enquanto usamos a media aritmetica
@@ -589,7 +589,7 @@ indice_mobilidade_entorno <- function(muni_list, ano=2019, pop="pop_total"){
     
     # Ajusta o nome do arquivo
     #write_csv(dados_indice, sprintf('%s/indice_mobilidade_pop_normalizado_4_%s.csv', save_folder, pop))
-    write_csv(dados_indice, sprintf('%s/indice_mobilidade_%s_revisado.csv', save_folder, pop))
+    write_csv(dados_indice, sprintf('%s/indice_mobilidade_%s_elast.csv', save_folder, pop))
     
   }
   # Retorna o dataframe
