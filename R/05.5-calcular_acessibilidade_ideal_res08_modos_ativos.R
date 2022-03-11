@@ -1,8 +1,9 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.4.1 Calcular acessibilidade - resolução 07
+###### 0.4.1 Calcular acessibilidade - Resolução 08
 
-# Calcula o acesso a oportunidades para os hexágonos de resolução 07. Considera
-# no cálculo somente modos motorizados. Para resolução 08, usar script seguinte.
+# Calcula o acesso a oportunidades para os hexágonos de resolução 08. Considera
+# no cálculo *somente os modos ativos*. Para resolução 07, que considera também
+# os modos motorizados, usar o script anterior.
 
 # carregar bibliotecas
 source('fun/setup.R')
@@ -10,14 +11,13 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE --------------------------------------------------------------
 
-# sigla_muni <- "man"; ano <- 2019; res <- '07'
-
+# sigla_muni <- "spo"; ano <- 2019; res <- '08'
 
 calcular_acess_muni <- function(sigla_muni, ano) {
   
-  # Forçar resolução para 07. Para resolução 08, usar script seguinte; para 
-  # outras resoluções, adaptar os scripts.
-  res <- '07'
+  # Forçar resolução para 08. Para resolução 07, usar script anterior; para 
+  # outras, adaptar o script.
+  res <- '08'
   
   # status message
   message('Trabalhando na cidade ', sigla_muni, ' no ano ', ano,  '\n')
@@ -25,131 +25,21 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
-  subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus", files_folder, ano)
+  subfolder15D <- sprintf("%s/15_otp/04_output_ttmatrix_ideal/%s", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
-  dir.create(subfolder17, recursive = TRUE, showWarnings = FALSE)
+  # dir.create(subfolder17, recursive = TRUE, showWarnings = FALSE)
   
   # 1) Abrir tttmatrix ---------------------------------------------------
   
-  # traz os tempos dos modos ativos em minutos, calculados pelo r5r - o arquivo
-  # inclui os tempos para o modo carro calculados pelo 5r5. Estes tempos de
-  # automóvel serão usados caso haja tempos NA na base fornecida pela 99 
-  ttmatrix_ativos <- readr::read_delim(sprintf('%s/ttmatrix_%s_%s_%s_r5.csv',
-                                             subfolder15C, sigla_muni, res, ano))
+  # traz os tempos dos modos ativos em minutos, calculados pelo r5r
+  ttmatrix <- readr::read_delim(sprintf('%s/ttmatrix_ideal_%s_%s_%s_r5.csv',
+                                        subfolder15D, sigla_muni, res, ano))
   
-  # Separar matrizes de modos ativos e de automóvel
-  ttmatrix_carro_r5r <- ttmatrix_ativos %>% filter(mode == 'car_r5r')
-  # Não vamos usar os modos ativos porque a resolução 7 é muito alta para eles
-  rm(ttmatrix_ativos)
-  
-  
-  # ----------------------------------------------------------
-  # Ajustar base de tempos de carros
-  # ----------------------------------------------------------
+  # o limite de tempo a ser observado para o cálculo das acessibilidades é
+  # de 60 min - descartar todas as linhas com travel_time maior do que isso.
+  # Para modos ativos, o limite será 30 min, mas este filtro será feito adiante
+  ttmatrix <- ttmatrix %>% filter(travel_time <= 60)
 
-  # Para cada cidade, um limite de hexágonos possíveis de serem alcançados de
-  # automóvel será fixado de acordo com base nos dados da 99. Por exemplo, para
-  # BH, o limite é de 2 hexágonos que podem ser alcançados no máximo por veículos
-  # compartilhados no horário de pico. O ajuste será feito modificando o tempo
-  # de viagem de todas as origens que tenham como destino hexágonos além deste
-  # limite para o valor de 999. Já para os hexágonos vizinhos, um fator de
-  # ajuste será aplicado de forma a compensar pelos tempos do r5r, que se referem
-  # a tempos em tráfego livre. Como as viagens aconteceriam em horários de pico,
-  # é preciso "atrasá-las" de acordo com este fator de congestionamento
-
-  # Criar filtro de distância máxima em hexágonos para o alcance das viagens de
-  # carro. Este filtro tem como base os dados da 99
-  ajustes <- c("bho ; 2 ; 0.3436",
-               "cam ; 3 ; 0.2707",
-               "cgr ; 3 ; 0.1400",
-               "cur ; 3 ; 0.2687",
-               "for ; 2 ; 0.3166",
-               "goi ; 3 ; 0.2854",
-               "jpa ; 3 ; 0.2369",
-               "man ; 2 ; 0.2448",
-               "nat ; 3 ; 0.2761",
-               "rec ; 3 ; 0.3668",
-               "rio ; 2 ; 0.3123",
-               "sjc ; 3 ; 0.1563",
-               "sne ; 2 ; 0.3180",
-               "spo ; 2 ; 0.3291",
-               "tsa ; 2 ; 0.2340",
-               "ula ; 3 ; 0.1659",
-               "vta ; 2 ; 0.2806")
-  # Transformar filtro em dataframe
-  ajustes <- 
-    ajustes %>% 
-    as.data.frame() %>% 
-    separate('.', into = c('muni', 'hex_max', 'fator_congest'), sep = ' ; ', remove = TRUE) %>% 
-    mutate(hex_max       = as.numeric(hex_max),
-           fator_congest = as.double(fator_congest))
-  
-  
-  # Pegar quantos hexágonos vizinhos serão considerados para a cidade
-  raio_vizinhos <- ajustes %>% filter(muni == sigla_muni) %>% dplyr::select(hex_max) %>% pull()
-  
-  # Pegar o fator de atraso por congestionamento para a cidade
-  fator_atraso <- ajustes %>% filter(muni == sigla_muni) %>% dplyr::select(fator_congest) %>% pull()
-  
-  # Isolar todos os hexágonos de origens para a cidade
-  origens <- ttmatrix_carro_r5r %>% dplyr::select(origin) %>% distinct()
-  
-  
-  # Atualiza os tempos de viagens de um hexágono de origem para seus hexágonos 
-  # vizinhos (incluindo um fator de congestionamento) e não vizinhos (marcando
-  # o tempo igual a 999 de modo que seja retirado das análises)
-  modify_non_neighbors_times <- function(orig, matriz_tt, n_vizinhos, atraso) {
-
-    # orig <- '87a810000ffffff'; matriz_tt <- ttmatrix_carro_r5r; n_vizinhos <- raio_vizinhos; atraso <- fator_atraso
-
-    # Descobrir os hexágonos vizinhos
-    neighbors <- h3jsr::get_kring(orig, ring_size = n_vizinhos)[[1]][-1]
-    # Adicionar o próprio hexágono na lista com os vizinhos
-    neighbors <- c(neighbors, orig)
-
-    # Separar entre conjuntos de hexágonos vizinhos e não vizinhos
-    vizinhos     <- matriz_tt %>% filter(origin == orig &  destination %in% neighbors)
-    nao_vizinhos <- matriz_tt %>% filter(origin == orig & !destination %in% neighbors)
-
-     # Para hexágonos não vizinhos, ajustar os tempos de viagem para 999 - na 
-     # prática, isso não os considerará nos cálculos de acessibilidade
-     nao_vizinhos <- nao_vizinhos %>% mutate(travel_time = 999)
-     
-     # Para heágonos vizinhos, ajustar tempo de viagem conforme fator de atraso
-     vizinhos <- vizinhos %>% mutate(travel_time = travel_time + (travel_time * atraso))
-
-     # Juntar vizinhos e não vizinhos (ajustado) para retornar
-     return(rbind(vizinhos, nao_vizinhos))
-  }
-  
-  # Atualizar tempos de viagens para todas as origens
-  ttmatrix_carro_compart <- lapply(origens$origin, 
-                                   FUN = modify_non_neighbors_times,
-                                   matriz_tt = ttmatrix_carro_r5r,
-                                   n_vizinhos = raio_vizinhos,
-                                   atraso = fator_atraso)
-  
-  # Transformar conjunto de listas em um dataframe único
-  ttmatrix_carro_compart <- 
-    ttmatrix_carro_compart %>% 
-    rbindlist() %>% 
-    mutate(mode = 'ride_hailing') %>% 
-    arrange(origin, destination)
-
-  
-  # O limite de tempo a ser observado para o cálculo das acessibilidades é
-  # de 60 min - descartar todas as linhas com travel_time maior do que isso
-  ttmatrix <- ttmatrix_carro_compart %>% filter(travel_time <= 60)
-  
-  
-  # # Testar se filtro que limita o acesso do hexágono a um raio de x vizinhos funcionou
-  # subfolder12  <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
-  # hexagonos <- 
-  #   read_rds(sprintf('%s/hex_%s_%s_%s.rds', subfolder12, sigla_muni, res, ano)) %>% 
-  #   dplyr::select(destination = id_hex, geometry)
-  # orig <- ttmatrix %>% sample_n(1) %>% dplyr::select(origin) %>% pull()
-  # ttmatrix %>% filter(origin == orig) %>% left_join(hexagonos, by = 'destination') %>% st_as_sf() %>% mapview()
   
   
   # 2) Agregar dados de uso do solo à ttmatrix --------------------------
@@ -194,19 +84,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # Merge dados de destino na matrix de tempo de viagem
   ttmatrix <- ttmatrix %>% left_join(hex_dest, by = c("destination" = "id_hex"))
-  
-  
-  # Na geração da matrix de ônibus, retiramos hexágonos de origem que possuíam 
-  # população igual a zero e de destino que tinham zero oportunidades. Uma vez
-  # que a base 'ttmatrix' já está agora com os dados de população associados às
-  # origem e os dados de oportunidades associados aos destinos, podemos usar
-  # aqui o mesmo filtro.
-  ttmatrix <- 
-    ttmatrix %>% 
-    mutate(oport_total = empregos_total + saude_total + edu_total + cras_total,
-           .after = 'pop_total') %>% 
-    filter(pop_total > 0 & oport_total > 0)
-  
   
   # Transformar em data.table para cálculos de acessibilidade
   ttmatrix <- ttmatrix %>% setDT()
@@ -256,23 +133,20 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   tt <- c(1, 2, 3, 4)
   
   # Grid resulta em:
-  #  acess_sigla- atividade_sigla - tt_sigla - tt_tp - junto_tp - atividade_nome
-  #  CMA          TT                1          30      CMATT30    empregos_total
+  #  acess_sigla- atividade_sigla - tt_sigla - tt_tp - tt_ativo - junto_tp - junto_ativo - atividade_nome
+  #  CMA          TT                1          30      15         CMATT30    CMATT15       empregos_total
   grid_cma <- 
     expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
     rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
     # adicionar colunas de time threshold  para cada um dos modos
-    mutate(tt_tp = case_when(
+    mutate(tt_ativo = case_when(
+      # Linhas para tt_ativo com tempos maiores do que 30 serão retiradas depois
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
       tt_sigla == 3 ~ 45,
-      tt_sigla == 4 ~ 60,
-      # tt_sigla == 1 ~ 30,
-      # tt_sigla == 2 ~ 60,
-      # tt_sigla == 3 ~ 90,
-      # tt_sigla == 4 ~ 120
+      tt_sigla == 4 ~ 60
     )) %>%
-    mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
+    mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
     mutate(atividade_nome = case_when(atividade_sigla == "TT" ~ "empregos_total",
                                       # atividade_sigla == "TQ" ~ "empregos_match_quintil",
                                       # atividade_sigla == "TD" ~ "empregos_match_decil",
@@ -292,29 +166,30 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   
   # gerar o codigo para calcular as oportunidades
-  # para tp
-  # "CMATT30 = (sum(empregos_total[which(travel_time <= 30)], na.rm = T))"
-  codigo_cma_tp <- c(
+  # para ativo
+  # "CMATT15 = (sum(empregos_total[which(travel_time <= 15)], na.rm = T))"
+  codigo_cma_ativo <- c(
     
     sprintf("%s = (sum(%s[which(travel_time <= %s)], na.rm = T))", 
-            grid_cma$junto_tp, 
+            grid_cma$junto_ativo, 
             grid_cma$atividade_nome, 
-            grid_cma$tt_tp
+            grid_cma$tt_ativo
     )
   )
   
   # dar nomes às variaveis
-  to_make_cma_tp <-    setNames(codigo_cma_tp,    sub('^([[:alnum:]]*) =.*', '\\1', codigo_cma_tp))
+  to_make_cma_ativo <- setNames(codigo_cma_ativo, sub('^([[:alnum:]]*) =.*', '\\1', codigo_cma_ativo))
   
   
   # aplicar a acessibilidade para os modos da cidade
-  
-  # para transporte publico e carro
-  acess_cma <- ttmatrix[mode %in% c("ride_hailing"),
-                        lapply(to_make_cma_tp, function(x) eval(parse(text = x)))
+  # para modos ativos
+  acess_cma <- ttmatrix[mode %in% c("bike", "walk"), 
+                        lapply(to_make_cma_ativo, function(x) eval(parse(text = x)))
                         , by = .(city, mode, origin, pico, quintil, decil)]
   
   
+  # Retirar todas as colunas com tempos 45 e 60 para os modos ativos
+  acess_cma <- acess_cma %>% dplyr::select(-matches('[46]'))
   
   
   
@@ -328,22 +203,19 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # criar dummy para tt
   tt <- c(1, 2, 3, 4)
   
-  # acess_sigla atividade_sigla tt_sigla tt_tp junto_tp atividade_nome
-  # CMP         PT              1        30    CMPPT30  pop_total
+  # acess_sigla atividade_sigla tt_sigla tt_tp tt_ativo junto_tp junto_ativo atividade_nome
+  # CMP         PT              1        30    15       CMPPT30  CMPPT15     pop_total
   grid_cmp <- expand.grid(acess_cmp, atividade_cmp, tt, stringsAsFactors = FALSE) %>%
     rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
     # adicionar colunas de time threshold para cada um dos modos
-    mutate(tt_tp = case_when(
+    mutate(tt_ativo = case_when(
+      # Linhas para tt_ativo com tempos maiores do que 30 serão retiradas depois
       tt_sigla == 1 ~ 15,
       tt_sigla == 2 ~ 30,
       tt_sigla == 3 ~ 45,
-      tt_sigla == 4 ~ 60,
-      # tt_sigla == 1 ~ 30,
-      # tt_sigla == 2 ~ 60,
-      # tt_sigla == 3 ~ 90,
-      # tt_sigla == 4 ~ 120
+      tt_sigla == 4 ~ 60
     )) %>%
-    mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
+    mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
     mutate(atividade_nome = case_when(atividade_sigla == "PT" ~ "pop_total",
                                       atividade_sigla == "PM" ~ "pop_homens",
                                       atividade_sigla == "PW" ~ "pop_mulheres",
@@ -360,34 +232,37 @@ calcular_acess_muni <- function(sigla_muni, ano) {
                                       atividade_sigla == "I7" ~ "idade_70"))
   
   # gerar o codigo para calcular as oportunidades
-  # para tp 
-  # "CMPPT30 = (sum(pop_total[which(travel_time <= 30)], na.rm = T))"
-  codigo_cmp_tp <- c(
+  # para ativo
+  # "CMPPT15 = (sum(pop_total[which(travel_time <= 15)], na.rm = T))"
+  codigo_cmp_ativo <- c(
     
     sprintf("%s = (sum(%s[which(travel_time <= %s)], na.rm = T))", 
-            grid_cmp$junto_tp, 
+            grid_cmp$junto_ativo, 
             grid_cmp$atividade_nome, 
-            grid_cmp$tt_tp
+            grid_cmp$tt_ativo
     )
   )
   
   
   # gerar os nomes das variaveis
-  to_make_cmp_tp <- setNames(codigo_cmp_tp, sub('^([[:alnum:]]*) =.*', '\\1', codigo_cmp_tp))
+  to_make_cmp_ativo <- setNames(codigo_cmp_ativo, sub('^([[:alnum:]]*) =.*', '\\1', codigo_cmp_ativo))
   
   
   # aplicar a acessibilidade para os modos da cidade
-  
-  # para transporte publico e carro
-  acess_cmp <- ttmatrix[mode %in% c("ride_hailing"),
-                        lapply(to_make_cmp_tp, function(x) eval(parse(text = x)))
+  # para modos ativos
+  acess_cmp <- ttmatrix[mode %in% c("bike", "walk"), 
+                        lapply(to_make_cmp_ativo, function(x) eval(parse(text = x)))
                         , by = .(city, mode, destination, pico)]
+  
+  
+  # Retirar todas as colunas com tempos 45 e 60 para os modos ativos
+  acess_cmp <- acess_cmp %>% dplyr::select(-matches('[46]'))
   
   
   
   # 7) Juntar os arquivos de acess ------------------------------------------------
   
-  # Juntar os tres (left_join)
+  # Juntar as acessibilidades (left_join)
   acess <- merge(acess_cma, acess_cmp,
                  all.x = TRUE,
                  by.x = c("city", "mode", "origin", "pico"),
@@ -411,14 +286,22 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   
   # 8) Salvar output --------------------------------------
   
-  path_out <- sprintf("%s/acess_%s_%s_carro_compart_%s", subfolder17, res, sigla_muni, ano)
+  path_out <- sprintf("%s/acess_ideal_%s_%s_modos_ativos_%s", subfolder17, res, sigla_muni, ano)
   write_rds(acess_sf, sprintf('%s.rds', path_out))
   # write_delim(acess_sf, sprintf('%s.csv', path_out), delim = ';')
   st_write(acess_sf, sprintf('%s.gpkg', path_out), driver = 'GPKG', append = FALSE)
   
-  # gc colletc
-  # gc(TRUE)
   
+  # # Checar se acessibilidade mudou frente ao arquivo anterior gerado
+  # acess_nao_ideal <- read_rds(sprintf('%s/acess_%s_%s_modos_ativos_%s.rds', subfolder17, res, sigla_muni, ano))
+  # acess_nao_ideal <- acess_nao_ideal %>% dplyr::select(origin, city, mode, matches('CMATT')) %>% st_drop_geometry()
+  # 
+  # acess_ideal <- acess_sf %>% dplyr::select(origin, city, mode, matches('CMATT')) %>% st_drop_geometry()
+  # 
+  # comparativo <- acess_nao_ideal %>% left_join(acess_ideal, by = c('origin', 'city', 'mode'))
+  # comparativo %>% filter(mode == 'walk') %>% sample_n(20)
+  # comparativo %>% filter(mode == 'bike') %>% sample_n(20)
+  # comparativo %>% filter(mode == 'bike' & CMATT15.x != CMATT15.y) %>% sample_n(20)
   
 }
 
@@ -432,3 +315,5 @@ calcular_acess_muni <- function(sigla_muni, ano) {
 # furrr::future_walk('nat', calcular_acess_muni, ano = 2019)
 
 walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni, calcular_acess_muni, ano = 2019)
+
+

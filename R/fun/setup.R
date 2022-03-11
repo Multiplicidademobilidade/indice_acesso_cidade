@@ -1,4 +1,4 @@
-Sys.setenv(TZ='UTC') # Fuso horario local
+Sys.setenv(TZ = 'UTC') # Fuso horario local
 
 # Carregar bibliotecas
 
@@ -62,13 +62,13 @@ library(sf)           # leitura e manipulacao de dados espaciais
 #library(tmap)
 
 # Opções gerais após carregamento das bibliotecas
-options(scipen=10000)
+options(scipen = 10000)
 `%nin%` = Negate(`%in%`)
 `%nlike%` = Negate(`%like%`)
 
 # Use GForce Optimisations in data.table operations
 # details > https://jangorecki.gitlab.io/data.cube/library/data.table/html/datatable-optimize.html
-options(datatable.optimize=Inf)
+options(datatable.optimize = Inf)
 
 # set number of threads used in data.table
 data.table::setDTthreads(percent = 100)
@@ -282,12 +282,12 @@ to_spatial <- function(df1, coordenada = c("lon", "lat")) {
 }
 
 
-rm_accent <- function(str,pattern="all") {
-  if(!is.character(str))
+rm_accent <- function(str, pattern = "all") {
+  if (!is.character(str))
     str <- as.character(str)
   pattern <- unique(pattern)
-  if(any(pattern=="Ç"))
-    pattern[pattern=="Ç"] <- "ç"
+  if (any(pattern == "Ç"))
+    pattern[pattern == "Ç"] <- "ç"
   symbols <- c(
     acute = "áéíóúÁÉÍÓÚýÝ",
     grave = "àèìòùÀÈÌÒÙ",
@@ -305,9 +305,9 @@ rm_accent <- function(str,pattern="all") {
     cedil = "cC"
   )
   accentTypes <- c("´","`","^","~","¨","ç")
-  if(any(c("all","al","a","todos","t","to","tod","todo")%in%pattern)) # opcao retirar todos
-    return(chartr(paste(symbols, collapse=""), paste(nudeSymbols, collapse=""), str))
-  for(i in which(accentTypes%in%pattern))
+  if (any(c("all", "al", "a", "todos", "t", "to", "tod", "todo") %in% pattern)) # opcao retirar todos
+    return(chartr(paste(symbols, collapse = ""), paste(nudeSymbols, collapse = ""), str))
+  for (i in which(accentTypes %in% pattern))
     str <- chartr(symbols[i],nudeSymbols[i], str)
   return(str)
 }
@@ -344,11 +344,11 @@ theme_aop_map <- function(base_size, ...) {
   theme_void() %+replace%
     theme(
       legend.position = "bottom",
-      plot.margin=unit(c(2,0,0,0),"mm"),
-      legend.key.width=unit(2,"line"),
+      plot.margin = unit(c(2,0,0,0),"mm"),
+      legend.key.width = unit(2,"line"),
       legend.key.height = unit(0.2,"cm"),
-      legend.text=element_text(size=rel(0.5)),
-      legend.title=element_text(size=rel(0.5)),
+      legend.text = element_text(size = rel(0.5)),
+      legend.title = element_text(size = rel(0.5)),
       # plot.title = element_text(hjust = 0, vjust = 4),
       ...
     )
@@ -368,7 +368,7 @@ jenks_natural <- function(data, var, breaks){
   newvar <- paste0(var,"_jenks")
   
   # calculate jenks natural breaks
-  data[, paste0(newvar) := as.character(cut(get(var), breaks= getJenksBreaks(get(var), breaks), include.lowest = TRUE, dig.lab=3)) ]
+  data[, paste0(newvar) := as.character(cut(get(var), breaks = getJenksBreaks(get(var), breaks), include.lowest = TRUE, dig.lab = 3)) ]
   
   # Edit factor text
   data[, paste0(newvar) := str_replace_all(get(newvar), "\\[|\\(|\\]", "") ]
