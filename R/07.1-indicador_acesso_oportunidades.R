@@ -1,25 +1,24 @@
-## Script para o calculo do Indice de Mobilidade (IM)
+## Script para o calculo do Indicador de Acesso às Oportunidades em prol da
+## Redução de Desigualdades (IAOD)
 
 # Indice de mobilidade
 source('fun/setup.R')
-source('fun/indicador_mobilidade.R')
-library('scales')
+source('fun/indice_acesso_oportunidades.R')
 
 
 # Essa funcao calcula o indice de todas as cidades e organiza os resultados em um dataframe que sera salvo em .csv
 indice_mobilidade_entorno <- function(muni_list, ano = 2019){
-  # Essa função calcula uma série de índices intermediários que serão 
+  # Essa função calcula uma série de indicadores intermediários que serão 
   # utilizados para compor o índice final. São eles:
-  # IM - Índice de mobilidade final, que é uma média ponderada dos índices por modo de transporte
+  # IAOD - Índice final, que é uma média ponderada dos índices por modo de transporte
   
-  # IM_bus - ônibus
-  # IM_car - carro compartilhado
-  # IM_walk - a pé
-  # IM_bike - bicicleta
+  # ia_bus - indicador de acesso por ônibus
+  # ia_car - indicador de acesso por carro compartilhado
+  # ia_walk - indicador de acesso a pé
+  # ia_bike - indicador de acesso por bicicleta
   
   # Cada um dos índices acima é resultado da média aritmética dos índices por 
   # tipo de oportunidade, por exemplo:
-  # im_bus_educ - ônibus > educação
   # im_bus_saud - ônibus > saúde
   # IM_bus_trab - ônibus > trabalho
 
@@ -83,7 +82,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro, oport_carro_ideal)
 
 
-    # Criar indicadores de mobilidade para ônibus, para cidades que têm esse dado
+    # Criar indicadores de acesso para ônibus, para cidades que têm esse dado
     if (muni %nin% skip_bus) {
       # Selecionar colunas de interesse
       data_bus <- simplificar_colunas(data_bus, modo = 'onibus')
@@ -91,8 +90,8 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
       # Categorizar os hexágonos de acordo população total e população negra
       data_bus <- categorizar_populacao(data_bus)
       
-      # Calcular indicadores de mobilidade para trabalho, educação e saúde
-      im_onibus <- calcular_indicadores_mobilidade(data_bus, modo = 'onibus')
+      # Calcular componentes de acesso para trabalho, educação e saúde
+      im_onibus <- calcular_indices_iaod(data_bus, modo = 'onibus')
 
     } else { 
       # Para as cidades sem dados de onibus
@@ -103,7 +102,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     }
 
 
-    # Criar indicadores de mobilidade para carro compartilhado
+    # Criar indicadores de acesso para carro compartilhado
     
     # Selecionar colunas de interesse - carro compartilhado
     data_carro <- simplificar_colunas(data_carro, modo = 'carro_compart')
@@ -118,12 +117,12 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # Categorizar os hexágonos de acordo população total e população negra
     data_carro <- categorizar_populacao(data_carro)
     
-    # Calcular indicadores de mobilidade para trabalho, educação e saúde
-    im_carro <- calcular_indicadores_mobilidade(data_carro, modo = 'carro_compart')
+    # Calcular componentes de acesso para trabalho, educação e saúde
+    im_carro <- calcular_indices_iaod(data_carro, modo = 'carro_compart')
     
     
     
-    # Criar indicadores de mobilidade para modos ativos
+    # Criar indicadores de acesso para modos ativos
      
     # Selecionar colunas de interesse - modos ativos
     data_ativos <- simplificar_colunas(data_ativos, modo = 'modos_ativos')
@@ -143,8 +142,8 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # Categorizar os hexágonos de acordo população total e população negra
     data_ape <- categorizar_populacao(data_ape)
     
-    # Calcular indicadores de mobilidade para trabalho, educação e saúde
-    im_ape <- calcular_indicadores_mobilidade(data_ape, modo = 'a_pe')
+    # Calcular componentes de acesso para trabalho, educação e saúde
+    im_ape <- calcular_indices_iaod(data_ape, modo = 'a_pe')
     
     
     # Separar mobilidade por bicicletas
@@ -158,12 +157,12 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # Categorizar os hexágonos de acordo população total e população negra
     data_bici <- categorizar_populacao(data_bici)
     
-    # Calcular indicadores de mobilidade para trabalho, educação e saúde
-    im_bici <- calcular_indicadores_mobilidade(data_bici, modo = 'bicicleta')
+    # Calcular componentes de acesso para trabalho, educação e saúde
+    im_bici <- calcular_indices_iaod(data_bici, modo = 'bicicleta')
 
 
 
-    # Indicadores de Mobilidade por modo de transporte
+    # Indicadores de acesso por modo de transporte
     
     # Considerando a Política Nacional de Mobilidade Urbana = PNMU:
     # Onibus: 60 minutos; Res 7; Entorno = 10 hex;
@@ -199,17 +198,17 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # Juntar todos os indicadores em um único dataframe
     im <- cbind(im_onibus, im_carro, im_ape, im_bici)
     
-    # Calcular indicador de mobilidade consolidado
+    # Calcular índice de acesso às oportunidades (IAOD) consolidado
     im <- im %>% 
       mutate(im_educ = (peso_bus*im_bus_educ + peso_walk*im_walk_educ + peso_bike*im_bike_educ + peso_car*im_car_educ) / (peso_bus + peso_walk + peso_bike + peso_car),
              im_saud = (peso_bus*im_bus_saud + peso_walk*im_walk_saud + peso_bike*im_bike_saud + peso_car*im_car_saud) / (peso_bus + peso_walk + peso_bike + peso_car),
              im_trab = (peso_bus*im_bus_trab + peso_walk*im_walk_trab + peso_bike*im_bike_trab + peso_car*im_car_trab) / (peso_bus + peso_walk + peso_bike + peso_car),
-             im = (peso_bus*im_bus + peso_walk*im_walk + peso_bike*im_bike + peso_car*im_car) / (peso_bus + peso_bike + peso_walk + peso_car),
+             iaod = (peso_bus*im_bus + peso_walk*im_walk + peso_bike*im_bike + peso_car*im_car) / (peso_bus + peso_bike + peso_walk + peso_car),
              muni = muni
              )
     
     # Reordenar e selecionar colunas
-    im <- im %>% dplyr::select(muni, im, im_bus, im_walk, im_bike, im_car,
+    im <- im %>% dplyr::select(muni, iaod, im_bus, im_walk, im_bike, im_car,
                                im_walk_educ, im_walk_saud, im_walk_trab,
                                im_bike_educ, im_bike_saud, im_bike_trab,
                                im_bus_educ,  im_bus_saud,  im_bus_trab,
@@ -218,7 +217,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     
     # # Exibir resultados na tela
     # print("=========================================")
-    # print(paste("Cálculo do IM da cidade: ", muni))
+    # print(paste("Cálculo do IAOD da cidade: ", muni))
     # print(paste("Acessibilidade - ônibus: ", im$im_bus))
     # print(paste("Acessibilidade - a pé:   ", im$im_walk))
     # print(paste("Acessibilidade - bici:   ", im$im_bike))
@@ -238,16 +237,16 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
 # Rodar função de cálculo dos índices de mobilidade para todos os municípios
 ano = 2019
-indices_mobilidade <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni,
-                             indice_mobilidade_entorno, ano = ano) %>% 
-                      rbindlist()
+indices_acesso_oportunidades <- lapply(munis_list$munis_metro[ano_metro == ano]$abrev_muni,
+                                       indice_mobilidade_entorno, ano = ano) %>% 
+                                rbindlist()
 
 
 # Estrutura de pastas para salvar o arquivo
 files_folder <- "../../indice-mobilidade_dados"
-subfolder19 <- sprintf('%s/19_indice_mobilidade/%s', files_folder, ano)
+subfolder19 <- sprintf('%s/19_indices/%s', files_folder, ano)
 dir.create(subfolder19, recursive = TRUE, showWarnings = FALSE)
 
 # Salvar resultados
-out_file <- sprintf('%s/indice_mobilidade_%s.csv', subfolder19, ano)
-write_delim(indices_mobilidade, out_file, delim = ';')
+out_file <- sprintf('%s/IAOD_%s.csv', subfolder19, ano)
+write_delim(indices_acesso_oportunidades, out_file, delim = ';')

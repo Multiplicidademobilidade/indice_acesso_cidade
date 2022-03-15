@@ -13,7 +13,8 @@ library(tidyverse)
 # 2.2 Opiniao sobre novas viagens - 4.1 (% de concordancia)
 
 files_folder <- "../../indice-mobilidade_dados"
-dados <- read_csv(sprintf('%s/dados_99/base_clientes.csv', files_folder))
+# dados <- read_csv(sprintf('%s/dados_99/base_clientes.csv', files_folder))
+dados <- read_csv(sprintf('%s/00_Originais/PesquisaClientes99/pesquisa_clientes_99_2021-2022_tratado.csv', files_folder))
 
 
 dados_2_1 <- filter(dados, county_name=='nat')%>%
@@ -68,7 +69,7 @@ comp_2_2 <- dplyr::filter(dados_2_2, concord_app_mais_cidade=='concorda' | conco
 INIA <- left_join(INIA, comp_2_2, by='county_name')
 
 rm(comp_1_1, comp_1_2, comp_2_1, comp_2_2, dados_1_1, dados_1_2, dados_2_1, dados_2_2)
-rm(INIA)
+# rm(INIA)
 
 # Normalizando
 INIA$percent_1_1<- (INIA$percent_1_1 - min(INIA$percent_1_1))/(max(INIA$percent_1_1)-min(INIA$percent_1_1))
@@ -88,11 +89,12 @@ INIA$INIA <- ((7*INIA$ind_1) + (3*INIA$ind_2))/10
 
 # ----- PARTE 2: INCORPORACAO NO RANKING DE MOBILIDADE -----
 
-dados_iaod <- read_csv2(sprintf('%s/19_indice_mobilidade/2019/IAOD.csv', files_folder))%>%
-  rename('IAOD' = 'IM')%>%
-  dplyr::select(c('municipio', 'IAOD'))
+dados_iaod <- read_csv2(sprintf('%s/19_indices/2019/IAOD_2019.csv', files_folder))%>%
+  rename('IAOD' = 'iaod')%>%
+  dplyr::select(c('muni', 'IAOD')) %>% 
+  mutate(IAOD = as.double(IAOD))
 
-ranking <- left_join(INIA, dados_iaod, by=c('county_name'='municipio'))%>%
+ranking <- left_join(INIA, dados_iaod, by=c('county_name'='muni'))%>%
   dplyr::select(c('county_name', 'INIA', 'IAOD'))
 
 

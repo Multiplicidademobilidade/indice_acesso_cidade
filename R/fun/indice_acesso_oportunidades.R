@@ -97,7 +97,7 @@ categorizar_populacao <- function(df) {
 
 
 # Calcula indicadores de mobilidade para trabalho, educação e saúde
-calcular_indicadores_mobilidade <- function(df, modo) {
+calcular_indices_iaod <- function(df, modo) {
   
   # Cálculo para ônibus é a partir de hexágonos do entorno; demais modos
   # é a partir de uma acessibilidade ideal
