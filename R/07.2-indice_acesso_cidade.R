@@ -55,8 +55,14 @@ combina_app_tp <-
   group_by(muni, concord_int_app_transp_col) %>%
   tally() %>% 
   # Calcular percentual por cidade
-  mutate(perc_combina_app_tp = n/sum(n)) %>% 
-  # Selecionar somente quem disse que concorda
+  mutate(perc_combina_app_tp = n/sum(n)) %>%
+  # Selecionar somente quem disse que concorda com a afirmação
+  filter(concord_int_app_transp_col == 'concorda' | concord_int_app_transp_col == 'concorda_total') %>%
+  # Reagrupar por muniípios, para somar percentuais
+  group_by(muni) %>%
+  mutate(perc_combina_app_tp = sum(perc_combina_app_tp)) %>%
+  # Como colunas de percentuais entre 'concorda' e 'concorda_total' têm os mesmos
+  # valores agora, pegar só a primeira
   filter(concord_int_app_transp_col == 'concorda') %>%
   # Isolar colunas de interesse
   dplyr::select(muni, perc_combina_app_tp)
@@ -83,17 +89,17 @@ app_mais_viagens <-
   group_by(muni, concord_app_mais_cidade) %>%
   tally() %>% 
   # Calcular percentual por cidade
-  mutate(perc_app_mais_vj = n / sum(n)) %>% 
+  mutate(perc_app_mais_vg = n / sum(n)) %>% 
   # Selecionar somente quem disse que concorda com a afirmação
   filter(concord_app_mais_cidade == 'concorda' | concord_app_mais_cidade == 'concorda_total') %>%
   # Reagrupar por muniípios, para somar percentuais
   group_by(muni) %>%
-  mutate(perc_app_mais_vj = sum(perc_app_mais_vj)) %>%
+  mutate(perc_app_mais_vg = sum(perc_app_mais_vg)) %>%
   # Como colunas de percentuais entre 'concorda' e 'concorda_total' têm os mesmos
   # valores agora, pegar só a primeira
   filter(concord_app_mais_cidade == 'concorda') %>%
   # Isolar colunas de interesse
-  dplyr::select(muni, perc_app_mais_vj)
+  dplyr::select(muni, perc_app_mais_vg)
 
 
 # Juntar todos os percentuais em um único dataframe
@@ -114,10 +120,10 @@ percentuais_pesquisa <-
   percentuais_pesquisa %>% 
   # Os dois primeiros componentes vão formar o indicador de integração com o transporte público
   mutate(c_int_tp     = (perc_integra_tp - min(.$perc_integra_tp))         / (max(.$perc_integra_tp) - min(.$perc_integra_tp)),
-         c_prefint_tp = (perc_combina_app_tp - min(.$perc_combina_app_tp)) / (max(.$perc_combina_app_tp) - min(.$perc_combina_app_tp)),
+         c_op_int_tp = (perc_combina_app_tp - min(.$perc_combina_app_tp)) / (max(.$perc_combina_app_tp) - min(.$perc_combina_app_tp)),
          # Os dois segundos vão formar o indicador de novas viagens
          c_nova_vg    = (perc_nao_teriam_vj - min(.$perc_nao_teriam_vj))   / (max(.$perc_nao_teriam_vj) - min(.$perc_nao_teriam_vj)),
-         c_op_nova_vg = (perc_app_mais_vj - min(.$perc_app_mais_vj))       / (max(.$perc_app_mais_vj) - min(.$perc_app_mais_vj)))
+         c_op_nova_vg = (perc_app_mais_vg - min(.$perc_app_mais_vg))       / (max(.$perc_app_mais_vg) - min(.$perc_app_mais_vg)))
 
 
 # Criar o Índice de integração e novas viagens do automóvel por aplicativo (INIA),
@@ -125,7 +131,7 @@ percentuais_pesquisa <-
 indice_inia <- 
   percentuais_pesquisa %>% 
   # ... de integração com o transporte público
-  mutate(itp = ((c_int_tp * 5) + (c_prefint_tp * 5)) / 10,
+  mutate(itp = ((c_int_tp * 5) + (c_op_int_tp * 5)) / 10,
          # ... de novas viagens
          inv = ((c_nova_vg * 5) + (c_op_nova_vg * 5)) / 10) %>% 
   # Por sua vez, o indicador de integração com o transporte público corresponde

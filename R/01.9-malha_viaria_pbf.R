@@ -186,7 +186,7 @@ extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
     arg1 <- sprintf("--read-pbf %s", br_pbf)
     
     # O município de Osasco vai dar erro no momento de criação da rede (script 4.1)
-    if (muni == 'oco'){
+    if (muni == 'oco') {
       arg2 <- sprintf("--bounding-box left=%s bottom=%s right=%s top=%s completeWays='yes'", 
                       muni_bbox@xmin, muni_bbox@ymin, muni_bbox@xmax, muni_bbox@ymax)
       
@@ -203,7 +203,7 @@ extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
     message('\narq   : ', muni_pbf, 
             '\ninicio: ', start_time, 
             '\nfim   : ', end_time, 
-            '\ntotal : ', round(end_time-start_time, 1),' min \n')
+            '\ntotal : ', round(end_time - start_time, 1),' min \n')
   } else {
     message('Arquivo para a cidade ', muni, " já existe, pulando...\n")
   }
