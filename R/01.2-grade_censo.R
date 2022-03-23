@@ -1,20 +1,19 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.1.4 Extrai grade estatistica de cada municipio
+# Extrai a grade estatística de cada município
 
-# carregar bibliotecas
+# Carregar bibliotecas
 source('fun/setup.R')
 
-# função do geobr para dissolver polígonos
+# Função do geobr para dissolver polígonos
 source("fun/dissolve_polygons.R")
 options(future.availableCores.methods = "mc.cores")
 options(mc.cores = 8)
 
+# ano <- 2019; sigla_muni <- 'nat'
 
-### Funcao
-# munis <- sigla <- "for"
+### Função para criar grade estatística
 criar_grade_muni_all <- function(ano, munis = "all") {
-  # Criar pastas para armazenamento dos dados (original era 'data-raw'); a estrutura é:
-  # ../../-mobilidade_dados/grade_municipios/[ano]/arquivos_municipios.rds
+  
+  # Estrutura de pastas
   files_folder <- "../../indice-mobilidade_dados"
   subfolder1 <- sprintf("%s/01_municipios", files_folder)
   subfolder1A <- sprintf("%s/%s", subfolder1, ano)
@@ -22,18 +21,18 @@ criar_grade_muni_all <- function(ano, munis = "all") {
   subfolder3A <- sprintf("%s/%s", subfolder3, ano)
   dir.create(sprintf("%s", subfolder3A), recursive = TRUE, showWarnings = FALSE)
   
-  # funcao para criar grade por municipio
-  criar_grade_muni <- function(sigla){
+  # Função para criar grade por município
+  criar_grade_muni <- function(sigla_muni){
     
-    message('\nRodando cidade: ', sigla,"\n")
+    message('\nRodando cidade: ', sigla_muni,"\n")
     
     # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
-    out_file <- sprintf("grade_%s_%s.rds", sigla, ano)
+    out_file <- sprintf("grade_%s_%s.rds", sigla_muni, ano)
     
-    if (out_file %nin% list.files(subfolder3A)){
+    if (out_file %nin% list.files(subfolder3A)) {
       # Obter código do estado do município
       cod_estado <- 
-        subset(munis_list$munis_df, abrev_muni==sigla)$abrev_estado %>% 
+        subset(munis_list$munis_df, abrev_muni == sigla_muni)$abrev_estado %>% 
         as.character()
       
       # Ler as grades estatísticas dos estados
@@ -42,7 +41,7 @@ criar_grade_muni_all <- function(ano, munis = "all") {
       grade <- grade %>% st_transform(crs = 4326)
       
       # Leitura do(s) municipio(s)
-      muni <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1A, sigla, ano) )
+      muni <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1A, sigla_muni, ano) )
       # Dissolver os polígonos dos municípios componentes da RM
       # muni <- dissolve_polygons(muni, group_column = "code_state")
       # Estabelecer a projeção em WGS84
@@ -71,7 +70,7 @@ criar_grade_muni_all <- function(ano, munis = "all") {
       write_rds(grade_muni, sprintf("%s/%s", subfolder3A, out_file), compress = 'gz')
       
     } else {
-        message('Arquivo para a cidade ', sigla, " já existe, pulando...\n")
+        message('Arquivo para a cidade ', sigla_muni, " já existe, pulando...\n")
     }
     
   }
@@ -90,12 +89,12 @@ criar_grade_muni_all <- function(ano, munis = "all") {
   } else {
     future::plan(future::multisession)
   }
-  invisible(future.apply::future_lapply(X = x, FUN=criar_grade_muni, future.packages=c('sf', 'dplyr')))
+  invisible(future.apply::future_lapply(X = x, FUN = criar_grade_muni, future.packages = c('sf', 'dplyr')))
 
 }
 
 
-# Extrair grade estatística de cada município - usar uma sigla das presentes
+# Extrair grade estatística de cada município - usar uma sigla_muni das presentes
 # em munis_list$munis_metro[ano_metro == ano]$abrev_muni ou 'all' para todos
 # criar_grade_muni_all(ano = 2019, munis = 'sgo')
 # criar_grade_muni_all(ano = 2019, munis = 'all')
@@ -106,5 +105,5 @@ criar_grade_muni_all <- function(ano, munis = "all") {
 # previstas com o gc() no código não liberam a RAM usada pelo R-Studio, o que
 # torna necessário reiniciar a sessão como um todo com .rs.restartR() após
 # rodar cada cidade
-criar_grade_muni_all(ano = 2019, munis = 'vta')
+criar_grade_muni_all(ano = 2019, munis = 'nat')
 # .rs.restartR()

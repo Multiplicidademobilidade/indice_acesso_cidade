@@ -9,22 +9,15 @@
 #      com menos de 2 dígitos após a vírgula; (ii) CRAS diferentes na mesma lat/lon
 #. 4.) Gera dois outputs: uma base intermediária com os endereços e ok e outra com os erros identificados em 3.)
 #      para geolocalização
-#. 5.) Geocode dos endereços com problema: checa quais endereços já foram geolocalizados em anos anteriores (arquivo
-#       geocode_cras.csv) e faz o geocode via Google Maps dos remanescentes.
-#. 6.) Salva dois arquivos: (i) cras_ano.csv, com todas as informações dos CRAS; (ii) geocode-cras.csv atualizado com
-#      os novos endereços geolocalizados.
+#. 5.) Geocode dos endereços com problema: faz o geocode via Google Maps;
+#. 6.) Salva dois arquivos
 
 
 cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
   # 1) Ler os dados da base do SUAS baixado do site do MDS ---------------------------------
   
-  if(ano == '2019') {
-    # original IPEA
-    # cras <- data.table::fread(sprintf('%s/CRAS/Censo_SUAS_2019_dados_gerais_RH_CRAS_divulgaÆo.csv', raw_data_folder),
-    #                           select = c("NU_IDENTIFICADOR","q0_1","q0_2", "q0_3","q0_4","q0_6","q0_8","q0_9","q0_10", "q0_11",
-    #                                      "q0_12","q0_15", 'Latitude', 'Longitude', 'q39'))
-    #
-    # revisto, considerando encoding
+  if (ano == '2019') {
+    # Abrir arquivo considerando encoding
     cras <- read_delim(sprintf('%s/CRAS/Censo_SUAS_2019_dados_gerais_RH_CRAS_divulgaÆo.csv', raw_data_folder),
                        delim = ';',
                        locale = locale(encoding = 'iso_8859-1'),
@@ -70,7 +63,7 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
   
   # Recodifica tipo de logradouro e indicador de Cadastramento no CADUnico
   
-  if (ano == '2019'){
+  if (ano == '2019') {
     cras[, tp_log := fcase(
       tp_log == 3, "Avenida", tp_log == 32, "Rua", tp_log == 35, "Travessa", tp_log == 12, "Estrada",
       tp_log == 2, "Área", tp_log == 1, "Alameda", tp_log == 40, "Via", tp_log == 31, "Rodovia",
@@ -78,7 +71,7 @@ cras_geocode <- function(ano, raw_data_folder, out_folder, run_gmaps = FALSE) {
       tp_log == 12, "Estrada", tp_log == 21, "Loteamento", tp_log == 20, "Largo")]
     
     cras[, cad_unico := ifelse(cad_unico == 0, 'Não', 'Sim')]
-  } else if (ano != '2019'){
+  } else if (ano != '2019') {
     # se faz cadastro do cadUnico
     cras[, cad_unico := stringr::str_sub(cad_unico,1,3)]
   }

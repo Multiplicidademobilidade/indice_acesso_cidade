@@ -21,16 +21,10 @@
 # carregar bibliotecas
 source('fun/setup.R')
 
-message("Inform username and password to access https://urs.earthdata.nasa.gov ")
-username <- readline("Give the username : ")
-password <- readline("Give the password : ")
+message("Informar usuário e password para acessar https://urs.earthdata.nasa.gov ")
+username <- readline("Informe o username : ")
+password <- readline("Informe o password : ")
 
-# username <- "user"
-# password <- "pass"
-
-# ano <- 2020
-# sigla_muni <- "man"
-# sigla_muni="for"
 
 download_srtm <- function(ano, sigla_muni) {
   # Estrutura de pastas
@@ -41,20 +35,20 @@ download_srtm <- function(ano, sigla_muni) {
   
   # Rodar somente caso arquivo final não exista na pasta
   out_file <- sprintf("topografia_%s.tif", sigla_muni)
-  if (out_file %nin% list.files(subfolder10)){
+  if (out_file %nin% list.files(subfolder10)) {
     
     message('\nComeçando processo para a cidade: ', sigla_muni)
     
-    # read municipality boundary
+    # Ler limites do município
     muni_sf <- readr::read_rds(sprintf("%s/municipio_%s_%s.rds", subfolder1, sigla_muni, ano))
     
     # muni_sf %>% mapview()
     
-    # extract bounding box
+    # Extrair a bounding box do município
     bbox <- st_bbox(muni_sf)
     bbox <- as.integer(bbox) - 1
     
-    # identify which tiles are needed to cover the whole study area
+    # Identificar quais tiles são necessários para cobrir toda a área de estudo
     lons <- seq(floor(bbox[1]), ceiling(bbox[3]), by = 1)
     lats <- seq(floor(bbox[2]), ceiling(bbox[4]), by = 1)
     tiles <- expand.grid(lat = lats, lon = lons) %>%
@@ -62,11 +56,11 @@ download_srtm <- function(ano, sigla_muni) {
              hy = if_else(lat < 0, "S", "N"))
     tile = sprintf("%s%02d%s%03d", tiles$hy, abs(tiles$lat), tiles$hx, abs(tiles$lon))
     
-    # build the url's for each tile
+    # Construir a URL para cada tile
     urls <- paste0("https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/",
                    tile, ".SRTMGL1.hgt.zip")
     
-    # download zip files and extract raster tiles
+    # Baixar zip files e extrair os raster tiles
     outputdir <- tempdir()
     zipfiles <- paste0(outputdir, "/", tile, ".hgt.zip")
     rstfiles <- paste0(outputdir, "/", tile, ".hgt")
@@ -74,13 +68,13 @@ download_srtm <- function(ano, sigla_muni) {
     walk2(urls, zipfiles, function(url, filename) {
       httr::GET(url = url, 
                 authenticate(username, password),
-                write_disk(path =filename, overwrite = TRUE),
+                write_disk(path = filename, overwrite = TRUE),
                 progress())
     })
     
     walk(zipfiles, unzip, exdir = outputdir)
     
-    # read all raster tiles, merge them together, and then crop to the study area's bounding box
+    # Ler todos os raster tiles, juntá-los e fazer o recorte de acordo com o bounding box
     rst <- map(rstfiles, raster)
     if (length(rst) == 1) {
       rst_layer <- rst[[1]]
@@ -89,7 +83,7 @@ download_srtm <- function(ano, sigla_muni) {
     }
     rst_layer_crop <- raster::crop(rst_layer, st_bbox(muni_sf))
     
-    # save processed raster to the municipality folder
+    # Salvar arquivos processados
     raster::writeRaster(rst_layer_crop, 
                         sprintf("%s/%s", subfolder10, out_file), 
                         overwrite = TRUE)
@@ -100,5 +94,6 @@ download_srtm <- function(ano, sigla_muni) {
   }
 }
 
-# download_srtm(2019, "oco")
+
 walk(munis_list$munis_df$abrev_muni, download_srtm, ano = 2019)
+

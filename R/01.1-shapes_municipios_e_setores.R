@@ -1,13 +1,14 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.1.1 Download de shape file de municipios e setores censitarios dos  municipios incluidos no projeto
+# Faz o download dos shapefiles dos municípios e setores censitários dos
+# municípios incluidos no projeto (via geobr)
 
-# carregar bibliotecas
+# Carregar bibliotecas
 source("fun/setup.R")
 # função do geobr para dissolver polígonos
 source("fun/dissolve_polygons.R")
 
+# ano <- 2019; sigla_muni <- 'nat'
 
-# 1. Funcao para download de shape file dos municipios e setores censitarios
+# Função para download de shape file dos municípios e setores censitários
 download_muni_setores <- function(ano, munis = "all") {
 
   download_muni_setores_un <- function(sigla_muni) {
@@ -20,7 +21,7 @@ download_muni_setores <- function(ano, munis = "all") {
     # O state code são os primeiros dois dígitos de code_munis
     state_code <- substr(code_munis[1], 1, 2) %>% as.numeric()
     
-    # Criar pastas para armazenamento dos dados (original era 'data-raw'); a estrutura é:
+    # Estrutura de pastas
     # ../../-mobilidade_dados/municipios/[ano]/arquivos_municipios.rds e
     # ../../-mobilidade_dados/setores_censitarios/[ano]/arquivos_setores_censitarios.rds
     files_folder <- "../../indice-mobilidade_dados"
@@ -34,12 +35,12 @@ download_muni_setores <- function(ano, munis = "all") {
     # Fazer download de arquivos - shapes dos municipios
     out_file1 <- sprintf("municipio_%s_%s.rds", sigla_muni, ano)
     # Baixar somente se arquivo não existir na pasta
-    if (out_file1 %nin% list.files(subfolder1A)){
+    if (out_file1 %nin% list.files(subfolder1A)) {
         # Baixar shape do estado
         uf_sf <- geobr::read_municipality(code_muni = state_code, year = ano)
         
         # A cidade de Vitória possui duas pequenas ilhas além mar - retirá-las
-        if (sigla_muni == 'vta'){
+        if (sigla_muni == 'vta') {
           # As duas ilhas têm área menor do que 50000000 m²
           uf_sf <- ms_filter_islands(uf_sf, min_area = 50000000) 
         }
@@ -52,24 +53,23 @@ download_muni_setores <- function(ano, munis = "all") {
         # Transformar em WGS84
         muni_sf <- st_transform(muni_sf, 4326)
         
-        
-        
-        # salvar municipios
+
+        # Salvar municípios
         readr::write_rds(muni_sf, sprintf("%s/%s", subfolder1A, out_file1), compress = 'gz')
     } else {
       message('\nArquivo ', out_file1, ' já existe na pasta\n', subfolder1A,  '.\nPulando etapa 1.')
     }
     
     
-    # Download de arquivos - shapes dos setores censitarios
+    # Download de arquivos - shapes dos setores censitários
     out_file2 <- sprintf("setores_%s_%s.rds", sigla_muni, ano)
     # Baixar somente se arquivo não existir na pasta
-    if (out_file2 %nin% list.files(subfolder2A)){
+    if (out_file2 %nin% list.files(subfolder2A)) {
       uf_sf_tracts <- geobr::read_census_tract(state_code)
       ct_sf <- uf_sf_tracts %>% filter(code_muni %in% code_munis)
       ct_sf <- st_transform(ct_sf, 4326)
       
-      # salvar setores censitarios
+      # Salvar setores censitários
       readr::write_rds(ct_sf, sprintf("%s/%s", subfolder2A, out_file2), compress = 'gz')
     } else {
       message('\nArquivo ', out_file2, ' já existe na pasta\n', subfolder2A,  '.\nPulando etapa 2.')
@@ -82,7 +82,7 @@ download_muni_setores <- function(ano, munis = "all") {
     x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
   } else (x = munis)
   
-  lapply(X=x, FUN=download_muni_setores_un)
+  lapply(X = x, FUN = download_muni_setores_un)
 }
 
 

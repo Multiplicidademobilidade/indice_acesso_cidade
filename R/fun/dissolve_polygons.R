@@ -18,18 +18,18 @@ to_multipolygon <- function(temp_sf){
     return(temp_sf) }
 }
 
-###### Simplify temp_sf -----------------
 
+###### Simplify temp_sf -----------------
 simplify_temp_sf <- function(temp_sf, tolerance=100){
   
   # reproject to utm
-  temp_gpkg_simplified <- sf::st_transform(temp_sf, crs=3857)
+  temp_gpkg_simplified <- sf::st_transform(temp_sf, crs = 3857)
   
   # simplify with tolerance
   temp_gpkg_simplified <- sf::st_simplify(temp_gpkg_simplified, preserveTopology = T, dTolerance = tolerance)
   
   # reproject to utm
-  temp_gpkg_simplified <- sf::st_transform(temp_gpkg_simplified, crs=4674)
+  temp_gpkg_simplified <- sf::st_transform(temp_gpkg_simplified, crs = 4674)
   
   # Make any invalid geometry valid # st_is_valid( sf)
   temp_gpkg_simplified <- sf::st_make_valid(temp_gpkg_simplified)
@@ -38,12 +38,7 @@ simplify_temp_sf <- function(temp_sf, tolerance=100){
 }
 
 
-
-
-
-
 dissolve_polygons <- function(mysf, group_column){
-  
   
   # a) make sure we have valid geometries
   temp_sf <- sf::st_make_valid(mysf)
@@ -57,7 +52,7 @@ dissolve_polygons <- function(mysf, group_column){
   dissolvefun <- function(grp){
     
     # c.1) subset region
-    temp_region <- subset(mysf, get(group_column, mysf)== grp )
+    temp_region <- subset(mysf, get(group_column, mysf) == grp )
     
     
     # c.2) create attribute with the number of points each polygon has
@@ -69,15 +64,15 @@ dissolve_polygons <- function(mysf, group_column){
     
     # d) convert to sp
     sf_regiona <- mypols %>% as("Spatial")
-    sf_regiona <- rgeos::gBuffer(sf_regiona, byid=TRUE, width=0) # correct eventual topology issues
+    sf_regiona <- rgeos::gBuffer(sf_regiona, byid = TRUE, width = 0) # correct eventual topology issues
     
     # c) dissolve borders to create country file
     result <- maptools::unionSpatialPolygons(sf_regiona, rep(TRUE, nrow(sf_regiona@data))) # dissolve
     
     
     # d) get rid of holes
-    outerRings = Filter(function(f){f@ringDir==1},result@polygons[[1]]@Polygons)
-    outerBounds = sp::SpatialPolygons(list(sp::Polygons(outerRings,ID=1)))
+    outerRings = Filter(function(f){f@ringDir == 1},result@polygons[[1]]@Polygons)
+    outerBounds = sp::SpatialPolygons(list(sp::Polygons(outerRings,ID = 1)))
     
     # e) convert back to sf data
     outerBounds <- st_as_sf(outerBounds)

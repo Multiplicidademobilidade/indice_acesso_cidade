@@ -128,28 +128,6 @@ educacao_filter <- function(ano, download = FALSE) {
   
   # 2) Ler escolas do ano do censo escolar 
   
-  # essa funcao esta desativada porque os dados estao sendo baixados manualmente
-  # deu problema na funcao de zip_list que sempre dava crash no R
-  # if (download) {
-  #   
-  #   # os dados do censo escolar sao baixados daqui https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar
-  #   # os dados tambem podem ser baixados automaticamente para cada ano (arquivo .zip)
-  #   # definir url
-  #   url <- ifelse(ano == 2017, sprintf("https://download.inep.gov.br/microdados/micro_censo_escolar_%s.zip", ano),
-  #                 sprintf("https://download.inep.gov.br/microdados/microdados_educacao_basica_%s.zip", ano))
-  #   curl::curl_download(url,
-  #                       destfile = sprintf("../../data-raw/censo_escolar/%s/censo-escolar_%s.zip", ano, ano),
-  #                       quiet = FALSE)
-  #   
-  #   # extrar os arquivos dentro de cada zip
-  #   zip_list <- zip_list(sprintf("https://download.inep.gov.br/microdados/micro_censo_escolar_%s.zip", ano))
-  #   
-  #   # so vamos extrair dos arquivos: a base de escolas e a base com a qtde de matriculas
-  #   zip::unzip(zipfile = sprintf("https://download.inep.gov.br/microdados/micro_censo_escolar_%s.zip", ano), 
-  #              files = "",
-  #              exdir = sprintf("../../data-raw/censo_escolar/%s", ano))
-  # }
-  
   # colunas de interesse: 
   colunas <- c(c("CO_ENTIDADE", "NO_ENTIDADE", "CO_MUNICIPIO",
                  # "IN_COMUM_CRECHE", "IN_COMUM_PRE", 
@@ -191,7 +169,7 @@ educacao_filter <- function(ano, download = FALSE) {
   escolas_munis <- escolas_munis[in_regular == 1 | in_profissionalizante == 1]
   
   # Identifica codigo das escolas priosionais
-  escolas_prisionais <- subset(escolas_munis, in_local_func_unid_prisional ==1 | in_local_func_prisional_socio ==1)$co_entidade
+  escolas_prisionais <- subset(escolas_munis, in_local_func_unid_prisional == 1 | in_local_func_prisional_socio == 1)$co_entidade
   
   # remove escolas prisionais
   escolas_fim <- subset(escolas_munis, co_entidade %nin% escolas_prisionais)
@@ -213,8 +191,8 @@ educacao_filter <- function(ano, download = FALSE) {
   sum(is.na(escolas_fim_mat$mat_medio))
   
   
-  # 4) Selecionar variaveis e salvar ---------------
-  # after 2019, variable 'nu_funcionarios' was descontinued
+  # 4) Selecionar variáveis e salvar ---------------
+  # depois de 2019, variável 'nu_funcionarios' foi descontinuada
   if (ano %in% c(2017, 2018)) {
     escolas_fim_mat <- 
       escolas_fim_mat %>%
@@ -296,7 +274,7 @@ educacao_geocode_all <- function(ano) {
   # Checar se arquivo resultante já existe. Se sim, avisar e pular processamento
   out_file <- sprintf("educacao_%s_filter_geocoded_gmaps.rds", ano)
   
-  if (out_file %nin% list.files(subfolder5)){
+  if (out_file %nin% list.files(subfolder5)) {
     
     # Arquivo com as escolas e os geocodes vindos do INEP
     open_file <- sprintf('%s/educacao_%s_filter_geocoded.rds', subfolder5, ano)
@@ -332,188 +310,8 @@ educacao_geocode_all <- function(ano) {
     
     # Salvar arquivo resultante
     write_rds(educacao_geocodada_final, sprintf("%s/%s", subfolder5, out_file), compress = 'gz')
-    # write_delim(geocode_ggmap, sprintf("%s/educacao_%s_filter_geocoded_gmaps.csv", subfolder5, ano), delim = ';')
-    # write_delim(educacao_geocodada_final, sprintf("%s/educacao_%s_filter_geocoded_gmaps2.csv", subfolder5, ano), delim = ';')
     
   } else {
     message('Arquivo para o ano  ', ano, " já existe, pulando...\n")
   }
 }
-
-#' #' A funcao 'educacao_geocode' faz o geocode de escolas com coordenadas problematicas e tem como output
-#' #' a base final do ano ja com as coordenadas corrigidas e pronta
-#' #' Etapas:
-#' #' 1) Abre as escolas do ano que foram filtradas na etapa anterior
-#' #' 2) Separa somente as escolas para geocode que nao forem geocoded no ano anterior (isso so serve a partir de 2018)
-#' #' 3) Identifica escolas com lat/long problematicos a partir dos quatro criterios estabelecidos
-#' #' 4) Faz geocode das escolas problematicas usando google maps. Se a opcao 'run_gmaps = FALSE', vai fazer uso
-#' #' dos dados que ja foram rodados no gmaps antes
-#' #' 5) Recodifica escolas que estao fora da cidade: algumas escolas persistem em ficar fora da cidade, o q pode indicar
-#' #' que esses estabs estao com a localizacao correta so que foram registrados numa cidade da RM
-#' #' 6) Traz as coordenadas corrigidas para a base do novo ano
-#' #' 7) Traz as coordenadas do ano anterior para a base do novo ano
-#' 
-#' educacao_geocode_ipea <- function(ano1, run_gmaps = FALSE) {
-#'   # 1) Trazer as coordenadas da escolas fornecidas pelo INEP e geocodififadas pelo streetmap 
-#'   escolas_coords <- fread("../../data/geocode/educacao/educacao_raw_geocoded.csv",
-#'                           encoding = "UTF-8")
-#'   
-#'   
-#'   # abrir base com as escolas do censo escolar
-#'   # censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder5, c(2017, 2018, 2019), c(2017, 2018, 2019)), read_rds)
-#'   censo_escolar <- lapply(sprintf("%s/%s/educacao_%s_filter.rds", subfolder5, 2019, 2019), read_rds)
-#'   censo_escolar_estabs <- censo_escolar %>% rbindlist(fill = TRUE) %>% dplyr::select(co_entidade)
-#'   
-#'   # filtrar somente as escolas dos nossos municipios
-#'   escolas_coords <- escolas_coords %>% 
-#'     filter(co_entidade %in% censo_escolar_estabs$co_entidade) %>%
-#'     select(co_entidade, cidade, uf, endereco, lon_inep, lat_inep,
-#'            matched_address, Status, Addr_type, Score, lon, lat) %>%
-#'     setDT()
-#'   
-#'   escolas_coords$cidade <- iconv(escolas_coords$cidade, from = "UTF-8", to = "ASCII//TRANSLIT") 
-#'   
-#'   
-#'   # identify engine
-#'   escolas_coords[, geocode_engine := "streetmap"]
-#'   
-#'   
-#'   # 3.1) Selecionar estabs com baixa precisao
-#'   escolas_coords[, gmaps := fifelse(Status %in% c("T", "U"), TRUE,
-#'                                     fifelse(Addr_type == "PointAddress", FALSE,
-#'                                             fifelse(cidade %like% "Brasilia" & Addr_type %in% c("StreetAddress", "StreetAddressExt", "StreetName") & Score >= 75, FALSE,
-#'                                                     fifelse(Addr_type %in% c("StreetAddress", "StreetAddressExt", "StreetName") & Score >= 90, FALSE, TRUE))))]
-#'   
-#'   estabs_problema <- escolas_coords[gmaps == TRUE]
-#'   
-#'   message("Total of estabs to go to gmaps: ", unique(estabs_problema$co_entidade) %>% length())
-#'   
-#'   
-#'   # 3.2) Listar esses enderecos com problema
-#'   enderecos <- estabs_problema %>% mutate(fim = endereco) %>% pull(fim)
-#'   
-#'   # 3.3) Registrar Google API Key
-#'   my_api <- data.table::fread("../../data-raw/google_key.txt", header = TRUE)
-#'   
-#'   
-#'   
-#'   if (run_gmaps) {
-#'     
-#'     message("Running gmaps, this may take a while")
-#'     
-#'     register_google(key = my_api$key[1]) # rafa
-#'     coordenadas_google <- lapply(X=enderecos, ggmap::geocode, output = "all")
-#'     
-#'     # identify list names as id_estab
-#'     names(coordenadas_google) <- estabs_problema$co_entidade
-#'     
-#'     # save
-#'     write_rds(coordenadas_google, 
-#'               "../../data/acesso_oport/educacao/geocode/educacao_geocode_%s_output_google.rds")
-#'     
-#'   } else coordenadas_google <- read_rds("../../data/acesso_oport/educacao/geocode/educacao_geocode_%s_output_google.rds")
-#'   
-#'   
-#'   # function to create data.frame from gmaps output
-#'   create_dt <- function(x) {
-#'     
-#'     precision_depth0 <- ifelse(length(x[["results"]][[1]][["address_components"]]) > 0, 
-#'                                x[["results"]][[1]][["address_components"]], 
-#'                                NA)
-#'     
-#'     # check length from precision depth
-#'     precision_depth <- ifelse(is.na(precision_depth0), NA,
-#'                               ifelse(length(precision_depth0[[1]]$types) > 0,
-#'                                      precision_depth0[[1]]$types[[1]], 
-#'                                      NA))
-#'     
-#'     a <- data.table(
-#'       matched_address = ifelse(!is.null(x[["results"]][[1]][["formatted_address"]]), x[["results"]][[1]][["formatted_address"]], NA),
-#'       # PrecisionDepth = ifelse(!is.null(x[["results"]][[1]][["address_components"]][[1]]$types[[1]]), x[["results"]][[1]][["address_components"]][[1]]$types[[1]], NA),
-#'       Addr_type = precision_depth,
-#'       lon = ifelse(!is.null(x[["results"]][[1]][["geometry"]][["location"]][["lng"]]), x[["results"]][[1]][["geometry"]][["location"]][["lng"]], NA),
-#'       lat = ifelse(!is.null(x[["results"]][[1]][["geometry"]][["location"]][["lat"]]), x[["results"]][[1]][["geometry"]][["location"]][["lat"]], NA)
-#'     )
-#'     
-#'   }
-#'   
-#'   # 3.5) Rodar funcao que transforma todos os estabs georef em data.table
-#'   estabs_problema_geocoded <- lapply(coordenadas_google, create_dt)
-#'   
-#'   # 3.6) Rbind as data.table
-#'   estabs_problema_geocoded_dt <- rbindlist(estabs_problema_geocoded, idcol = "co_entidade",
-#'                                            use.names = TRUE)
-#'   
-#'   
-#'   # make sure we only using the correct subset
-#'   estabs_problema_geocoded_dt <- estabs_problema_geocoded_dt[co_entidade %in% estabs_problema$co_entidade]
-#'   
-#'   
-#'   # 3.9) Identificar o tipo de problema
-#'   estabs_problema_geocoded_dt[, geocode_engine := 'gmaps']
-#'   
-#'   # 3.10) Identificar qualidade quando o endereco nao foi encontrado
-#'   estabs_problema_geocoded_dt[is.na(lon), ':='(Addr_type = "address_not_found")]
-#'   
-#'   
-#'   # 10) Substituir as coordenadas problematicas que estao na base do streetmap ----
-#'   # pelas novas coordenadas que foram corrigidas pelo gmaps
-#'   
-#'   # 10.1) Identificar geocode engine (essa info vai acabar sendo substituida quando
-#'   # necessario)
-#'   # table(rais_geocoded_filter$Addr_type, useNA = 'always')
-#'   # table(rais_geocoded_filter$geocode_engine, useNA = 'always')
-#'   # table(rais_geocoded_filter$type_year_input, useNA = 'always')
-#'   
-#'   # 10.2) Fazer a substituicao
-#'   escolas_coords[, co_entidade := as.character(co_entidade)]
-#'   escolas_coords[estabs_problema_geocoded_dt, on = "co_entidade",
-#'                  c("Addr_type", "matched_address",  "lon", "lat", "geocode_engine") :=
-#'                    list(i.Addr_type, i.matched_address, i.lon, i.lat, i.geocode_engine)]
-#'   
-#'   # table(escolas_coords$geocode_engine, useNA = "always")
-#'   
-#'   
-#'   
-#'   # censo <- censo_escolar[[1]]
-#'   
-#'   # substituir para cada ano
-#'   atualizar_censoescolar <- function(censo) {
-#'     
-#'     
-#'     censo[, co_entidade := as.character(co_entidade)]
-#'     
-#'     censo[escolas_coords, on = "co_entidade",
-#'           c("cidade", "uf", "endereco", "lon_inep", "lat_inep", 
-#'             "matched_address", "Addr_type", "Score", "lon", "lat", "geocode_engine") :=
-#'             list(i.cidade, i.uf, i.endereco, i.lon_inep, i.lat_inep, 
-#'                  i.matched_address, i.Addr_type, i.Score, i.lon, i.lat, i.geocode_engine)]
-#'     
-#'     # identificar ano
-#'     ano1 <- unique(censo$ano)
-#'     
-#'     
-#'     # 8) Salvar
-#'     write_rds(censo,
-#'               sprintf("../../data/acesso_oport/educacao/%s/educacao_%s_filter_geocoded_gmaps.rds", ano1, ano1), compress = 'gz')
-#'     
-#'     
-#'     # ui <- censo %>% filter(Addr_type == "street_number")
-#'     
-#'     # ui %>%
-#'     #   slice(800) %>%
-#'     #   to_spatial() %>%
-#'     #   mapview()
-#'     
-#'   }
-#'   
-#'   
-#'   walk(censo_escolar,atualizar_censoescolar)
-#'   
-#'   
-#' }
-
-
-
-
-

@@ -150,9 +150,9 @@ cnes_check <-
     gmaps_log = str_replace(gmaps_address, '(.+){1}, (\\d+)? - (.+, ){1}(.+){1} - (.+, ){1}(\\d{5})(-)?(\\d{3})?(,.+)', '\\1'),
     gmaps_log = toupper(rm_accent(gmaps_log)),
     gmaps_log = str_replace(gmaps_log, '^AV\\.', 'AV'),
-    gmaps_log = str_replace(gmaps_log, '^AV ', 'AVENIDA '),        
-    gmaps_log = str_replace(gmaps_log, '^R\\.', 'RUA'),        
-    gmaps_log = str_replace(gmaps_log, '^TV\\.', 'TRAVESSA'),        
+    gmaps_log = str_replace(gmaps_log, '^AV ', 'AVENIDA '),
+    gmaps_log = str_replace(gmaps_log, '^R\\.', 'RUA'),
+    gmaps_log = str_replace(gmaps_log, '^TV\\.', 'TRAVESSA'),
     gmaps_log = str_replace(gmaps_log, 'DR\\.', 'DR'),
     gmaps_log = str_replace(gmaps_log, 'MAL\\.', 'MARECHAL'),
     gmaps_log = str_replace(gmaps_log, 'SR\\.', 'SENHOR'),
@@ -168,7 +168,7 @@ cnes_check <-
     # Ajeitar coluna name_muni
     name_muni = toupper(name_muni),
     
-    # Para endereços sem número, precisamos de uma nova regex para isolar o logradouro...        
+    # Para endereços sem número, precisamos de uma nova regex para isolar o logradouro...
     gmaps_log2 = str_replace(gmaps_log, '(.+){1} - (.+)', '\\1'),
     # ... para isolar a cidade...
     gmaps_cid2 = str_replace(gmaps_log2, '(.+){1}, (.+)', '\\2'),

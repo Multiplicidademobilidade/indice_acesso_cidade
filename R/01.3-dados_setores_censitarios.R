@@ -1,11 +1,9 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.1.2 Carrega socioecônomicos dos setores censitários
+# Carregar dados socioecônomicos dos setores censitários
 
-
-# carregar bibliotecas
+# Carregar bibliotecas
 source('fun/setup.R')
 
-### 1. Carrega micro dados dos setores censitarios --------------------------------------------------
+### 1. Carregar micro dados dos setores censitários --------------------------------------------------
 
 # Fazer download dos dados censitários em
 # https://www.ibge.gov.br/estatisticas/downloads-estatisticas.html
@@ -42,25 +40,16 @@ source('fun/setup.R')
 # Dom2_V002 # Moradores em domicílios particulares permanentes
 # DomRen_V003 # Total do rendimento nominal mensal dos domicílios particulares permanentes 
 
-# Income brackets: PessoaRenda
-# V001 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# até ½ salário mínimo
-# V002 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de ½ a 1 salário mínimo
-# V003 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 1 a 2 salários mínimos
-# V004 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 2 a 3 salários mínimos
-# V005 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 3 a 5 salários mínimos
-# V006 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 5 a 10 salários mínimos
-# V007 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 10 a 15 salários mínimos
-# V008 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 15 a 20 salários mínimos
-# V009 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de
-# mais de 20 salários mínimos
+# PessoaRenda
+# V001 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de até ½ salário mínimo
+# V002 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de ½ a 1 salário mínimo
+# V003 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 1 a 2 salários mínimos
+# V004 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 2 a 3 salários mínimos
+# V005 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 3 a 5 salários mínimos
+# V006 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 5 a 10 salários mínimos
+# V007 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 10 a 15 salários mínimos
+# V008 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 15 a 20 salários mínimos
+# V009 Pessoas de 10 anos ou mais de idade com rendimento nominal mensal de mais de 20 salários mínimos
 # V010 Pessoas de 10 anos ou mais de idade sem rendimento nominal mensal 
 
 # Raca/cor
@@ -162,47 +151,6 @@ df_ent04 <- df_ent04 %>%
   rename_at(vars(starts_with("V")), ~ paste0("Entorno04_", .x))
 
 
-# Algumas observações antes de juntar tudo: 
-# 
-# Estes códigos de setores existem em todos os arquivos menos no Básico
-# 431410005170002
-# 431410005170004
-# 431410005170006
-# 170210905000091
-# 170210905000092
-# 170210905000093
-# 170210905000094
-# 170210905000095
-# 170210905000096
-# 170210905000097
-# 170210905000098
-# 170210905000099
-# 170210905000100
-# 170210905000101
-# 170210905000102
-# 
-# Sendo:
-# 43 = Rio Grande do Sul, 4314100 = Passo Fundo
-# 
-# 17 = Tocantins, 1702109 = Araguaiana
-# 
-# Estes códigos UF vêm como letras, não números, no arquivo Básico
-# ES = deveria ser 32?
-# SP2 = deveria ser 35?
-# TO = deveria ser 17?
-
-
-# Variáveis originais do IPEA
-# setores1 <- setores1 %>% select(Cod_UF, Cod_municipio, Cod_setor, 
-#                                 DomRend_V003, Dom2_V002, 
-#                                 # income brackets
-#                                 # PessRenda_V001:PessRendaV010,
-#                                 # raca, cor
-#                                 Pess3_V002, Pess3_V003, Pess3_V004, 
-#                                 Pess3_V005, Pess3_V006,
-#                                 # idade
-#                                 Pess13_V023:Pess13_V134)
-
 
 # Juntar todos os arquivos em um único dataframe
 setores <- 
@@ -227,7 +175,7 @@ code_munis <- munis_list$munis_metro$code_muni %>% unlist %>% unique()
 setores2 <- setores %>% filter(Cod_municipio %in% code_munis)
 
 
-# munis <- sigla <- "goi"
+# ano <- 2019; sigla_muni <- 'nat'
 merge_renda_setores_all <- function(ano, munis = "all") { 
   # Criar estrutura de pastas
   subfolder2 <- sprintf("%s/02_setores_censitarios/%s", files_folder, ano)
@@ -237,7 +185,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
   # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
   out_file <- sprintf("setores_agregados_%s_%s.rds", munis, ano)
   
-  if (out_file %nin% list.files(subfolder4)){
+  if (out_file %nin% list.files(subfolder4)) {
     # Agrupar variáveis de idade/renda e somá-las
     setores3 <- 
       setores2 %>% 
@@ -309,7 +257,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
       message('Rodando cidade: ', sigla,"\n")
       
       # Código do município
-      code_muni <- subset(munis_list$munis_metro, abrev_muni==sigla & ano_metro == ano )$code_muni %>% unlist()
+      code_muni <- subset(munis_list$munis_metro, abrev_muni == sigla & ano_metro == ano )$code_muni %>% unlist()
       # Subset dados dos setores
       dados <- subset(setores5, cod_muni %in% code_muni)
       
@@ -337,7 +285,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
     } else {
       future::plan(future::multisession)
     }
-    invisible(future.apply::future_lapply(X = x, FUN = merge_renda_setores, future.packages=c('sf', 'dplyr', 'data.table')))
+    invisible(future.apply::future_lapply(X = x, FUN = merge_renda_setores, future.packages = c('sf', 'dplyr', 'data.table')))
     
   } else {
     message('\nArquivo para a cidade ', munis, " já existe, pulando...\n")
@@ -356,7 +304,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
 # estava não-funcional antes da modificação) - usar a seguinte construção para 
 # todos os arquivos:
 ano = 2019
-x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
-lapply(X = x, FUN = merge_renda_setores_all, ano = ano)
+# x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
+lapply(X = 'nat', FUN = merge_renda_setores_all, ano = ano)
 
 # .rs.restartR()

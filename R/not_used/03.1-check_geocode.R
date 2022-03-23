@@ -1,3 +1,5 @@
+# Faz o agrupamento das variáveis socioeconômicas nos hexágonos
+
 # carregar bibliotecas
 source('fun/setup.R')
 
@@ -16,8 +18,7 @@ agrupar_variaveis_hex <- function(ano) {
   
   # 1) Abrir arquivos com as oportunidades -------------------------------------
   
-  # 1.1) Saude
-  # cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocoded_gmaps_gquality.rds", subfolder6, ano))
+  # 1.1) Saúde
   cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocoded.rds", subfolder6, ano)) 
   
   # selecionar colunas
@@ -71,8 +72,6 @@ agrupar_variaveis_hex <- function(ano) {
   
   agrupar_variaveis <- function(sigla_muni) { 
     
-    # sigla_muni <- "oco"
-    
     # status message
     message('Trabalhando na cidade: ', sigla_muni, '\n')
     
@@ -94,7 +93,7 @@ agrupar_variaveis_hex <- function(ano) {
       filter(code_muni == cod_mun_ok) %>%
       st_as_sf(coords = c("lon", "lat"), crs = 4326)
     
-    # saude
+    # saúde
     cnes_filtrado <- 
       cnes_data %>% 
       filter(str_starts(code_muni, str_sub(cod_mun_ok, start = 1, end = 6))) %>%
@@ -103,10 +102,10 @@ agrupar_variaveis_hex <- function(ano) {
     # Resolução do hexágono
     muni_res <- '08'
     
-    # endereco do hexagono na resolucao
+    # Endereço do hexágono na resolucao
     hexf <- sprintf("%s/hex_%s_%s_%s.rds", subfolder12, sigla_muni, muni_res, ano)
     
-    # Ler arquivo de hexagono  
+    # Ler arquivo de hexágono  
     hex_muni <- readr::read_rds(hexf)
     
     
@@ -123,10 +122,6 @@ agrupar_variaveis_hex <- function(ano) {
                              by = id_hex ]
     
     
-    # Comentado no script original
-    # setDT(hex_muni)[, empregos_total := sum(empregos_alta, empregos_media, empregos_baixa), by=id_hex]
-    
-    
     # agrupar saude - join espacial 
     # mesma projecao geográfica
     cnes_filtrado <- sf::st_transform(cnes_filtrado, sf::st_crs(hex_muni)) 
@@ -135,10 +130,10 @@ agrupar_variaveis_hex <- function(ano) {
     hex_saude[, saude_total := ifelse( is.na(cnes), 0, 1) ]
     
     # Summarize
-    hex_saude <- hex_saude[, .(saude_total = sum(saude_total, na.rm=T),
-                               saude_baixa = sum(health_low, na.rm=T),
-                               saude_media = sum(health_med, na.rm=T),
-                               saude_alta  = sum(health_high, na.rm=T)),
+    hex_saude <- hex_saude[, .(saude_total = sum(saude_total, na.rm = T),
+                               saude_baixa = sum(health_low, na.rm = T),
+                               saude_media = sum(health_med, na.rm = T),
+                               saude_alta  = sum(health_high, na.rm = T)),
                            by = id_hex ]
     
     
@@ -180,7 +175,7 @@ agrupar_variaveis_hex <- function(ano) {
     hex_muni_fim <- hex_muni_fim %>% mutate(ano = ano)
     
     
-    # Salva grade de hexagonos com todas informacoes de uso do soloe
+    # Salva grade de hexagonos com todas informacoes de uso do solo
     dir_output <- sprintf("%s/hex_agregado_%s_%s_%s.rds", subfolderXX, sigla_muni, muni_res, ano)
     readr::write_rds(hex_muni_fim, dir_output)
   }
@@ -190,17 +185,10 @@ agrupar_variaveis_hex <- function(ano) {
   
 }
 
-# agrupar_variaveis_hex(2017)
-# agrupar_variaveis_hex(2018)
+# Rodar função
 agrupar_variaveis_hex(2019)
 
 # gerar mapas
-
-# sigla_muni <- "bho"
-# ano <- 2017
-# sigla_muni <- "sgo"; ano <- 2018
-# sigla_muni <- "goi"; ano <- 2019
-
 maps_check_geocode <- function(sigla_muni, ano) {
   
   # Estrutura de pastas
@@ -237,13 +225,13 @@ maps_check_geocode <- function(sigla_muni, ano) {
   #   geom_sf(data = hex_teste, aes(fill = empregos_total_perc))
   
   
-  mapview::mapshot(map_empregos, debug=T, selfcontained = FALSE,
+  mapview::mapshot(map_empregos, debug = T, selfcontained = FALSE,
                    url = sprintf("%s/maps/%s/distribuicao_us_%s_%s_empregos.html", subfolderXX, sigla_muni, ano, sigla_muni))
   
-  mapview::mapshot(map_saude, debug=T, remove_controls=NULL,  selfcontained = FALSE,
+  mapview::mapshot(map_saude, debug = T, remove_controls=NULL,  selfcontained = FALSE,
                    url = sprintf("%s/maps/%s/distribuicao_us_%s_%s_saude.html", subfolderXX, sigla_muni, ano, sigla_muni))
   
-  mapview::mapshot(map_educacao, debug=T, remove_controls=NULL,  selfcontained = FALSE,
+  mapview::mapshot(map_educacao, debug = T, remove_controls=NULL,  selfcontained = FALSE,
                    url = sprintf("%s/maps/%s/sdistribuicao_us_%s_%s_educacao.html", subfolderXX, sigla_muni, ano, sigla_muni))
   
   

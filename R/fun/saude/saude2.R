@@ -232,9 +232,6 @@ convenio <-
   dplyr::mutate(across(where(is.numeric), ~ case_when(. > 0 ~ 1, TRUE ~ 0)))
 
 
-# # Checando uma das CO_UNIDADE que possuía 23 entradas
-# convenio %>% filter(CO_UNIDADE == '3113702178982')
-
 # Juntar ao dataframe principal
 cnes_estab <- cnes_estab %>% left_join(convenio, by = 'CO_UNIDADE')
 
@@ -260,7 +257,6 @@ rm(convenio)
 # ------------------------------------------------
 # Criar dummies relacionadas ao tipo de atendimento
 # ------------------------------------------------
-# No código original do IPEA:
 # complex_baix - se refere aos booleans CO_GESTAO_01
 # complex_medi - se refere aos booleans CO_GESTAO_02, CO_GESTAO_05
 # complex_alta - se refere aos booleans CO_GESTAO_03, CO_GESTAO_04, CO_GESTAO_06
@@ -302,7 +298,7 @@ cnes_estab <-
   filter(TP_GESTAO != 'S') %>% 
   # Deve haver necessariamente um tipo de atendimento, não pode ser "não se aplica"
   filter(CO_GESTAO_01 == 1 | CO_GESTAO_02 == 1 | CO_GESTAO_03 == 1 |
-           CO_GESTAO_04 == 1 | CO_GESTAO_05 == 1 | CO_GESTAO_06 == 1) %>% 
+         CO_GESTAO_04 == 1 | CO_GESTAO_05 == 1 | CO_GESTAO_06 == 1) %>% 
   # Filter 1: healthcare facilities operating with the public health system
   # Convênio deve atender SUS
   filter(CO_CONVENIO_01 == 1) %>% 

@@ -1,6 +1,3 @@
-library(XML)
-library(RCurl)
-
 #' Define package environment
 #'
 #' \code{pkg.env} is a package environment that contains the variable

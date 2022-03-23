@@ -2,9 +2,6 @@
 
 # Setup
 source('fun/setup.R')
-library(tmap)
-library(tmaptools)
-library(RColorBrewer)
 
 # Funcoes:
 # criar_mapas_acesso <- linha 23

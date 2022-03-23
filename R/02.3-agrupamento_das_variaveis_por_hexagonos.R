@@ -1,10 +1,8 @@
-# Agrega informacoes demograficas e de uso do solo nos hexagonos
+# Agrega informacoes demograficas e de uso do solo nos hexágonos
 
-# carregar bibliotecas -----------------------------------------------------------------------------
+# Carregar bibliotecas
 sf::sf_use_s2(FALSE)
 source('fun/setup.R')
-
-# ano <- 2019
 
 #' A funcao `agrupar_variaveis_hex` agrega as variáveis de emprego, educação, 
 #' saúde e demográficas das grades estísticas para os hexágonos de cada cidade
@@ -24,8 +22,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   
   # 1) Abrir arquivos com as oportunidades -------------------------------------
   
-  # 1.1) Saude
-  # cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocoded_gmaps_gquality_corrected2.rds", subfolder6, ano)) 
+  # 1.1) Saúde
   cnes_data <- readr::read_rds(sprintf("%s/saude_%s_filter_geocode_revisto_gmaps_duas_etapas.rds", subfolder6, ano)) 
   
   # selecionar colunas
@@ -40,7 +37,6 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   
   
   # 1.2) Escolas
-  # escolas <- read_rds(sprintf("%s/educacao_%s_filter_geocoded_gmaps_gquality_corrected2.rds", subfolder5, ano))
   escolas <- read_rds(sprintf("%s/educacao_%s_filter_geocoded_gmaps.rds", subfolder5, ano))
   
   # selecionar colunas
@@ -53,7 +49,6 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   
   
   # 1.3) Empregos
-  # empregos <- readr::read_rds(sprintf("%s/rais_%s_etapa4_geocoded_gmaps_gquality_corrected_escola.rds", subfolder7, ano))
   empregos <- readr::read_rds(sprintf("%s/rais_%s.rds", subfolder7, ano))
   
   # selecionar colunas
@@ -87,9 +82,6 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   #' demográficas da grade do IBGE
   
   agrupar_variaveis <- function(sigla_muni) { 
-    
-    # sigla_muni <- "for"
-    # sigla_muni <- "oco"
     
     # status message
     message('Trabalhando na cidade ', sigla_muni, '\n')
@@ -194,23 +186,23 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
       hex_pop[, renda_capita := renda_total / pop_total]
       
       # calcular quintis ponderados pela populacao
-      deciles  <- Hmisc::wtd.quantile(hex_pop$renda_capita, weights=hex_pop$pop_total, 
-                                      probs=c( seq(0 , 1 , 0.1) ), 
-                                      type=c('quantile','(i-1)/(n-1)','i/(n+1)','i/n'), 
-                                      normwt=FALSE, na.rm=T)
+      deciles  <- Hmisc::wtd.quantile(hex_pop$renda_capita, weights = hex_pop$pop_total, 
+                                      probs = c( seq(0 , 1 , 0.1) ), 
+                                      type = c('quantile','(i-1)/(n-1)','i/(n+1)','i/n'), 
+                                      normwt = FALSE, na.rm = T)
       
-      quintiles  <- Hmisc::wtd.quantile(hex_pop$renda_capita, weights=hex_pop$pop_total, 
-                                        probs=c( seq(0 , 1 , 0.2) ), 
-                                        type=c('quantile','(i-1)/(n-1)','i/(n+1)','i/n'), 
-                                        normwt=FALSE, na.rm=T)
+      quintiles  <- Hmisc::wtd.quantile(hex_pop$renda_capita, weights = hex_pop$pop_total, 
+                                        probs = c( seq(0 , 1 , 0.2) ), 
+                                        type = c('quantile','(i-1)/(n-1)','i/(n+1)','i/n'), 
+                                        normwt = FALSE, na.rm = T)
       
       # classificar cada hexagono em cada quintil de renda
       hex_pop[, quintil := findInterval(renda_capita , quintiles[ -length(quintiles) ] ) ]
       hex_pop[, decil := findInterval(renda_capita , deciles[ -length(deciles) ] ) ]
       
       # check if pop size in each decile are roughly equal
-      hex_pop[, .(po_in_quintil = sum(pop_total, na.rm=T)), by = quintil]
-      hex_pop[, .(po_in_decile  = sum(pop_total, na.rm=T)), by = decil]
+      hex_pop[, .(po_in_quintil = sum(pop_total, na.rm = T)), by = quintil]
+      hex_pop[, .(po_in_decile  = sum(pop_total, na.rm = T)), by = decil]
       
       # # remove NAs
       # hex_pop <- hex_pop[ !is.na(decil)]
@@ -229,10 +221,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
                            by = id_hex ]
       
       
-      # setDT(hex_muni)[, empregos_total := sum(empregos_alta, empregos_media, empregos_baixa), by=id_hex]
-      
-      
-      # agrupar saude
+      # agrupar saúde
       # join espacial 
       cnes_filtrado <- sf::st_transform(cnes_filtrado, sf::st_crs(hex_muni)) # mesma projecao geografica
       hex_saude <- hex_muni %>% st_join(cnes_filtrado) %>% setDT()
@@ -240,10 +229,10 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
       hex_saude[, saude_total := ifelse( is.na(cnes), 0, 1) ]
       
       # Summarize
-      hex_saude <- hex_saude[, .(saude_total = sum(saude_total, na.rm=T),
-                                 saude_baixa = sum(health_low, na.rm=T),
-                                 saude_media = sum(health_med, na.rm=T),
-                                 saude_alta  = sum(health_high, na.rm=T)),
+      hex_saude <- hex_saude[, .(saude_total = sum(saude_total, na.rm = T),
+                                 saude_baixa = sum(health_low, na.rm = T),
+                                 saude_media = sum(health_med, na.rm = T),
+                                 saude_alta  = sum(health_high, na.rm = T)),
                              by = id_hex ]
       
       
@@ -310,10 +299,6 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
     x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
   } else (x = munis)
   
-  # Parallel processing using future.apply
-  # future::plan(future::multiprocess)
-  #options(future.globals.maxSize= Inf) # permitir processamento de arquivo grande
-  # future.apply::future_lapply(X = x, FUN=agrupar_variaveis)
   walk(x, agrupar_variaveis)
   
   
@@ -321,7 +306,7 @@ agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
 
 
 
-# aplicar funcao -----------------
+# Aplicar função
 # agrupar_variaveis_hex(ano = 2019, munis = 'vta')
 agrupar_variaveis_hex(ano = 2019, munis = 'all', res = '08') # res pode ser uma lista: c('07', '08')
 
@@ -334,14 +319,14 @@ salvar_shapes_agregados <- function(res, ano="2019"){ # especifica resolucao e a
   save_folder <- sprintf("%s/shapes", load_folder)
   
   # Cria pasta se nao existir
-  if ("shapes" %nin% list.dirs(load_folder, recursive = FALSE, full.names = FALSE)){
+  if ("shapes" %nin% list.dirs(load_folder, recursive = FALSE, full.names = FALSE)) {
     dir.create(save_folder)
   }
   
   # Procura os arquivos que atendem o especificado
   files_list <- list.files(load_folder, pattern = sprintf("\\w{3}_%s", res)) 
   
-  for (arquivo in files_list){
+  for (arquivo in files_list) {
     shape_name <- str_extract(arquivo, sprintf("\\w{3}_%s", res)) # le o nome
     aux <- readRDS(sprintf("%s/%s", load_folder, arquivo)) # le o arquivo
     st_write(aux, sprintf("%s/hex_agregado_%s_%s.gpkg", save_folder, shape_name, ano), driver = "GPKG", append = FALSE) # salva
@@ -349,169 +334,5 @@ salvar_shapes_agregados <- function(res, ano="2019"){ # especifica resolucao e a
   }
 }
 
-# Aplicar funcao ------------
-salvar_shapes_agregados(res="08")
-
-
-
-
-
-
-# # compare years -------------------------------------------------------------------------------
-# 
-# 
-# 
-# 
-# # sigla_munii <- 'for'
-# 
-# compare_jobs_distribution <- function(sigla_munii) {
-#   
-#   # open hex files
-#   hex_jobs_2017 <- read_rds(sprintf("../../data/acesso_oport/hex_agregados/2017/hex_agregado_%s_09_2017.rds",
-#                                     sigla_munii)) %>%
-#     mutate(ano_jobs = 2017)
-#   
-#   hex_jobs_2018 <- read_rds(sprintf("../../data/acesso_oport/hex_agregados/2018/hex_agregado_%s_09_2018.rds",
-#                                     sigla_munii)) %>%
-#     mutate(ano_jobs = 2018)
-#   
-#   # hex_jobs_2017_old <- read_rds(sprintf("../../data/acesso_oport/hex_agregados/2019/hex_agregado_%s_09_2019.rds",
-#   #                                       sigla_munii)) %>%
-#   #   mutate(ano_jobs = "2017_old")
-#   
-#   hex_jobs <- rbind(hex_jobs_2017, hex_jobs_2018)
-#   # hex_jobs <- rbind(hex_jobs_2017, hex_jobs_2018, hex_jobs_2017_old)
-#   hex_jobs <- select(hex_jobs, id_hex, sigla_muni, empregos_total, ano_jobs, geometry) %>% setDT()
-#   
-#   hex_jobs_wide <- pivot_wider(hex_jobs, names_from = ano_jobs, values_from = empregos_total,
-#                                names_prefix = "jobs_")
-#   
-#   # compare!
-#   hex_jobs_wide <- hex_jobs_wide %>%
-#     mutate(dif1_abs = jobs_2018 - jobs_2017) %>%
-#     mutate(dif1_log = log(jobs_2018/jobs_2017)) %>%
-#     # truncate
-#     mutate(dif1_abs_tc = case_when(dif1_abs < -500 ~ -500,
-#                                    dif1_abs > 500 ~ 500,
-#                                    TRUE ~ dif1_abs)) %>%
-#     mutate(dif1_log_tc = case_when(dif1_log < -1 ~ -1,
-#                                    dif1_log > 1 ~ 1,
-#                                    TRUE ~ dif1_log)) %>%
-#     st_sf()
-#   
-#   
-#   hex_jobs_wide <- hex_jobs_wide %>%
-#     filter(!(jobs_2017 == 0 & jobs_2018 == 0))
-#   
-#   map1 <- ggplot()+
-#     geom_sf(data = hex_jobs_wide, aes(fill = dif1_log_tc), color = NA)+
-#     scale_fill_distiller(palette = "RdBu"
-#                          , limits  = c(-1, 1)*max(abs(hex_jobs_wide$dif1_log_tc))
-#     )+
-#     labs(title = "Diferença relativa de empregos entre 2017 e 2018",
-#          subtitle = "Em vermelho: Jobs 2018 > Jobs 2017")+
-#     theme_aop_map()
-#   
-#   # ggplot()+
-#   #   geom_sf(data = hex_jobs_wide, aes(fill = dif1_abs), color = NA)+
-#   #   scale_fill_distiller(palette = "RdBu"
-#   #                        , limits  = c(-1, 1)*max(abs(hex_jobs_wide$dif1_abs))
-#   #   )+
-#   #   labs(title = "Diferença relativa de empregos entre 2017 e 2018",
-#   #        subtitle = "Em vermelho: Jobs 2018 > Jobs 2017")+
-#   #   theme_for_CMA()
-#   
-#   plot1 <- ggplot()+
-#     geom_boxplot(data = hex_jobs_wide, aes(x = 1, y = dif1_log))+
-#     labs(title = "Diferença relativa de empregos entre 2017 e 2018",
-#          subtitle = "Maior que zero: Jobs 2018 > Jobs 2017")+
-#     # theme_ipsum()+
-#     theme_bw()+
-#     ggforce::facet_zoom(ylim = c(-0.5, 0.5))
-#   
-#   map2 <- ggplot()+
-#     geom_sf(data = hex_jobs_wide, aes(fill = dif1_abs_tc), color = NA)+
-#     scale_fill_distiller(palette = "RdBu"
-#                          , limits  = c(-1, 1)*max(abs(hex_jobs_wide$dif1_abs_tc))
-#     )+
-#     labs(title = "Diferença absoluta de empregos entre 2017 e 2018",
-#          subtitle = "Em vermelho: Jobs 2018 > Jobs 2017")+
-#     theme_aop_map()
-#   
-#   plot2 <- ggplot()+
-#     geom_boxplot(data = hex_jobs_wide, aes(x = 1, y = dif1_abs))+
-#     # labs(title = "Diferença absoluta empregos entre 2017 e 2018",
-#     #      subtitle = "Maior que zero: Jobs 2018 > Jobs 2017")+
-#     # theme_ipsum()+
-#     theme_bw()+
-#     theme(axis.text.x = element_blank())
-#     # ggforce::facet_zoom(ylim = c(-100, 100))
-#   
-#   summary(hex_jobs_wide$dif1_abs)
-#   
-#   library(patchwork)
-#   figure2 <- map2 + plot2 + plot_layout(widths = c(3, 1)) 
-#   
-#   ggsave(filename = sprintf("reports/comparacao_distribuicao_anos/comp_jobs_%s.png", sigla_munii),
-#          plot = figure2,
-#          device = "png",
-#          width = 16,
-#          units = "cm")
-#   
-#   
-#   # ggsave(filename = sprintf("reports/%s_teste2.png", sigla_munii), plot = plot2)
-#   # ggsave(filename = sprintf("reports/%s_teste3.png", sigla_munii), plot = plot3)
-#   
-#   
-#   
-# }
-# 
-# 
-# 
-# lapply(munis_df_2019$abrev_muni, compare_jobs_distribution)
-# 
-# 
-# 
-# 
-# # Checagem de resultados ---------------------------------------------------------------------------
-# 
-# # Fun para criar mapas interativos (html) de distribuicao espacial de uso do solo
-# salva_mapas <- function(sigla_muni, ano) {
-#   
-#   # sigla_muni <- "bsb"; ano <- 2019
-#   # sigla_muni <- "for"; ano <- 2018
-#   
-#   
-#   # trazer dados de uso do solo
-#   us <- readr::read_rds(sprintf("../../data/acesso_oport/hex_agregados/%s/hex_agregado_%s_09_%s.rds", ano, sigla_muni, ano))
-#   
-#   
-#   # # saude
-#   # map_saude <- mapview(subset(us, saude_total>0), zcol = "saude_total")
-#   # 
-#   # # empregos
-#   # map_empregos <- mapview(subset(us, empregos_total>0), zcol = "empregos_total")
-#   # 
-#   # # educacao
-#   # map_edu <- mapview(subset(us, edu_total>0), zcol = "edu_total")
-#   # 
-#   # 
-#   # single_map <- mapview(subset(us, saude_total>0), zcol = "saude_total") +  
-#   #   mapview(subset(us, empregos_total>0), zcol = "empregos_total") + 
-#   #   mapview(subset(us, edu_total>0), zcol = "edu_total")
-#   
-#   # save
-#   # mapview::mapshot(single_map, debug=T, remove_controls=NULL, url = sprintf("reports/distribuicao_us/us_%s_%s.html", sigla_muni, ano))
-#   
-#   maxs <- data.frame(sigla_muni = sigla_muni,
-#                      max_saude = max(us$saude_total),
-#                      max_edu = max(us$edu_total))
-#   
-# }  
-# 
-# # Aplica funcao para cada municipio
-# 
-# # Parallel processing using future.apply
-# maxs <- lapply(X = munis_df_2019$abrev_muni, FUN=salva_mapas, ano = 2018)
-# 
-# maxs_dt <- rbindlist(maxs)
+# Aplicar função
+salvar_shapes_agregados(res = "08")

@@ -1,5 +1,5 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.3.1 Download de dados de malha de ruas do OSM em formato .pbf (que sera utilizado no OpenTripPlanner)
+###### Faz o download de dados de malha de ruas do OSM em formato .pbf, que será utilizado no r5r
 
 #' Esse script extrai a malha viária de cada cidade, de acordo com a bounding box
 #' do arquivo raster de topografia. 
@@ -210,7 +210,6 @@ extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
 }
 
 
-# extrai_malha_viaria(muni = "oco", ano_base = 2019, ano_arq_pbf = ano_pbf)
 # Demora de 2 a 3 minutos por cidade para rodar
 ano = 2019
 purrr::walk(munis_list$munis_metro[ano_metro == ano]$abrev_muni, extrai_malha_viaria, ano_base = ano, ano_arq_pbf = ano_pbf)

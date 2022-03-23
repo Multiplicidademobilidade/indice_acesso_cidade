@@ -24,7 +24,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     # Checar se arquivo resultante já existe. Se sim, avisar e pular a cidade
     out_file <- sprintf("grade_renda_cor_%s_%s.rds", sigla_muni, ano)
     
-    if (out_file %nin% list.files(subfolder13)){
+    if (out_file %nin% list.files(subfolder13)) {
       # Caminho para os arquivos
       path_setor <- sprintf("%s/setores_agregados_%s_%s.rds", subfolder4, sigla_muni, ano)
       path_grade <- sprintf("%s/grade_%s_%s.rds", subfolder3, sigla_muni, ano)
@@ -119,7 +119,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
       # calculada a proporção que cada segmento de população tem em relação à 
       # população dentro do próprio setor. A variável renda total não está aqui 
       # porque ela já representa o total da renda, não sendo segmentada
-      setDT(setor)[,  pop_total := sum(cor_branca, cor_amarela, cor_indigena, cor_negra),  by=id_setor]
+      setDT(setor)[,  pop_total := sum(cor_branca, cor_amarela, cor_indigena, cor_negra),  by = id_setor]
       setor[,  ":="(
         # renda
         moradores_SM_0_1Q = moradores_SM_0_1Q/pop_total,
@@ -144,7 +144,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
         idade_7_prop = idade_70/pop_total
       ), 
       
-      by=id_setor]
+      by = id_setor]
       
       # volta para sf
       setor <- st_sf(setor)
@@ -216,43 +216,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
         dplyr::mutate(idade_6_pedaco = idade_6_prop * pop_sub_grade) %>%
         dplyr::mutate(idade_7_pedaco = idade_7_prop * pop_sub_grade)
       
-      # # Grand Finale (uniao dos pedacos) - Agrupar por grade e somar a renda
-      # ui_fim <- ui %>%
-      #   st_set_geometry(NULL) %>%
-      #   group_by(id_grade, pop_total, pop_homens, pop_mulheres) %>%
-      #   dplyr::summarise(
-      #     # renda
-      #     renda = sum(renda_pedaco, na.rm = TRUE),
-      #     # moradores_SM_0_1Q = sum(moradores_SM_0_1Q_pedaco, na.rm = TRUE),
-      #     # moradores_SM_1Q_1M = sum(moradores_SM_1Q_1M_pedaco, na.rm = TRUE),
-      #     # moradores_SM_1M_1 = sum(moradores_SM_1M_1_pedaco, na.rm = TRUE),
-      #     # moradores_SM_1_2 = sum(moradores_SM_1_2_pedaco, na.rm = TRUE),
-      #     # moradores_SM_2 = sum(moradores_SM_2_pedaco, na.rm = TRUE),
-      #     # cor
-      #     cor_branca = as.numeric(sum(branca_pedaco, na.rm = TRUE)),
-      #     cor_amarela = as.numeric(sum(amarela_pedaco, na.rm = TRUE)),
-      #     cor_indigena = as.numeric(sum(indigena_pedaco, na.rm = TRUE)),
-      #     cor_negra = as.numeric(sum(negra_pedaco, na.rm = TRUE)),
-      #     # para idade
-      #     idade_0a5   = as.numeric(sum(idade_1_pedaco, na.rm = TRUE)),
-      #     idade_6a14  = as.numeric(sum(idade_2_pedaco, na.rm = TRUE)),
-      #     idade_15a18 = as.numeric(sum(idade_3_pedaco, na.rm = TRUE)),
-      #     idade_19a24 = as.numeric(sum(idade_4_pedaco, na.rm = TRUE)),
-      #     idade_25a39 = as.numeric(sum(idade_5_pedaco, na.rm = TRUE)),
-      #     idade_40a69 = as.numeric(sum(idade_6_pedaco, na.rm = TRUE)),
-      #     idade_70    = as.numeric(sum(idade_7_pedaco, na.rm = TRUE))
-      #   ) %>%
-      #   dplyr::mutate(renda = as.numeric(renda)) %>%
-      #   ungroup()
-      #    
-      # ui_fim_sf <- grade_corrigida %>%
-      #   dplyr::select(id_grade) %>%
-      #   left_join(ui_fim, by = "id_grade") %>%
-      #   # arredodandar valores
-      #   mutate_at(vars(matches("pop|renda|moradores|cor|idade")), round)
-      
-      
-      
+     
       # Renomear as colunas 
       ui_fim_sf <- ui %>%
         mutate(pop_mulheres = pop_sub_grade * prop_mulheres,
@@ -262,12 +226,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
           id_grade, pop_total = pop_sub_grade, pop_mulheres, pop_homens,
           # renda
           renda = renda_pedaco,
-          # moradores_SM_0_1Q = moradores_SM_0_1Q_pedaco,
-          # moradores_SM_1Q_1M = moradores_SM_1Q_1M_pedaco,
-          # moradores_SM_1M_1 = moradores_SM_1M_1_pedaco,
-          # moradores_SM_1_2 = moradores_SM_1_2_pedaco,
-          # moradores_SM_2 = moradores_SM_2_pedaco,
-          
+         
           # cor
           cor_branca = branca_pedaco,
           cor_amarela = amarela_pedaco,
@@ -306,8 +265,8 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
   } else {
     future::plan(future::multisession)
   }
-  invisible(future.apply::future_lapply(X = x, FUN=renda_de_setor_p_grade_muni, future.packages=c('sf', 'dplyr'), future.seed = TRUE))
-  lapply(X = x, FUN=renda_de_setor_p_grade_muni)
+  invisible(future.apply::future_lapply(X = x, FUN = renda_de_setor_p_grade_muni, future.packages = c('sf', 'dplyr'), future.seed = TRUE))
+  lapply(X = x, FUN = renda_de_setor_p_grade_muni)
   
 }
 
@@ -315,7 +274,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
 # Agregar informações dos setores censitários (renda, idade) para a grade 
 # estatística - usar uma sigla das presentes em:
 # munis_list$munis_metro[ano_metro == ano]$abrev_muni ou 'all' para todos
-# renda_de_setor_p_grade(ano = 2019, munis = 'oco')
+# renda_de_setor_p_grade(ano = 2019, munis = 'nat')
 # renda_de_setor_p_grade(ano = 2019, munis = 'all')
 
 # É importante mencionar que os processos de st_...() exigem bastante memória 
