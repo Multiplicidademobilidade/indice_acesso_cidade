@@ -15,7 +15,6 @@
 source('fun/setup.R')
 #library(gmapsdistance) # Distance Matrix API
 source('fun/gmapsdistance.R') # Vamos utilizar uma versao editada num primeiro momento
-library(tictoc)
 
 #### 1) Funcao para preparar uma matriz de entrada ------------
 # Recebe o .rds dos hexágonos e prepara uma matriz de origens e destinos

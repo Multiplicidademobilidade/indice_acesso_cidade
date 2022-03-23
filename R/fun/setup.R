@@ -1,8 +1,11 @@
 # Definir fuso horario local
 Sys.setenv(TZ = 'UTC')
 
-# Carregar bibliotecas
+# Checar bibliotecas usadas no projeto
+# deps <- renv::dependencies()
+# deps %>% as.data.frame() %>% dplyr::select(Package) %>% distinct() %>% arrange(Package)
 
+# Carregar bibliotecas
 library(tidyverse)
 library(tidylog)        # opcional, mas útil - pode ser desligado quando performance for um problema
 # Estes pacotes serão usados mas todos estão no Tidyverse
@@ -15,45 +18,50 @@ library(tidylog)        # opcional, mas útil - pode ser desligado quando perfor
 # library(stringr)      # operacoes em strings
 # library(forcats)
 
-# library(beepr)
-# library(bit64)        # viz large numbers
-# library(ceramic)
 library(data.table)   # manipulacao de dados
-# library(extrafont)    # fontes de texto
-# library(fastDummies)  # para a criação de dummies
-# library(fasttime)     # rapido processamento de dados em data/horario
-# library(furrr)
 library(future.apply) # Aplicar funcoes em paralelo
 library(geobr)        # dados espaciais do brasil
-# library(ggmap)        # geocoding
-# library(gtfsio)        #
-# library(ggthemes)     # temas para visualizacao de dados
+library(ggmap)        # geocoding
 library(h3jsr)        # h3 hex remotes::install_github("obrl-soil/h3jsr"), requer install.packages("V8")
 library(Hmisc)
-# library(hrbrthemes)   # requer hrbrthemes::import_roboto_condensed()
-# library(httr)
-# library(janitor)
-# library(knitr)
-# library(leafgl)
-# library(lubridate)    # dados em data/horario
-# library(maptools)
-# library(mapview)      # visualizacao interativa dos dados
-# library(patchwork)
-# library(pbapply)      # progress bar
-# library(quantreg)
-# library(rmapshaper)
+library(httr)
+library(janitor)
+library(maptools)
+library(mapview)      # visualizacao interativa dos dados
+library(pbapply)      # progress bar
 library(r5r)
 library(raster)
-# library(RColorBrewer) # paleta de cores
+library(RColorBrewer) # paleta de cores
 library(RCurl) # paleta de cores
-# library(rgeos)
 library(sf)           # leitura e manipulacao de dados espaciais
-# library(tmap)
+library(sp)
+library(tictoc)
+library(tmap)
+library(tmaptools)
 library(XML)
 
 # Para usar o r5r é preciso instalar o Java SDK (ver https://ipeagit.github.io/r5r/);
 # para o Debian 11, instalar os pacotes default-jdk, openjdk-11-jdk, default-jre e
 # openjdk-11-jre
+
+# Bibliotecas não usadas
+# library(beepr)
+# library(bit64)        # viz large numbers
+# library(ceramic)
+# library(extrafont)    # fontes de texto
+# library(fastDummies)  # para a criação de dummies
+# library(fasttime)     # rapido processamento de dados em data/horario
+# library(furrr)
+# library(gtfsio)        #
+# library(ggthemes)     # temas para visualizacao de dados
+# library(hrbrthemes)   # requer hrbrthemes::import_roboto_condensed()
+# library(knitr)
+# library(leafgl)
+# library(lubridate)    # dados em data/horario
+# library(patchwork)
+# library(quantreg)
+# library(rmapshaper)
+# library(rgeos)
 
 # Opções gerais após carregamento das bibliotecas
 options(scipen = 10000)
