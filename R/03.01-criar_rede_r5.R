@@ -9,9 +9,9 @@ source("fun/setup.R")
 construir_graph_muni <- function(sigla_muni, ano, ano_pbf) {
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder11  <- sprintf("%s/11_malha_viaria/%s", files_folder, ano_pbf)
-  subfolder15A <- sprintf("%s/15_otp/01_graphs/%s/%s", files_folder, ano, sigla_muni)
+  subfolder15A <- sprintf("%s/15_r5r/01_graphs/%s/%s", files_folder, ano, sigla_muni)
   dir.create(subfolder15A, recursive = TRUE, showWarnings = FALSE)
   
   # Criar cópia do arquivo .pbf na nova pasta

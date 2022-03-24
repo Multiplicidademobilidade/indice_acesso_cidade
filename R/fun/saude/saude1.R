@@ -25,7 +25,7 @@
 
 # 1. Criar as pastas de trabalho para os dados de saúde
 ano = 2019 # Atualizar conforme o caso
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder6 <- sprintf("%s/06_cnes_saude/%s", files_folder, ano)
 dir.create(sprintf("%s", subfolder6), recursive = TRUE, showWarnings = FALSE)
 

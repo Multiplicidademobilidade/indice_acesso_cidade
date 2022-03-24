@@ -8,9 +8,9 @@ library('tidyverse')
 
 # Estrutura de pastas
 ano = 2019
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder00  <- sprintf("%s/00_Originais/PesquisaClientes99", files_folder)
-subfolder19  <- sprintf('%s/19_indices/%s', files_folder, ano)
+subfolder19  <- sprintf('%s/18_indices/%s', files_folder, ano)
 
 
 # ----- PARTE 1: CÁLCULO DO INIA -----

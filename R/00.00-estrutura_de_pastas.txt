@@ -1,4 +1,4 @@
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder00  <- sprintf("%s/00_Originais/", files_folder)
 subfolder1   <- sprintf("%s/01_municipios/%s", files_folder, ano)
 subfolder2   <- sprintf("%s/02_setores_censitarios/%s", files_folder, ano)
@@ -23,5 +23,5 @@ subfolder16  <- sprintf("%s/16_ttmatrix_motorizados/%s", files_folder, ano)
 subfolder16A  <- sprintf("%s/16_ttmatrix_motorizados/%s/00_matrizes_od/", files_folder, ano)
 subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus/", files_folder, ano)
 subfolder17  <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
-subfolder18  <- sprintf("%s/18_mapas_acessibilidades/%s", files_folder, ano)
-subfolder19  <- sprintf("%s/19_indices/%s", files_folder, ano)
+subfolder18  <- sprintf("%s/18_indices/%s", files_folder, ano)
+subfolder19  <- sprintf("%s/19_mapas_acessibilidades/%s", files_folder, ano)

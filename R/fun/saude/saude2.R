@@ -3,7 +3,7 @@
 
 # Estrutura de pastas
 ano = 2019 # Atualizar conforme o caso
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder6 <- sprintf("%s/06_cnes_saude/%s", files_folder, ano)
 
 # Arquivo CNES saúde vindo do script anterior
@@ -88,7 +88,7 @@ register_google(key = my_api$V1)
 # Fazer o geocode usando o ggmap e a coluna 'end_geocode'
 geocode_ggmap <- geocode(location = cnes_saude_rev$end_geocode, output = "more", source = "google")
 # write_delim(geocode_ggmap, sprintf('%s/saude_%s_geocode_revisto_gmaps.csv', subfolder6, ano), delim = ';')
-geocode_ggmap <- read_delim(sprintf('%s/saude_%s_geocode_revisto_gmaps.csv', subfolder6, ano), delim = ';')
+# geocode_ggmap <- read_delim(sprintf('%s/saude_%s_geocode_revisto_gmaps.csv', subfolder6, ano), delim = ';')
  
 
 # Simplificar geocode_ggmap para juntar ao cnes_saude_rev
@@ -119,7 +119,7 @@ cnes_saude_out <-
 write_rds(cnes_saude_out, sprintf('%s/saude_%s_filter_geocode_revisto_gmaps.rds', subfolder6, ano), compress = 'gz')
 
 # cnes_saude_out2 <- cnes_saude_out %>% mutate(indice_linha = 1:nrow(.))
-write_delim(cnes_saude_out2, sprintf('%s/saude_%s_filter_geocode_revisto_gmaps.csv', subfolder6, ano), delim = ';')
+# write_delim(cnes_saude_out2, sprintf('%s/saude_%s_filter_geocode_revisto_gmaps.csv', subfolder6, ano), delim = ';')
 
 # ----------------------------------------
 # Segundo processo: Gmaps após rechecagem

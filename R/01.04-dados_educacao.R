@@ -16,7 +16,7 @@ source('fun/educacao/educacao.R')
 ano = 2019
 lapply(X = ano, FUN = criar_pastas_censo_educacao)
 
-# 1) Aplicar funcao filtro ----------------
+# 1) Aplicar função filtro ----------------
 # O resultado é o arquivo educacao_%s_filter.rds, que contém as matrículas de
 # ensino infantil, fundamental e médio para cada escola
 # lapply(X=2017:2019, FUN = educacao_filter)

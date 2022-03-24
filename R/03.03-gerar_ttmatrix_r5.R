@@ -9,10 +9,10 @@ source('fun/setup.R')
 calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
-  subfolder15A <- sprintf("%s/15_otp/01_graphs/%s/%s", files_folder, ano, sigla_muni)
-  subfolder15B <- sprintf("%s/15_otp/02_points/%s", files_folder, ano)
-  subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
+  files_folder <- "../../indice_acesso_cidade_dados"
+  subfolder15A <- sprintf("%s/15_r5r/01_graphs/%s/%s", files_folder, ano, sigla_muni)
+  subfolder15B <- sprintf("%s/15_r5r/02_points/%s", files_folder, ano)
+  subfolder15C <- sprintf("%s/15_r5r/03_output_ttmatrix/%s", files_folder, ano)
   dir.create(subfolder15C, recursive = TRUE, showWarnings = FALSE)
   
   # r5 setup
@@ -37,7 +37,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   
   
   # Calcular para modo carro somente se resolução for abaixo de 8
-  if (strtoi(res) < 8) {
+  if (strtoi(res, base = 10L) < 8) {
     ttm_car <- travel_time_matrix(r5r_core = setup,
                                   origins = points,
                                   destinations = points,
@@ -77,7 +77,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '08') {
   ttm_bike[, pico := 1]
   
   # Juntar matrizes
-  if (strtoi(res) < 8) {
+  if (strtoi(res, base = 10L) < 8) {
     ttm <- rbind(ttm_walk, ttm_bike, ttm_car)
   } else {
     ttm <- rbind(ttm_walk, ttm_bike)

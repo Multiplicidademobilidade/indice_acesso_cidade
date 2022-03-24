@@ -12,7 +12,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
     # sigla_muni <- 'oco'; ano <- 2019
     
     # Estrutura de pastas
-    files_folder <- "../../indice-mobilidade_dados"
+    files_folder <- "../../indice_acesso_cidade_dados"
     subfolder3 <- sprintf("%s/03_grade_municipios/%s", files_folder, ano)
     subfolder4 <- sprintf("%s/04_setores_agregados/%s", files_folder, ano)
     subfolder13 <- sprintf("%s/13_grade_municipio_com_renda_cor/%s", files_folder, ano)
@@ -260,12 +260,12 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
   } else (x = munis)
   
   # Parallel processing using future.apply
-  if (future::supportsMulticore()) {
-    future::plan(future::multicore)
-  } else {
-    future::plan(future::multisession)
-  }
-  invisible(future.apply::future_lapply(X = x, FUN = renda_de_setor_p_grade_muni, future.packages = c('sf', 'dplyr'), future.seed = TRUE))
+  # if (future::supportsMulticore()) {
+  #   future::plan(future::multicore)
+  # } else {
+  #   future::plan(future::multisession)
+  # }
+  # invisible(future.apply::future_lapply(X = x, FUN = renda_de_setor_p_grade_muni, future.packages = c('sf', 'dplyr'), future.seed = TRUE))
   lapply(X = x, FUN = renda_de_setor_p_grade_muni)
   
 }
@@ -281,7 +281,7 @@ renda_de_setor_p_grade <- function(ano, munis = "all") {
 # RAM, em especial para estados grandes. Monitorar. Talvez seja preciso rodar
 # por cidade e reiniciar a sessão como com .rs.restartR() após cada cidade
 
-renda_de_setor_p_grade(ano = 2019, munis = 'vta')
+renda_de_setor_p_grade(ano = 2019, munis = 'nat')
 # .rs.restartR()
 # "bho" "cam" "cgr" "cur" "for" "goi" "mac" "man" "nat" "rec" "rio" "sal" "spo" 
 # "tsa" "jpa" "ula" "vta" "oco" "sne" "sjc" "lda"

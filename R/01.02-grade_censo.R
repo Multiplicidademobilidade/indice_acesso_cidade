@@ -14,7 +14,7 @@ options(mc.cores = 8)
 criar_grade_muni_all <- function(ano, munis = "all") {
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder1 <- sprintf("%s/01_municipios", files_folder)
   subfolder1A <- sprintf("%s/%s", subfolder1, ano)
   subfolder3 <- sprintf("%s/03_grade_municipios", files_folder)

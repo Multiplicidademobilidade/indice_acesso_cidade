@@ -24,7 +24,7 @@ download_muni_setores <- function(ano, munis = "all") {
     # Estrutura de pastas
     # ../../-mobilidade_dados/municipios/[ano]/arquivos_municipios.rds e
     # ../../-mobilidade_dados/setores_censitarios/[ano]/arquivos_setores_censitarios.rds
-    files_folder <- "../../indice-mobilidade_dados"
+    files_folder <- "../../indice_acesso_cidade_dados"
     subfolder1 <- sprintf("%s/01_municipios", files_folder)
     subfolder1A <- sprintf("%s/%s", subfolder1, ano)
     subfolder2 <- sprintf("%s/02_setores_censitarios", files_folder)

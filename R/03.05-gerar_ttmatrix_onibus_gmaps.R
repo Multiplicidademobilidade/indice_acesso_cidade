@@ -23,13 +23,13 @@ preparar_matriz <- function(ano=2019, munis="all", resol=7){
   # ano <- 2019; resol <- 8; sigla_munis <- 'goi'
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   #subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano) # Nao esta sendo utilizado
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolder16 <- sprintf("%s/16_ttmatrix_motorizados/01_onibus", files_folder)
   df_folder <- sprintf("%s/%s/dataframes", subfolder16, ano)
   
-  if (dataframes %nin% list.dirs("../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus/2019", recursive = FALSE, full.names = FALSE)){
+  if (dataframes %nin% list.dirs("../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus/2019", recursive = FALSE, full.names = FALSE)){
     dir.create(df_folder)
   }
   
@@ -96,7 +96,7 @@ preparar_matriz <- function(ano=2019, munis="all", resol=7){
 }
 
 # Preciso fazer um por um
-files_folder = "../../indice-mobilidade_dados/16_matriz_viagens_onibus/2019/dataframes"
+files_folder = "../../indice_acesso_cidade_dados/16_matriz_viagens_onibus/2019/dataframes"
 
 cidade <- "ula"
 preparar_matriz(munis = cidade)
@@ -112,12 +112,12 @@ map_distance_matrix <- function(ano, munis="all", resol="07", rodada=1){
   api_key <-  set.api.key("AIzaSyCOH4rvtara3oRGNXx7gecSKFV7n5VFgr4") # Precisa da API KEY para funcionar
   
   # Criar estrutura de pasta
-  files_folder <- sprintf("../../indice-mobilidade_dados")
+  files_folder <- sprintf("../../indice_acesso_cidade_dados")
   subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano) # É preciso carregar os hex_muni de novo para trazer os centroides corrigidos
   subfolder16 <- sprintf("%s/16_ttmatrix_motorizados/01_onibus/%s", files_folder, ano)
   df_folder <- sprintf("%s/dataframes", subfolder16)
   
-  if (ano %nin% list.dirs("../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus", recursive = FALSE, full.names = FALSE)){
+  if (ano %nin% list.dirs("../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus", recursive = FALSE, full.names = FALSE)){
     dir.create(subfolder16)
   }
   
@@ -333,7 +333,7 @@ map_distance_matrix(ano=2019, munis="rio", rodada=2)
 
 # Gerar relatorio
 relatorio_requisicao <- function(sigla_muni, resol, ano){
-  matriz_folder = "../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
+  matriz_folder = "../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
   file <- read_rds(sprintf("%s/matriztp2_%s_%s_%s.rds", matriz_folder, sigla_muni, resol, ano))
   erros <- nrow(filter(file, is.na(status)))
   not_found <- nrow(filter(file, status=="ROUTE_NOT_FOUND"))
@@ -347,7 +347,7 @@ relatorio_requisicao(sigla_muni= "rio", resol="07", ano=2019)
 # ----
 
 # Carregar arquivos
-matriz_folder = "../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
+matriz_folder = "../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
 file <- read_rds(sprintf("%s/matriztp_rec_07_2019.rds", matriz_folder))#%>%
 #dplyr::filter(Status!="ROUTE_NOT_FOUND")#%>%
 #dplyr::select(id_hex:distancia)
@@ -374,7 +374,7 @@ file2 <- read_rds(sprintf("%s/matriztp2_bho_07_2019.rds", matriz_folder))
 
 adequa_matrizes <- function(muni){
   
-  matriz_folder = "../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
+  matriz_folder = "../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
   #file <- read_rds(sprintf("%s/matriztp_nat_07_2019.rds", matriz_folder))
   #file2 <- read_rds(sprintf("%s/matriztp_spo_07_2019.rds", matriz_folder))
   file <- read_rds(sprintf("%s/matriztp_%s_07_2019.rds", matriz_folder, muni))
@@ -396,5 +396,5 @@ adequa_matrizes <- function(muni){
 
 adequa_matrizes("rec")
 
-matriz_folder = "../../indice-mobilidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
+matriz_folder = "../../indice_acesso_cidade_dados/16_ttmatrix_motorizados/01_onibus/2019"
 file <- read_rds(sprintf("%s/matriztp2_for_07_2019.rds", matriz_folder))

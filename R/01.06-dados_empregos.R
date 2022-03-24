@@ -14,7 +14,7 @@ source('fun/setup.R')
 
 # 1. Criar estrutura de pastas para os dados georreferenciados da RAIS
 ano = 2019
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder7 <- sprintf("%s/07_rais_empregos/%s", files_folder, ano)
 dir.create(subfolder7, recursive = TRUE, showWarnings = FALSE)
 

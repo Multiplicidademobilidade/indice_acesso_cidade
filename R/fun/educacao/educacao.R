@@ -34,7 +34,7 @@
 # Criar pasta geral para todos os arquivos e demais pastas - este trecho está
 # fora da função devido ao processo manual de baixar e copiar os arquivos
 criar_pastas_censo_educacao <- function(ano){
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   dir.create(sprintf("%s", subfolder5), recursive = TRUE, showWarnings = FALSE)
 }
@@ -43,7 +43,7 @@ criar_pastas_censo_educacao <- function(ano){
 educacao_filter <- function(ano, download = FALSE) {
   # Estrutura de pastas
   # ano = 2019
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
   
@@ -218,7 +218,7 @@ educacao_filter <- function(ano, download = FALSE) {
 
 educacao_juntar_geocode_inep <- function(ano_base) {
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
   
@@ -268,7 +268,7 @@ educacao_juntar_geocode_inep <- function(ano_base) {
 educacao_geocode_all <- function(ano) { 
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   
   # Checar se arquivo resultante já existe. Se sim, avisar e pular processamento

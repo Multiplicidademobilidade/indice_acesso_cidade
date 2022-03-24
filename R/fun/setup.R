@@ -18,7 +18,9 @@ library(tidylog)        # opcional, mas útil - pode ser desligado quando perfor
 # library(stringr)      # operacoes em strings
 # library(forcats)
 
+library(ceramic)
 library(data.table)   # manipulacao de dados
+library(fastDummies)  # para a criação de dummies
 library(future.apply) # Aplicar funcoes em paralelo
 library(geobr)        # dados espaciais do brasil
 library(ggmap)        # geocoding
@@ -33,6 +35,7 @@ library(r5r)
 library(raster)
 library(RColorBrewer) # paleta de cores
 library(RCurl) # paleta de cores
+library(rgeos)
 library(sf)           # leitura e manipulacao de dados espaciais
 library(sp)
 library(tictoc)
@@ -47,9 +50,7 @@ library(XML)
 # Bibliotecas não usadas
 # library(beepr)
 # library(bit64)        # viz large numbers
-# library(ceramic)
 # library(extrafont)    # fontes de texto
-# library(fastDummies)  # para a criação de dummies
 # library(fasttime)     # rapido processamento de dados em data/horario
 # library(furrr)
 # library(gtfsio)        #
@@ -61,7 +62,7 @@ library(XML)
 # library(patchwork)
 # library(quantreg)
 # library(rmapshaper)
-# library(rgeos)
+
 
 # Opções gerais após carregamento das bibliotecas
 options(scipen = 10000)
@@ -144,24 +145,33 @@ munis_list <- list(
   
 ) 
 
-# para manaus
-ylim = c(-353979.8550, -326309.6987)
-xlim = c(-6696609.8722, -6658735.3079)
 
-
-# # ggplot themes
-# theme_aop_map <- function(base_size, ...) {
-#   # theme_void(base_family="Roboto Condensed") %+replace%
-#   theme_void() %+replace%
-#     theme(
-#       legend.position = "bottom",
-#       plot.margin = unit(c(2,0,0,0),"mm"),
-#       legend.key.width = unit(2,"line"),
-#       legend.key.height = unit(0.2,"cm"),
-#       legend.text = element_text(size = rel(0.5)),
-#       legend.title = element_text(size = rel(0.5)),
-#       # plot.title = element_text(hjust = 0, vjust = 4),
-#       ...
-#     )
-# }
-
+rm_accent <- function(str, pattern = "all") {
+  if (!is.character(str))
+    str <- as.character(str)
+  pattern <- unique(pattern)
+  if (any(pattern == "Ç"))
+    pattern[pattern == "Ç"] <- "ç"
+  symbols <- c(
+    acute = "áéíóúÁÉÍÓÚýÝ",
+    grave = "àèìòùÀÈÌÒÙ",
+    circunflex = "âêîôûÂÊÎÔÛ",
+    tilde = "ãõÃÕñÑ",
+    umlaut = "äëïöüÄËÏÖÜÿ",
+    cedil = "çÇ"
+  )
+  nudeSymbols <- c(
+    acute = "aeiouAEIOUyY",
+    grave = "aeiouAEIOU",
+    circunflex = "aeiouAEIOU",
+    tilde = "aoAOnN",
+    umlaut = "aeiouAEIOUy",
+    cedil = "cC"
+  )
+  accentTypes <- c("´","`","^","~","¨","ç")
+  if (any(c("all", "al", "a", "todos", "t", "to", "tod", "todo") %in% pattern)) # opcao retirar todos
+    return(chartr(paste(symbols, collapse = ""), paste(nudeSymbols, collapse = ""), str))
+  for (i in which(accentTypes %in% pattern))
+    str <- chartr(symbols[i],nudeSymbols[i], str)
+  return(str)
+}

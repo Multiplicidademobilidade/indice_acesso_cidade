@@ -16,7 +16,7 @@ source('fun/setup.R')
 # 1. Criar estrutura de pastas
 # ----------------------------------------
 ano_pbf = 2021 # Ano a que se refere o arquivo PBF
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder11 <- sprintf("%s/11_malha_viaria/%s", files_folder, ano_pbf)
 dir.create(sprintf("%s", subfolder11), recursive = TRUE, showWarnings = FALSE)
 
@@ -25,7 +25,7 @@ dir.create(sprintf("%s", subfolder11), recursive = TRUE, showWarnings = FALSE)
 # 2. Baixar arquivo PBF
 # ----------------------------------------
 # Baixar o arquivo PBF do Brasil manualmente do site download.geofabrik.de/ e 
-# salvar na pasta criada ('../../indice-mobilidade_dados/11_malha_viaria/[ano]/')
+# salvar na pasta criada ('../../indice_acesso_cidade_dados/11_malha_viaria/[ano]/')
 
 
 # ----------------------------------------
@@ -116,7 +116,7 @@ filtrar_malha_viaria_br(ano = ano_pbf, pbf_folder = subfolder11)
 # função para extrair a malha viária do município -------------------------
 extrai_malha_viaria <- function(muni, ano_base, ano_arq_pbf) {
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder10 <- sprintf("%s/10_topografia", files_folder)
   
   ## encontrar bounding box da cidade, a partir do grid de topografia

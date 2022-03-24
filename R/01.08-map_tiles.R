@@ -15,7 +15,7 @@ Sys.setenv(MAPBOX_API_KEY = my_api$V1)
 baixar_map_tile_ceramic <- function(ano, munis = "all") {
   
   # Criar pasta para salvar arquivos
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
   subfolder9 <- sprintf("%s/09_maptiles_crop/%s", files_folder, ano)
   dir.create(sprintf("%s", subfolder9), recursive = TRUE, showWarnings = FALSE)

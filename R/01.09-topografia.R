@@ -28,7 +28,7 @@ password <- readline("Informe o password : ")
 
 download_srtm <- function(ano, sigla_muni) {
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
   subfolder10 <- sprintf("%s/10_topografia/%s", files_folder, sigla_muni)
   dir.create(sprintf("%s", subfolder10), recursive = TRUE, showWarnings = FALSE)
@@ -95,5 +95,5 @@ download_srtm <- function(ano, sigla_muni) {
 }
 
 
-walk(munis_list$munis_df$abrev_muni, download_srtm, ano = 2019)
+walk('munis_list$munis_df$abrev_muni', download_srtm, ano = 2019)
 

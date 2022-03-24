@@ -35,10 +35,10 @@ mapas_acessibilidade <- function(muni, formato, modo, oport){
   paleta_NA <- '#DCDCDC'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Acessibilidade", files_folder)
+  subfolderXY <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
   save_folder <- sprintf("%s/%s", subfolderXY, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
@@ -88,10 +88,10 @@ criar_mapas_acesso <- function(muni, formato){
   paleta_NA <- '#DCDCDC'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Acessibilidade", files_folder)
+  subfolderXY <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
   save_folder <- sprintf("%s/%s", subfolderXY, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
@@ -338,7 +338,7 @@ tmap_options(
 tmap_mode('plot')
 
 # Dados
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
 
 muni = "cgr"
@@ -426,9 +426,9 @@ criar_mapas_populacao <- function(muni, formato, res){
   paleta_NA <- '#DCDCDC'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Populacao", files_folder)
+  subfolderXY <- sprintf("%s/19_mapas_acessibilidades/2019/Populacao", files_folder)
   save_folder <- sprintf("%s/%s", subfolderXY, muni)
   
   # !! adicionar um condicional
@@ -525,9 +525,9 @@ criar_mapas_oportunidades <- function(muni, formato, res){
   paleta_NA <- '#DCDCDC'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Oportunidades", files_folder)
+  subfolderXY <- sprintf("%s/19_mapas_acessibilidades/2019/Oportunidades", files_folder)
   save_folder <- sprintf("%s/%s", subfolderXY, muni)
   
   # !! adicionar um condicional
@@ -609,7 +609,7 @@ tmap_options(
 )
 
 # Dados
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
 subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
 

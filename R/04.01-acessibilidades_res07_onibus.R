@@ -22,9 +22,9 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   message('Trabalhando na cidade ', sigla_muni, ' no ano ', ano,  '\n')
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder15C <- sprintf("%s/15_otp/03_output_ttmatrix/%s", files_folder, ano)
+  subfolder15C <- sprintf("%s/15_r5r/03_output_ttmatrix/%s", files_folder, ano)
   subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
   dir.create(subfolder17, recursive = TRUE, showWarnings = FALSE)
@@ -334,12 +334,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
 }
 
 # 2. APLICAR PARA TODAS AS CIDADES --------------------------------------------------------------
-# Parallel processing using future.apply
-if (future::supportsMulticore()) {
-  future::plan(future::multicore)
-} else {
-  future::plan(future::multisession)
-}
 
 # Nem todos os municípios possuem dados de viagens de ônibus - vamos puxar todos
 # e retirar os que não possuem
@@ -348,4 +342,3 @@ munis <- munis_list$munis_metro[ano_metro == 2019]
 munis <- munis %>% filter(abrev_muni %nin% munic_sem_dados_onibus)
 
 walk(munis$abrev_muni, calcular_acess_muni, ano = 2019)
-# furrr::future_walk('nat', calcular_acess_muni, ano = 2019)

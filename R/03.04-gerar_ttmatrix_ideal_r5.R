@@ -6,7 +6,6 @@
 # carregar bibliotecas
 # options(java.parameters = "-Xmx64G")
 options(java.parameters = '-Xmx14G')
-library(r5r)
 source('fun/setup.R')
 
 
@@ -15,18 +14,18 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
   # sigla_muni <- "nat"; ano <- 2019; res <- '7'
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   
-  subfolder15A <- sprintf("%s/15_otp/01_graphs/%s/%s", files_folder, ano, sigla_muni)
-  subfolder15B <- sprintf("%s/15_otp/02_points/%s", files_folder, ano)
-  subfolder15D <- sprintf("%s/15_otp/04_output_ttmatrix_ideal/%s", files_folder, ano)
+  subfolder15A <- sprintf("%s/15_r5r/01_graphs/%s/%s", files_folder, ano, sigla_muni)
+  subfolder15B <- sprintf("%s/15_r5r/02_points/%s", files_folder, ano)
+  subfolder15D <- sprintf("%s/15_r5r/04_output_ttmatrix_ideal/%s", files_folder, ano)
   dir.create(subfolder15D, recursive = TRUE, showWarnings = FALSE)
   
   # r5 setup
   setup <- setup_r5(data_path = subfolder15A)
   
   # points
-  points <- fread(sprintf("%s/points_%s_0%s_%s.csv", subfolder15B, sigla_muni, res, ano))
+  points <- fread(sprintf("%s/points_%s_%s_%s.csv", subfolder15B, sigla_muni, res, ano))
   colnames(points) <- c("id", "lon", "lat")
   
   # select date
@@ -73,7 +72,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
   
   
   # # Calcular para modo carro somente se resolução for abaixo de 8
-  # if (strtoi(res) < 8){
+  # if (strtoi(res, base = 10L) < 8){
   #   # Criar faixas de horário para o cálculo de viagens de automóvel
   #   car_times <- c(paste0(date, " 06:00:00"), paste0(date, " 06:30:00"),
   #                  paste0(date, " 07:00:00"), paste0(date, " 07:30:00"), 
@@ -118,7 +117,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
     
     
   # Calcular para modo carro somente se resolução for abaixo de 8
-  if (strtoi(res) < 8) {
+  if (strtoi(res, base = 10L) < 8) {
     ttm_car <- travel_time_matrix(r5r_core = setup,
                                   origins = points,
                                   destinations = points,
@@ -157,7 +156,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
   
   # juntar matrizes
   # ttm <- rbind(ttm_pico, ttm_fpico, ttm_walk, ttm_bike)
-  if (strtoi(res) < 8) {
+  if (strtoi(res, base = 10L) < 8) {
     ttm <- rbind(ttm_walk, ttm_bike, ttm_car)
   } else {
     ttm <- rbind(ttm_walk, ttm_bike)
@@ -174,7 +173,7 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
   table(ttm$pico, useNA = 'always')
   
   # save ttmatrix/
-  fwrite(ttm, sprintf("%s/ttmatrix_ideal_%s_0%s_%s_r5.csv", subfolder15D, sigla_muni, res, ano))
+  fwrite(ttm, sprintf("%s/ttmatrix_ideal_%s_%s_%s_r5.csv", subfolder15D, sigla_muni, res, ano))
   
   
 }
@@ -182,4 +181,4 @@ calculate_ttmatrix <- function(sigla_muni, ano, res = '8') {
 
 # rodar função
 walk(munis_list$munis_metro[ano_metro == 2019]$abrev_muni,
-     calculate_ttmatrix, ano = 2019, res = '7')
+     calculate_ttmatrix, ano = 2019, res = '08')

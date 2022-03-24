@@ -15,7 +15,7 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
   shape_to_hexagon <- function(sigla_muni) {
     
     # Estrutura de pastas
-    files_folder <- "../../indice-mobilidade_dados"
+    files_folder <- "../../indice_acesso_cidade_dados"
     subfolder1 <- sprintf("%s/01_municipios/%s", files_folder, ano)
     subfolder11  <- sprintf("%s/11_malha_viaria/2021/%s", files_folder, sigla_muni)
     subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano)
@@ -36,7 +36,7 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
     }
     
     # # Checagem dos buffers e grids
-    out_path <- '../../indice-mobilidade_dados/00_Originais'
+    out_path <- '../../indice_acesso_cidade_dados/00_Originais'
     # st_write(muni_orig, sprintf('%s/01_shape_municipio.gpkg', out_path), driver = 'GPKG', append = FALSE)
     # st_write(muni, sprintf('%s/02_cidade_com_buffer.gpkg', out_path), driver = 'GPKG', append = FALSE)
     
@@ -288,4 +288,5 @@ criar_hexagonos <- function(ano, res = '08', munis = "all") {
 
 
 #### 2) Aplicar funcao ------------
+criar_hexagonos(ano = 2019, res = '07', munis = 'all')
 criar_hexagonos(ano = 2019, res = '08', munis = 'all')

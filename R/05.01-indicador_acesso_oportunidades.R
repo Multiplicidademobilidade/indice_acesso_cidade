@@ -25,7 +25,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
   # ano <- 2019; muni <- 'nat'
 
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
 
@@ -243,8 +243,8 @@ indices_acesso_oportunidades <- lapply(munis_list$munis_metro[ano_metro == ano]$
 
 
 # Estrutura de pastas para salvar o arquivo
-files_folder <- "../../indice-mobilidade_dados"
-subfolder19 <- sprintf('%s/19_indices/%s', files_folder, ano)
+files_folder <- "../../indice_acesso_cidade_dados"
+subfolder19 <- sprintf('%s/18_indices/%s', files_folder, ano)
 dir.create(subfolder19, recursive = TRUE, showWarnings = FALSE)
 
 # Salvar resultados

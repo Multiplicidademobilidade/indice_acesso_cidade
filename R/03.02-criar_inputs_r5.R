@@ -12,10 +12,10 @@ source('fun/setup.R')
 gerar_pontos_r5r_muni <- function(sigla_muni, ano) {
   
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/%s", files_folder, ano)
-  subfolder15A <- sprintf("%s/15_otp/01_graphs/%s/%s", files_folder, ano, sigla_muni)
-  subfolder15B <- sprintf("%s/15_otp/02_points/%s", files_folder, ano)
+  subfolder15A <- sprintf("%s/15_r5r/01_graphs/%s/%s", files_folder, ano, sigla_muni)
+  subfolder15B <- sprintf("%s/15_r5r/02_points/%s", files_folder, ano)
   dir.create(subfolder15B, recursive = TRUE, showWarnings = FALSE)
   
   # Mensagem inicial
@@ -99,9 +99,9 @@ guardar_resumo <- function(resolution, ano, df){
            points_r5 = points_out)
   
   # Salvar arquivo
-  files_folder <- "../../indice-mobilidade_dados"
-  subfolder15 <- sprintf("%s/15_otp/", files_folder)
-  write_delim(go_out, sprintf("%s/15_otp/02_points/resumo_pontos_%s_%s.csv", files_folder, resolution, ano), delim = ';')
+  files_folder <- "../../indice_acesso_cidade_dados"
+  subfolder15 <- sprintf("%s/15_r5r/", files_folder)
+  write_delim(go_out, sprintf("%s/15_r5r/02_points/resumo_pontos_%s_%s.csv", files_folder, resolution, ano), delim = ';')
   
 }
 

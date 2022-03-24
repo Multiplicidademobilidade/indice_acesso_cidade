@@ -10,7 +10,7 @@ source('fun/setup.R')
 # Censos > Censo Demográfico 2010 > Resultados do Universo > Agregados por Setores Censitários
 # 
 # Descompactar todos os arquivos .zip. Os arquivos foram salvos na pasta
-# "../../indice-mobilidade_dados/00_Originais/Censo2010. Vamos precisar das planilhas:
+# "../../indice_acesso_cidade_dados/00_Originais/Censo2010. Vamos precisar das planilhas:
 # 1. Basico
 # 2. Domicilio 02
 # 3. DomicilioRenda
@@ -70,7 +70,7 @@ source('fun/setup.R')
 
 
 # Pasta geral para todos os arquivos e demais pastas
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 censo_original_files <- sprintf("%s/00_Originais/Censo2010", files_folder)
 
 # Lista todos os arquivos de uma pasta com o mesmo padrão regex, não recursivo
@@ -304,7 +304,7 @@ merge_renda_setores_all <- function(ano, munis = "all") {
 # estava não-funcional antes da modificação) - usar a seguinte construção para 
 # todos os arquivos:
 ano = 2019
-# x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
-lapply(X = 'nat', FUN = merge_renda_setores_all, ano = ano)
+x = munis_list$munis_metro[ano_metro == ano]$abrev_muni
+lapply(X = x, FUN = merge_renda_setores_all, ano = ano)
 
 # .rs.restartR()

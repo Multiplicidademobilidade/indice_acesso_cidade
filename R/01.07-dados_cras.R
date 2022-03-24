@@ -8,7 +8,7 @@ source('fun/cras/cras.R')
 
 # Estrutura de pastas
 ano = 2019 # Atualizar conforme o caso
-files_folder <- "../../indice-mobilidade_dados"
+files_folder <- "../../indice_acesso_cidade_dados"
 cras_base_folder <- sprintf("%s/08_cras_assist_social", files_folder)
 subfolder8 <- sprintf("%s/%s", cras_base_folder, ano)
 dir.create(sprintf("%s", subfolder8), recursive = TRUE, showWarnings = FALSE)

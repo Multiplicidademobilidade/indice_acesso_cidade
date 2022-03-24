@@ -9,7 +9,7 @@ source('fun/setup.R')
 
 agrupar_variaveis_hex <- function(ano, munis = "all", res = '08') {
   # Estrutura de pastas
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder5 <- sprintf("%s/05_censo_escolar/%s", files_folder, ano)
   subfolder6 <- sprintf("%s/06_cnes_saude/%s", files_folder, ano)
   subfolder7 <- sprintf("%s/07_rais_empregos/%s", files_folder, ano)
@@ -314,25 +314,25 @@ agrupar_variaveis_hex(ano = 2019, munis = 'all', res = '08') # res pode ser uma 
 
 
 #### Salvar shapes  ------------
-salvar_shapes_agregados <- function(res, ano="2019"){ # especifica resolucao e ano
-  load_folder <- sprintf("../../indice-mobilidade_dados/14_hex_agregados/%s", ano)
-  save_folder <- sprintf("%s/shapes", load_folder)
-  
-  # Cria pasta se nao existir
-  if ("shapes" %nin% list.dirs(load_folder, recursive = FALSE, full.names = FALSE)) {
-    dir.create(save_folder)
-  }
-  
-  # Procura os arquivos que atendem o especificado
-  files_list <- list.files(load_folder, pattern = sprintf("\\w{3}_%s", res)) 
-  
-  for (arquivo in files_list) {
-    shape_name <- str_extract(arquivo, sprintf("\\w{3}_%s", res)) # le o nome
-    aux <- readRDS(sprintf("%s/%s", load_folder, arquivo)) # le o arquivo
-    st_write(aux, sprintf("%s/hex_agregado_%s_%s.gpkg", save_folder, shape_name, ano), driver = "GPKG", append = FALSE) # salva
-    rm(aux)
-  }
-}
-
-# Aplicar função
-salvar_shapes_agregados(res = "08")
+# salvar_shapes_agregados <- function(res, ano="2019"){ # especifica resolucao e ano
+#   load_folder <- sprintf("../../indice_acesso_cidade_dados/14_hex_agregados/%s", ano)
+#   save_folder <- sprintf("%s/shapes", load_folder)
+#   
+#   # Cria pasta se nao existir
+#   if ("shapes" %nin% list.dirs(load_folder, recursive = FALSE, full.names = FALSE)) {
+#     dir.create(save_folder)
+#   }
+#   
+#   # Procura os arquivos que atendem o especificado
+#   files_list <- list.files(load_folder, pattern = sprintf("\\w{3}_%s", res)) 
+#   
+#   for (arquivo in files_list) {
+#     shape_name <- str_extract(arquivo, sprintf("\\w{3}_%s", res)) # le o nome
+#     aux <- readRDS(sprintf("%s/%s", load_folder, arquivo)) # le o arquivo
+#     st_write(aux, sprintf("%s/hex_agregado_%s_%s.gpkg", save_folder, shape_name, ano), driver = "GPKG", append = FALSE) # salva
+#     rm(aux)
+#   }
+# }
+# 
+# # Aplicar função
+# salvar_shapes_agregados(res = "08")
