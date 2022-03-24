@@ -1,0 +1,229 @@
+---
+title: "Visualização dos mapas"
+output: html_notebook
+---
+## Configuracoes iniciais
+```{r}
+  # Setup
+  source('fun/setup.R')
+  # Plotagem
+  tmap_options(
+    output.format = 'png',
+    output.dpi = 500
+  )
+  # Cores
+  #paleta <- c('#38040E', '#F4442E', '#FFC145', '#05E4FF', '#6184D8') 
+  paleta_NA <- '#DCDCDC'
+  
+  # Estrutura de pasta
+  files_folder <- "../../indice-mobilidade_dados"
+  subfolder1 <- sprintf('%s/01_municipios/2019/', files_folder)
+  subfolder2 <- sprintf('%s/02_setores_censitarios/2019', files_folder)
+  subfolder12 <- sprintf('%s/12_hex_municipios/2019', files_folder)
+  subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
+  subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
+  
+```
+# Carregar arquivos
+
+## Parte 1:
+- Limite municipal
+- Setores Censitários
+- Hexágonos - res 07
+- Hexágonos - res 08
+
+```{r}
+muni <- 'bho'
+
+limite <- readRDS(sprintf('%s/municipio_%s_2019.rds', subfolder1, muni)) 
+setores <- readRDS(sprintf('%s/setores_%s_2019.rds', subfolder2, muni)) 
+hex_7 <- readRDS(sprintf('%s/hex_%s_07_2019.rds', subfolder12, muni)) 
+hex_8 <- readRDS(sprintf('%s/hex_%s_08_2019.rds', subfolder12, muni)) 
+```
+
+## Parte 2:
+- Dados agregados - res 07
+- Dados agregados - res 08
+- Mapas do CMA - automóvel por aplicativo
+- Mapas do CMA - ônibus
+- Mapas do CMA - a pé
+- Mapas do CMA - bicicleta
+
+```{r}
+muni <- 'nat'
+# Dados agregados por resolucao
+file_7 <- readRDS(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
+file_8 <- readRDS(sprintf("%s/hex_agregado_%s_08_2019.rds", subfolder14, muni))
+# Mapas do CMA por modo de transporte
+file_7_car <- readRDS(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))
+file_7_bus <- readRDS(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))
+file_8_walk <- readRDS(sprintf("%s/acess_08_%s_modos_ativos_2019.rds", subfolder17, muni))%>%
+  dplyr::filter(mode=='walk')
+file_8_bike <- readRDS(sprintf("%s/acess_08_%s_modos_ativos_2019.rds", subfolder17, muni))%>%
+  dplyr::filter(mode=='bike')
+```
+
+## Mapas
+
+```{r}
+t1 <- tm_shape(limite)+
+  tm_polygons()+
+  tm_layout(main.title='Limite municipal', main.title.position = c('center', 'TOP'))+
+  tm_scale_bar(breaks = c(0, 5, 10), text.size = 0.5,
+               lwd = 0.8)
+
+t2 <- tm_shape(setores)+
+  tm_polygons()+
+  tm_layout(main.title='Setores Censitários', main.title.position = c('center', 'TOP'))+
+  tm_scale_bar(breaks = c(0, 5, 10), text.size = 0.5,
+               lwd = 0.8)
+
+t3 <- tm_shape(hex_7)+
+  tm_polygons()+
+  tm_layout(main.title='Malha hexagonal', 
+            main.title.position = c('center', 'TOP'),
+            title = 'Resolução 7',
+            title.position = c('right', 'bottom'))+
+  tm_scale_bar(breaks = c(0, 5, 10), text.size = 0.5,
+               lwd = 0.8)
+
+t4 <- tm_shape(hex_8)+
+  tm_polygons()+
+  tm_layout(main.title='Malha hexagonal',
+            main.title.position = c('center', 'TOP'),
+            title = 'Resolução 8',
+            title.position = c('right', 'bottom'))+
+  tm_scale_bar(breaks = c(0, 5, 10), text.size = 0.5,
+               lwd = 0.8)
+
+tmap_arrange(t1, t2, t3, t4, nrow=2)
+```
+## População
+
+- Mapa 1: Distribuição da população
+- Mapa 2: Distribuição da população negra
+```{r}
+file_8$pop_total <- ifelse(file_8$pop_total > 0, file_8$pop_total, NA)
+file_8$perc_negra <- (file_8$cor_negra/file_8$pop_total)*100
+```
+
+```{r}
+main_title <- 'População'        # main_title em tm_layout
+      coluna <- "pop_total"                       # col em tm_fill
+      subtitulo <- "Número de habitantes"   # title em tm_fill
+      estilo <- "quantile"                                # style em tm_fill
+      
+      tm_shape(file_8) + 
+        tm_layout(main.title = main_title,
+                  main.title.position = c("center","TOP"),
+                  legend.outside = FALSE, frame = FALSE,
+                  #panel.labels = c('At?? 15 minutos','At?? 30 minutos','At?? 45 minutos','At?? 60 minutos'),
+                  main.title.size = 2, legend.title.size = 1,
+                  inner.margins = c(0.02, 0.02, 0.02, 0.3))+
+        tm_fill(col = coluna, 
+                n=4,
+                #breaks = breaks,
+                style = estilo,
+                palette = 'Blues', colorNA = '#666666', textNA = "Sem população", 
+                title = subtitulo,
+                legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
+        tm_scale_bar(breaks = c(0, 2, 4), text.size = .5)#, position=c("right", "bottom"))#+
+      #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
+      #tm_borders(alpha = 1)
+```
+
+```{r}
+main_title <- "População negra"
+      coluna <- "perc_negra"
+      subtitulo <- "Percentual por hexágono"
+      estilo <- "equal"
+      breaks = c(0,20,40,60,80,100)
+      
+      tm_shape(file_8) + 
+        tm_layout(main.title = main_title,
+                  main.title.position = c("center", "TOP"),
+                  legend.outside = FALSE, frame = FALSE, 
+                  #panel.labels = c('At?? 15 minutos','At?? 30 minutos','At?? 45 minutos','At?? 60 minutos'),
+                  title.size = 1, legend.title.size = 1,
+                  inner.margins = c(0.02, 0.02, 0.02, 0.3))+
+        tm_fill(col = coluna, 
+                n=4,
+                breaks = breaks,
+                style = 'quantile',
+                palette = 'Blues', colorNA = "#666666", textNA = "Sem população", 
+                title = subtitulo,
+                legend.format = list(text.separator="a", scientific=TRUE, format="f"),
+                legend.position = c('left','center'))+ # scientific e interessante
+        tm_scale_bar(breaks = c(0, 2, 4), text.size = .5)#, position=c("right", "bottom"))#+
+      #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
+      #tm_borders(alpha = 1)
+```
+
+Oportunidades
+
+```{r}
+file <- readRDS(sprintf("%s/hex_agregado_%s_%s_2019.rds", subfolder14, muni, res))
+
+  tt_total <- sum(file$empregos_total)
+  st_total <- sum(file$saude_total)
+  et_total <- sum(file$edu_total)
+  
+  file$empregos_total <- ifelse(file$empregos_total > 0, file$empregos_total, NA)
+  file$saude_total <- ifelse(file$saude_total > 0, file$saude_total, NA)
+  file$edu_total <- ifelse(file$edu_total > 0, file$edu_total, NA)
+```
+
+```{r}
+estilo <- "jenks"
+oport <- "edu_total"
+main_title <- "Educação"
+subtitulo <- "Número de estabs"
+
+tm_shape(file) + 
+      tm_layout(main.title = main_title,
+                main.title.position = c("center","TOP"),
+                legend.outside = FALSE, frame = FALSE, 
+                title.size = 1, legend.title.size = 1,
+                inner.margins = c(0.02, 0.02, 0.02, 0.2))+
+      tm_fill(col = oport, 
+              n=5,
+              #breaks = c(0,1,5,10,20,70),
+              style = estilo,
+              palette = 'Blues', colorNA = "#DCDCDC", textNA = "Zero", 
+              title = subtitulo,
+              legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
+      tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("right", "bottom"))#+
+    #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
+    #tm_borders(alpha = 1)
+```
+Acesso
+
+```{r}
+cma_3%>%
+  tm_shape()+ 
+  tm_layout(main.title = sprintf("Acesso ao trabalho \n%s", titulo), 
+            legend.outside = FALSE, frame = FALSE, 
+            #panel.labels = panel_labels,
+            main.title.size = 1,
+            main.title.position = c("center","TOP"),
+            legend.title.size = 1,
+            main.title.position = 'center',
+            frame.lwd = NA,
+            #panel.label.bg.color = NA,
+            #panel.label.size = 0.8,
+            inner.margins = c(0.02, 0.02, 0.02, 0.4))+
+  tm_fill(col = "CMATT30_r", 
+          n=4,
+          #breaks = c(0,20,40,60,80,100),
+          style = 'jenks', #"cat",
+          palette = 'Blues', colorNA = paleta_NA, textNA = "Sem dados", 
+          title = "CMA/CMA' (%)",
+          legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
+  tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("right", "bottom"))+
+  #tm_facets(by = "CMA", nrow=1, free.coords = FALSE)+
+  tm_legend(position = c('right','center'))
+```
+
+
+
+
