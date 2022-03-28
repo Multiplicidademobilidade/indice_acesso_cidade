@@ -11,6 +11,16 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
     # Garantir que cálculo para ônibus jamais vai ser por acessibilidade ideal
     acess_ideal <- FALSE
     
+  } else if (modo == 'carro_onibus') {
+    # Acessibilidades CMATT45, CMAST45, CMAET45
+    matches_acessibilidade <- '^CMA[TSE]T45'
+    
+    # Atualizar modo de transporte para a combinação carro compart. + ônibus
+    df <- df %>% mutate(mode = 'ridehailing_transit')
+    
+    # Garantir que cálculo que contêm ônibus jamais vai ser por acessibilidade ideal
+    acess_ideal <- FALSE
+    
   } else if (modo == 'carro_compart' | modo == 'modos_ativos') {
     # Acessibilidades CMATT30, CMAST30, CMAET30
     matches_acessibilidade <- '^CMA[TSE]T30'
@@ -99,13 +109,19 @@ categorizar_populacao <- function(df) {
 # Calcula indicadores de mobilidade para trabalho, educação e saúde
 calcular_indices_iaod <- function(df, modo) {
   
-  # Cálculo para ônibus é a partir de hexágonos do entorno; demais modos
+  # Cálculos que contêm ônibus são a partir de hexágonos do entorno; demais modos
   # é a partir de uma acessibilidade ideal
-  if (modo == 'onibus') {
+  if (modo == 'onibus' | modo == 'carro_onibus') {
     
-    # Definir uma distância de 10 hexágonos de entorno para ônibus - 
-    # resultado é lista de hexágonos de entorno para cada hexágono inicial
-    viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 10, simple = TRUE)
+    # Definir uma distância de hexágonos de entorno para ônibus - resultado é 
+    # uma lista de hexágonos de entorno para cada hexágono inicial
+    if (modo == 'onibus') {
+      # Só para ônibus, distância será de 10 hexágonos
+      viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 10, simple = TRUE)
+    } else if (modo == 'carro_onibus') {
+      # Para a combinação carro compartilhado e ônibus, distância será de 7 hexágonos
+      viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 7, simple = TRUE)
+    }
     
     # Definir entorno - A partir de cada hexágono, será estabelecido um
     # entorno, onde serão agrupados o total de oportunidades por tipo
@@ -128,10 +144,18 @@ calcular_indices_iaod <- function(df, modo) {
     df$educ_entorno <- ifelse(df$educ_entorno == 0, 1, df$educ_entorno)
     df$trab_entorno <- ifelse(df$trab_entorno == 0, 1, df$trab_entorno)
     
-    # Calcular a razão entre CMA para 60 minutos e quantidade de oportunidades no entorno
-    df$educ_perc <- df$CMAET60 / df$educ_entorno
-    df$saud_perc <- df$CMAST60 / df$saud_entorno
-    df$trab_perc <- df$CMATT60 / df$trab_entorno
+    # Calcular a razão entre CMA e quantidade de oportunidades no entorno
+    if (modo == 'onibus') {
+      # Só para ônibus, CMA é de 60 minutos
+      df$educ_perc <- df$CMAET60 / df$educ_entorno
+      df$saud_perc <- df$CMAST60 / df$saud_entorno
+      df$trab_perc <- df$CMATT60 / df$trab_entorno
+    } else if (modo == 'carro_onibus') {
+      # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
+      df$educ_perc <- df$CMAET45 / df$educ_entorno
+      df$saud_perc <- df$CMAST45 / df$saud_entorno
+      df$trab_perc <- df$CMATT45 / df$trab_entorno
+    }
     
     
   } else { # Demais modos: carro compartilhado, modos ativos
@@ -165,6 +189,8 @@ calcular_indices_iaod <- function(df, modo) {
   # Renomear colunas de acordo com o modo
   if (modo == 'onibus') {
     names(im) <- names(im) %>% str_replace('im_', 'im_bus_')
+  } else if (modo == 'carro_onibus') {
+    names(im) <- names(im) %>% str_replace('im_', 'im_carbus_')
   } else if (modo == 'carro_compart') {
     names(im) <- names(im) %>% str_replace('im_', 'im_car_')
   } else if (modo == 'a_pe') {

@@ -3,7 +3,7 @@
 #' 1) Lê os dados do censo escolar (que foram baixadas do site do INEP, base de escolas) e faz filtros selecionando
 
 # Processo manual para baixar os dados (ver observações dentro da função):
-# 1) Baixar os Microdados do Censo Escolar da Educacação Básica para os anos 
+# 1) Baixar os Microdados do Censo Escolar da Educação Básica para os anos 
 # desse link: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar
 # 2) Dezipar o arquivo completamente
 # 3) Copiar o arquivo de ANEXOS/dicionario, ESCOLAS, e as MATRICULAS de todas as regioes
