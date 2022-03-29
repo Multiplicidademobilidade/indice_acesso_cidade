@@ -111,17 +111,12 @@ calcular_indices_iaod <- function(df, modo) {
   
   # Cálculos que contêm ônibus são a partir de hexágonos do entorno; demais modos
   # é a partir de uma acessibilidade ideal
-  if (modo == 'onibus' | modo == 'carro_onibus') {
-    
+  if (modo == 'onibus') {
     # Definir uma distância de hexágonos de entorno para ônibus - resultado é 
     # uma lista de hexágonos de entorno para cada hexágono inicial
-    if (modo == 'onibus') {
-      # Só para ônibus, distância será de 10 hexágonos
-      viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 10, simple = TRUE)
-    } else if (modo == 'carro_onibus') {
-      # Para a combinação carro compartilhado e ônibus, distância será de 7 hexágonos
-      viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 7, simple = TRUE)
-    }
+    
+    # Só para ônibus, distância será de 10 hexágonos
+    viz_bus <- get_kring(h3_address = df$id_hex, ring_size = 10, simple = TRUE)
     
     # Definir entorno - A partir de cada hexágono, será estabelecido um
     # entorno, onde serão agrupados o total de oportunidades por tipo
@@ -145,17 +140,45 @@ calcular_indices_iaod <- function(df, modo) {
     df$trab_entorno <- ifelse(df$trab_entorno == 0, 1, df$trab_entorno)
     
     # Calcular a razão entre CMA e quantidade de oportunidades no entorno
-    if (modo == 'onibus') {
-      # Só para ônibus, CMA é de 60 minutos
-      df$educ_perc <- df$CMAET60 / df$educ_entorno
-      df$saud_perc <- df$CMAST60 / df$saud_entorno
-      df$trab_perc <- df$CMATT60 / df$trab_entorno
-    } else if (modo == 'carro_onibus') {
-      # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
-      df$educ_perc <- df$CMAET45 / df$educ_entorno
-      df$saud_perc <- df$CMAST45 / df$saud_entorno
-      df$trab_perc <- df$CMATT45 / df$trab_entorno
+    # Só para ônibus, CMA é de 60 minutos
+    df$educ_perc <- df$CMAET60 / df$educ_entorno
+    df$saud_perc <- df$CMAST60 / df$saud_entorno
+    df$trab_perc <- df$CMATT60 / df$trab_entorno
+    
+    
+  } else if (modo == 'carro_onibus') {
+    # Definir uma distância de hexágonos de entorno para ônibus - resultado é 
+    # uma lista de hexágonos de entorno para cada hexágono inicial
+    
+    # Para a combinação carro compartilhado e ônibus, distância será de 7 hexágonos
+    viz_carbus <- get_kring(h3_address = df$id_hex, ring_size = 7, simple = TRUE)
+    
+    # Definir entorno - A partir de cada hexágono, será estabelecido um
+    # entorno, onde serão agrupados o total de oportunidades por tipo
+    df$saud_entorno <- 0
+    df$educ_entorno <- 0
+    df$trab_entorno <- 0
+    
+    # Calcular quantidade de oportunidades no entorno de cada hexágono
+    for (i in 1:nrow(df)) {
+      
+      df[i,]$saud_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$saude_total)
+      df[i,]$educ_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$edu_total)
+      df[i,]$trab_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$empregos_total)
+      
     }
+    
+    # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
+    # trab_entorno - este passo é necessário devido à divisão a seguir
+    df$saud_entorno <- ifelse(df$saud_entorno == 0, 1, df$saud_entorno)
+    df$educ_entorno <- ifelse(df$educ_entorno == 0, 1, df$educ_entorno)
+    df$trab_entorno <- ifelse(df$trab_entorno == 0, 1, df$trab_entorno)
+    
+    # Calcular a razão entre CMA e quantidade de oportunidades no entorno
+    # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
+    df$educ_perc <- df$CMAET45 / df$educ_entorno
+    df$saud_perc <- df$CMAST45 / df$saud_entorno
+    df$trab_perc <- df$CMATT45 / df$trab_entorno
     
     
   } else { # Demais modos: carro compartilhado, modos ativos
