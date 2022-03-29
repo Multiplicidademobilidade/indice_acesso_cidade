@@ -19,9 +19,7 @@ source('fun/gmapsdistance.R') # Vamos utilizar uma versao editada num primeiro m
 #### 1) Funcao para preparar uma matriz de entrada ------------
 # Recebe o .rds dos hexágonos e prepara uma matriz de origens e destinos
 preparar_matriz <- function(ano=2019, munis="all", resol=7){
-  
-  # ano <- 2019; resol <- 8; sigla_munis <- 'goi'
-  
+
   # Estrutura de pastas
   files_folder <- "../../indice_acesso_cidade_dados"
   #subfolder12 <- sprintf("%s/12_hex_municipios/%s", files_folder, ano) # Nao esta sendo utilizado
@@ -105,11 +103,12 @@ df <- read_rds(sprintf("%s/df_%s_07_2019.rds", files_folder, cidade))
 
 #### 2) Funcao para realizar as requisições na API ------------
 
-# faz a leitura do arquivo .Rdata localizado na pasta dataframes
-# aplica filtros de acordo com a distancia especificada
-# faz as requisições
+# 2.1 faz a leitura do arquivo .Rdata localizado na pasta dataframes
+# 2.2 aplica filtros de acordo com a distancia especificada
+# 2.3 faz as requisições
+
 map_distance_matrix <- function(ano, munis="all", resol="07", rodada=1){
-  api_key <-  set.api.key("AIzaSyCOH4rvtara3oRGNXx7gecSKFV7n5VFgr4") # Precisa da API KEY para funcionar
+  api_key <-  set.api.key("API_KEY") # Precisa da API KEY para funcionar
   
   # Criar estrutura de pasta
   files_folder <- sprintf("../../indice_acesso_cidade_dados")
@@ -128,9 +127,9 @@ map_distance_matrix <- function(ano, munis="all", resol="07", rodada=1){
   fazer_requisicao <- function(sigla_munis){
     # Carregar dataframes
     
-    tic("Preparando strings")
-    # Teste com 5 linhas
-    #file <- head(file, 8)
+    tic("Preparando strings") # controle do tempo decorrido
+
+    #file <- head(file, 5) # recomenda-se testar a requisicao com uma matriz reduzida
     
     if (rodada == 1){
       file <- read_rds(sprintf("%s/df_%s_%s_%s.rds", df_folder, sigla_munis, resol, ano)) 
@@ -199,9 +198,7 @@ map_distance_matrix <- function(ano, munis="all", resol="07", rodada=1){
     toc()
     
    # ===== REQUISICOES ===== 
-   # Teste com dataframe reduzido
-  #  file <- head(file, 8)
-    
+
     tic("Requisições na API")
     # Fazer requisicoes
     request <- function(origem, destino){

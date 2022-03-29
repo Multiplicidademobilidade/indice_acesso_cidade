@@ -13,6 +13,7 @@ output: html_notebook
   )
   # Cores
   #paleta <- c('#38040E', '#F4442E', '#FFC145', '#05E4FF', '#6184D8') 
+  paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65')
   paleta_NA <- '#DCDCDC'
   
   # Estrutura de pasta
@@ -101,7 +102,9 @@ tmap_arrange(t1, t2, t3, t4, nrow=2)
 ## População
 
 - Mapa 1: Distribuição da população
-- Mapa 2: Distribuição da população negra
+- Mapa 2: Distribuição da população negra - percentual
+- Mapa 3: Distribuição da população negra - quantil
+
 ```{r}
 file_8$pop_total <- ifelse(file_8$pop_total > 0, file_8$pop_total, NA)
 file_8$perc_negra <- (file_8$cor_negra/file_8$pop_total)*100
@@ -154,6 +157,44 @@ main_title <- "População negra"
                 title = subtitulo,
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"),
                 legend.position = c('left','center'))+ # scientific e interessante
+        tm_scale_bar(breaks = c(0, 2, 4), text.size = .5)#, position=c("right", "bottom"))#+
+      #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
+      #tm_borders(alpha = 1)
+```
+```{r}
+file_8 <- file_8 %>% mutate(perc_pop_negra = cor_negra / pop_total)
+quantis_pop_negra <- quantile(file_8$perc_pop_negra, na.rm=TRUE)
+  
+  # Executar as categorizações
+  file_8 <- file_8 %>% 
+    mutate(cat_pop_negra = case_when(perc_pop_negra >= quantis_pop_negra[4] ~ 4, # 75% ou mais
+                                     perc_pop_negra >= quantis_pop_negra[3] & perc_pop_negra < quantis_pop_negra[4] ~ 3, 
+                                     perc_pop_negra >= quantis_pop_negra[2] & perc_pop_negra < quantis_pop_negra[3] ~ 2,
+                                     TRUE ~1))
+```
+
+```{r}
+main_title <- "População negra"
+      coluna <- "cat_pop_negra"
+      subtitulo <- "Percentual por hexágono"
+      estilo <- "equal"
+      breaks = c(1,2,3,4)
+      
+      tm_shape(file_8) + 
+        tm_layout(main.title = main_title,
+                  main.title.position = c("center", "TOP"),
+                  legend.outside = FALSE, frame = FALSE, 
+                  #panel.labels = c('At?? 15 minutos','At?? 30 minutos','At?? 45 minutos','At?? 60 minutos'),
+                  title.size = 1, legend.title.size = 1,
+                  inner.margins = c(0.02, 0.02, 0.02, 0.3))+
+        tm_fill(col = coluna, 
+                n=4,
+                breaks = breaks,
+                style = 'cat',
+                palette = 'Blues', colorNA = "#DCDCDC", textNA = "Sem população", 
+                title = subtitulo,
+                legend.format = list(text.separator="a", scientific=TRUE, format="f"),
+                legend.position = c('left','bottom'))+ # scientific e interessante
         tm_scale_bar(breaks = c(0, 2, 4), text.size = .5)#, position=c("right", "bottom"))#+
       #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
       #tm_borders(alpha = 1)
@@ -226,4 +267,9 @@ cma_3%>%
 
 
 
+```{r}
+muni <- 'bho'
+cma_bus <- read_rds(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))%>%
+  dplyr::select(origin, city, mode, CMATT60, CMAST60, CMAET60)
+```
 
