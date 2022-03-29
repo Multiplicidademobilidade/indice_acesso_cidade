@@ -1,8 +1,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 0.4.1 Calcular acessibilidade - resolução 07 - ÔNIBUS
+###### 0.4.1 Calcular acessibilidade - resolução 07 - ÔNIBUS (CMA_BUS)
 
-# Calcula o acesso a oportunidades para os hexágonos de resolução 07. Considera
-# no cálculo somente o modo ônibus. Para resolução 08, usar script seguinte.
+# Calcula o acesso a oportunidades para os hexágonos de resolução 07. 
+# Considera no cálculo somente o modo ônibus. Para resolução 08, usar script seguinte.
 
 # carregar bibliotecas
 source('fun/setup.R')
@@ -10,7 +10,30 @@ source('fun/setup.R')
 
 #### 1. CALCULAR ACESSIBILIDADE ÔNIBUS --------------------------------------------------------
 
-# sigla_muni <- "nat"; ano <- 2019; res <- '07'
+# Dicionario de variaveis:
+# Acessibilidade:
+# - CMA = Acessibilidade Cumulativa Ativa
+# - CMP = Acessibilidade Cumulativa Passiva
+# - TMI = Acessibilidade de Tempo Mínimo à Oportunidade
+# Atividades:
+# - PT ~ "pop_total"
+# - PB ~ "cor_branca"
+# - PA ~ "cor_amarela"
+# - PI ~ "cor_indigena"
+# - PN ~ "cor_negra"
+# - TT ~ "empregos_total"
+# - TQ ~ "empregos_match_quintil" # não usado
+# - TD ~ "empregos_match_decil" # não usado
+# - ST ~ "saude_total"
+# - SB ~ "saude_baixa"
+# - SM ~ "saude_media"
+# - SA ~ "saude_alta"
+# - ET ~ "edu_total"
+# - EI ~ "edu_infantil"
+# - EF ~ "edu_fundamental"
+# - EM ~ "edu_medio"
+# - EI ~ "edu_infantil"
+# - CT ~ "cras_total"
 
 calcular_acess_muni <- function(sigla_muni, ano) {
   
@@ -113,8 +136,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
                   # variaveis cras
                   cras_total)
     
-  
-  
   # Merge dados de origem na matrix de tempo de viagem
   ttmatrix <- ttmatrix %>% left_join(hex_orig, by = c("origin" = "id_hex"))
   
@@ -124,33 +145,7 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   # Transformar em data.table para cálculos de acessibilidade
   ttmatrix <- ttmatrix %>% setDT()
   
-  # Dicionario de variaveis:
-  # Acessibilidade:
-  # - CMA = Acessibilidade Cumulativa Ativa
-  # - CMP = Acessibilidade Cumulativa Passiva
-  # - TMI = Acessibilidade de Tempo Mínimo à Oportunidade
-  # Atividades:
-  # - PT ~ "pop_total"
-  # - PB ~ "cor_branca"
-  # - PA ~ "cor_amarela"
-  # - PI ~ "cor_indigena"
-  # - PN ~ "cor_negra"
-  # - TT ~ "empregos_total"
-  # - TQ ~ "empregos_match_quintil" # não usado
-  # - TD ~ "empregos_match_decil" # não usado
-  # - ST ~ "saude_total"
-  # - SB ~ "saude_baixa"
-  # - SM ~ "saude_media"
-  # - SA ~ "saude_alta"
-  # - ET ~ "edu_total"
-  # - EI ~ "edu_infantil"
-  # - EF ~ "edu_fundamental"
-  # - EM ~ "edu_medio"
-  # - EI ~ "edu_infantil"
-  # - CT ~ "cras_total"
-  
-  
-  # 3) Calcular acessibilidade cumulativa ativa ----------------------------------------------------
+    # 3) Calcular acessibilidade cumulativa ativa ----------------------------------------------------
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
   acess_cma <- "CMA"
@@ -226,8 +221,6 @@ calcular_acess_muni <- function(sigla_muni, ano) {
   acess_cma <- ttmatrix[mode %in% c("transit"),
                         lapply(to_make_cma_tp, function(x) eval(parse(text = x)))
                         , by = .(city, mode, origin, pico, quintil, decil)]
-  
-  
   
   
   
@@ -337,7 +330,7 @@ calcular_acess_muni <- function(sigla_muni, ano) {
 
 # Nem todos os municípios possuem dados de viagens de ônibus - vamos puxar todos
 # e retirar os que não possuem
-munic_sem_dados_onibus <- c('jpa', 'tsa', 'vta')
+munic_sem_dados_onibus <- c('jpa', 'tsa', 'vta') # em 2019, o Google Maps não dava suporte a João Pessoa, Teresina e Vitória
 munis <- munis_list$munis_metro[ano_metro == 2019]
 munis <- munis %>% filter(abrev_muni %nin% munic_sem_dados_onibus)
 
