@@ -13,7 +13,7 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
     
   } else if (modo == 'carro_onibus') {
     # Acessibilidades CMATT45, CMAST45, CMAET45
-    matches_acessibilidade <- '^CMA[TSE]T45'
+    matches_acessibilidade <- '^CMA[TSE]T30'
     
     # Atualizar modo de transporte para a combinação carro compart. + ônibus
     df <- df %>% mutate(mode = 'ridehailing_transit')
@@ -151,7 +151,8 @@ calcular_indices_iaod <- function(df, modo) {
     # uma lista de hexágonos de entorno para cada hexágono inicial
     
     # Para a combinação carro compartilhado e ônibus, distância será de 7 hexágonos
-    viz_carbus <- get_kring(h3_address = df$id_hex, ring_size = 7, simple = TRUE)
+    viz_carbus <- get_kring(h3_address = df$id_hex, ring_size = 10, simple = TRUE)
+    #viz_car <- get_kring(h3_address = df$id_hex, ring_size = 1, simple = TRUE)
     
     # Definir entorno - A partir de cada hexágono, será estabelecido um
     # entorno, onde serão agrupados o total de oportunidades por tipo
@@ -159,13 +160,22 @@ calcular_indices_iaod <- function(df, modo) {
     df$educ_entorno <- 0
     df$trab_entorno <- 0
     
+    df$saud_entorno_aux <- 0 # preservando essa solucao para uma futura revisao
+    df$educ_entorno_aux <- 0
+    df$trab_entorno_aux <- 0
+    
     # Calcular quantidade de oportunidades no entorno de cada hexágono
     for (i in 1:nrow(df)) {
       
       df[i,]$saud_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$saude_total)
+      print('car_bus')
+      print(df[i,]$saud_entorno)
       df[i,]$educ_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$edu_total)
       df[i,]$trab_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$empregos_total)
       
+      #df[i,]$saud_entorno <- max(df[df$id_hex %in% viz_car[[i]],]$saud_entorno_aux) # preservando essa solucao para uma futura revisao
+      #df[i,]$educ_entorno <- max(df[df$id_hex %in% viz_car[[i]],]$educ_entorno_aux)
+      #df[i,]$trab_entorno <- max(df[df$id_hex %in% viz_car[[i]],]$trab_entorno_aux)
     }
     
     # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
@@ -176,9 +186,12 @@ calcular_indices_iaod <- function(df, modo) {
     
     # Calcular a razão entre CMA e quantidade de oportunidades no entorno
     # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
-    df$educ_perc <- df$CMAET45 / df$educ_entorno
-    df$saud_perc <- df$CMAST45 / df$saud_entorno
-    df$trab_perc <- df$CMATT45 / df$trab_entorno
+    #print(sprintf("dividindo %s / %s", df$CMAET30, df$educ_entorno))
+    df$educ_perc <- df$CMAET30 / df$educ_entorno
+    #print(sprintf("dividindo %s / %s", df$CMAST30, df$saud_entorno))
+    df$saud_perc <- df$CMAST30 / df$saud_entorno
+   # print(sprintf("dividindo %s / %s", df$CMATT30, df$trab_entorno))
+    df$trab_perc <- df$CMATT30 / df$trab_entorno
     
     
   } else { # Demais modos: carro compartilhado, modos ativos
