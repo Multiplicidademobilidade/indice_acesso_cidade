@@ -31,12 +31,13 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
 
   # Criar um dataframe vazio, para ser povoado em seguida
-  dados_indice <- data.frame(matrix(nrow = 0, ncol = 18))
+  dados_indice <- data.frame(matrix(nrow = 0, ncol = 21))
   colnames(dados_indice) <- c('muni', 'im', 'im_bus', 'im_walk', 'im_bike', 'im_carbus',
                               'im_walk_educ', 'im_walk_saud', 'im_walk_trab',
                               'im_bike_educ', 'im_bike_saud', 'im_bike_trab',
                               'im_bus_educ',  'im_bus_saud',  'im_bus_trab',
-                              'im_carbus_educ',  'im_carbus_saud',  'im_carbus_trab')
+                              'im_carbus_educ',  'im_carbus_saud',  'im_carbus_trab',
+                              'im_car_educ', 'im_car_saud', 'im_car_trab')
 
 
   # Cidades que não possuem dados de ônibus
@@ -238,7 +239,8 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
                                im_walk_educ, im_walk_saud, im_walk_trab,
                                im_bike_educ, im_bike_saud, im_bike_trab,
                                im_bus_educ,  im_bus_saud,  im_bus_trab,
-                               im_carbus_educ,  im_carbus_saud,  im_carbus_trab)
+                               im_carbus_educ,  im_carbus_saud,  im_carbus_trab,
+                               im_car_educ, im_car_saud, im_car_trab)
     
     
     # # Exibir resultados na tela

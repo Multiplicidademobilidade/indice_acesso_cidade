@@ -160,16 +160,14 @@ calcular_indices_iaod <- function(df, modo) {
     df$educ_entorno <- 0
     df$trab_entorno <- 0
     
-    df$saud_entorno_aux <- 0 # preservando essa solucao para uma futura revisao
-    df$educ_entorno_aux <- 0
-    df$trab_entorno_aux <- 0
+    #df$saud_entorno_aux <- 0 # preservando essa solucao para uma futura revisao
+    #df$educ_entorno_aux <- 0
+    #df$trab_entorno_aux <- 0
     
     # Calcular quantidade de oportunidades no entorno de cada hexágono
     for (i in 1:nrow(df)) {
       
       df[i,]$saud_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$saude_total)
-      print('car_bus')
-      print(df[i,]$saud_entorno)
       df[i,]$educ_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$edu_total)
       df[i,]$trab_entorno <- sum(df[df$id_hex %in% viz_carbus[[i]],]$empregos_total)
       
@@ -186,11 +184,8 @@ calcular_indices_iaod <- function(df, modo) {
     
     # Calcular a razão entre CMA e quantidade de oportunidades no entorno
     # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
-    #print(sprintf("dividindo %s / %s", df$CMAET30, df$educ_entorno))
     df$educ_perc <- df$CMAET30 / df$educ_entorno
-    #print(sprintf("dividindo %s / %s", df$CMAST30, df$saud_entorno))
     df$saud_perc <- df$CMAST30 / df$saud_entorno
-   # print(sprintf("dividindo %s / %s", df$CMATT30, df$trab_entorno))
     df$trab_perc <- df$CMATT30 / df$trab_entorno
     
     
