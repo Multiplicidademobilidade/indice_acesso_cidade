@@ -41,7 +41,7 @@ criar_mapas_acesso <- function(muni, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Acessibilidade", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
@@ -221,7 +221,7 @@ grafico_cma_entorno <- function(muni, ano=2019, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Acessibilidade", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
 
 dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
@@ -402,7 +402,7 @@ grafico_comp_aod <- function(muni, ano=2019, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Comp_AOD", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Comp_AOD", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)

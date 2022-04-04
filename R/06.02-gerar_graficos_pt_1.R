@@ -35,7 +35,7 @@ criar_mapas_populacao <- function(muni, formato, res){
   # Estrutura de pasta
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Populacao", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Populacao", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   # !! adicionar um condicional
@@ -133,7 +133,7 @@ criar_mapas_quantil <- function(muni, res = '08', formato = 'png'){
   # Estrutura de pasta
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Populacao", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Populacao", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   # !! adicionar um condicional
@@ -209,7 +209,7 @@ criar_mapas_oportunidades <- function(muni, formato='png', res='08'){
   # Estrutura de pasta
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Oportunidades", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas/2019/Oportunidades", files_folder)
   save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   # !! adicionar um condicional

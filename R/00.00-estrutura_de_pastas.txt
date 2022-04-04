@@ -24,4 +24,4 @@ subfolder16A  <- sprintf("%s/16_ttmatrix_motorizados/%s/00_matrizes_od/", files_
 subfolder16B  <- sprintf("%s/16_ttmatrix_motorizados/%s/01_onibus/", files_folder, ano)
 subfolder17  <- sprintf("%s/17_acesso_oportunidades/%s", files_folder, ano)
 subfolder18  <- sprintf("%s/18_indices/%s", files_folder, ano)
-subfolder19  <- sprintf("%s/19_mapas_acessibilidades/%s", files_folder, ano)
+subfolder19  <- sprintf("%s/19_mapas/%s", files_folder, ano)
