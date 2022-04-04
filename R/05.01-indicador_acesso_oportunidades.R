@@ -65,11 +65,11 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
     # Juntar dados de acessibilidade - carro compartilhado (res 7) aos hexágonos
     oport_carro <- read_rds(sprintf('%s/acess_07_%s_carro_compart_2019.rds', subfolder17, muni))
-    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin'))
+    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin')) %>% filter(!is.na(CMATT60))
 
-    # Juntar dados de acessibilidade ideal - carro compartilhado (res 7) aos hexágonos
-    oport_carro_ideal <- read_rds(sprintf('%s/acess_ideal_07_%s_carro_compart_2019.rds', subfolder17, muni))
-    data_carro_ideal  <- left_join(hex_agregados_7, oport_carro_ideal, by = c('id_hex' = 'origin'))
+    # # Juntar dados de acessibilidade ideal - carro compartilhado (res 7) aos hexágonos
+    # oport_carro_ideal <- read_rds(sprintf('%s/acess_ideal_07_%s_carro_compart_2019.rds', subfolder17, muni))
+    # data_carro_ideal  <- left_join(hex_agregados_7, oport_carro_ideal, by = c('id_hex' = 'origin'))
 
     # Juntar dados de acessibilidade - ônibus (res 7) aos hexágonos
     if (muni %nin% skip_bus) {
@@ -79,7 +79,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     }
 
     # Limpar ambiente de trabalho
-    rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro, oport_carro_ideal)
+    rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro) # oport_carro_ideal
     
     
     
@@ -122,23 +122,24 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     
     
     
-    # Criar indicadores de acesso para carro compartilhado 
+    # Criar indicadores de acesso para carro compartilhado (cálculo substituído
+    # pela integração carro + ônibus)
     
-    # Selecionar colunas de interesse - carro compartilhado
-    data_carro <- simplificar_colunas(data_carro, modo = 'carro_compart')
-    
-    # Selecionar colunas de interesse - carro compartilhado (acessibilidade ideal)
-    data_carro_ideal <- simplificar_colunas(data_carro_ideal, modo = 'carro_compart', acess_ideal = TRUE)
-    
-    # Juntar acessibilidades (calculada e ideal) no mesmo dataframe
-    data_carro <- left_join(data_carro, data_carro_ideal, by = 'id_hex')
-    rm(data_carro_ideal)
-    
-    # Categorizar os hexágonos de acordo população total e população negra
-    data_carro <- categorizar_populacao(data_carro)
-    
-    # Calcular componentes de acesso para trabalho, educação e saúde
-    im_carro <- calcular_indices_iaod(data_carro, modo = 'carro_compart')
+    # # Selecionar colunas de interesse - carro compartilhado
+    # data_carro <- simplificar_colunas(data_carro, modo = 'carro_compart')
+    # 
+    # # Selecionar colunas de interesse - carro compartilhado (acessibilidade ideal)
+    # data_carro_ideal <- simplificar_colunas(data_carro_ideal, modo = 'carro_compart', acess_ideal = TRUE)
+    # 
+    # # Juntar acessibilidades (calculada e ideal) no mesmo dataframe
+    # data_carro <- left_join(data_carro, data_carro_ideal, by = 'id_hex')
+    # rm(data_carro_ideal)
+    # 
+    # # Categorizar os hexágonos de acordo população total e população negra
+    # data_carro <- categorizar_populacao(data_carro)
+    # 
+    # # Calcular componentes de acesso para trabalho, educação e saúde
+    # im_carro <- calcular_indices_iaod(data_carro, modo = 'carro_compart')
     
     
     
@@ -203,10 +204,10 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
              peso_carbus = 1)
     
     # Carro compartilhado
-    im_carro <-
-      im_carro %>% 
-      mutate(im_car   = (im_car_educ * 3 + im_car_saud * 2 + im_car_trab * 5) / 10,
-             peso_car = 1)
+    # im_carro <-
+    #   im_carro %>% 
+    #   mutate(im_car   = (im_car_educ * 3 + im_car_saud * 2 + im_car_trab * 5) / 10,
+    #          peso_car = 1)
     
     # Mobilidade a pé
     im_ape <- 
@@ -222,7 +223,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     
     
     # Juntar todos os indicadores em um único dataframe
-    im <- cbind(im_onibus, im_carro_onibus, im_carro, im_ape, im_bici)
+    im <- cbind(im_onibus, im_carro_onibus, im_ape, im_bici) # im_carro
     
     # Calcular índice de acesso às oportunidades (IAOD) consolidado
     # Considerando o carro integrado ao onibus
