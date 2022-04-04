@@ -65,7 +65,8 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
     # Juntar dados de acessibilidade - carro compartilhado (res 7) aos hexágonos
     oport_carro <- read_rds(sprintf('%s/acess_07_%s_carro_compart_2019.rds', subfolder17, muni))
-    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin'))
+    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin'))%>% # adicionando essa linha
+      dplyr::filter(!is.na(CMATT60)) # adicionando essa linha
 
     # Juntar dados de acessibilidade ideal - carro compartilhado (res 7) aos hexágonos
     oport_carro_ideal <- read_rds(sprintf('%s/acess_ideal_07_%s_carro_compart_2019.rds', subfolder17, muni))
@@ -87,7 +88,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     if (muni %nin% skip_bus) {
       # 1. Calcular para integração carro compartilhado + ônibus:
       # Selecionar colunas de interesse
-      data_rh_bus <- simplificar_colunas(data_bus, modo = 'carro_onibus')
+      data_rh_bus <- simplificar_colunas(data_carro, modo = 'carro_onibus') # corrigido aqui
       
       # Categorizar os hexágonos de acordo população total e população negra
       data_rh_bus <- categorizar_populacao(data_rh_bus)

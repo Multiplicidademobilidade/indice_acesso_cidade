@@ -10,7 +10,7 @@ library('tidyverse')
 ano = 2019
 files_folder <- "../../indice_acesso_cidade_dados"
 subfolder00  <- sprintf("%s/00_Originais/PesquisaClientes99", files_folder)
-subfolder19  <- sprintf('%s/18_indices/%s', files_folder, ano)
+subfolder18  <- sprintf('%s/18_indices/%s', files_folder, ano)
 
 
 # ----- PARTE 1: CÁLCULO DO INIA -----
@@ -141,17 +141,24 @@ indice_inia <-
 
 
 # Guardar resultados do INIA
-out_file1 <- sprintf('%s/INIA_%s.csv', subfolder19, ano)
+out_file1 <- sprintf('%s/INIA_%s.csv', subfolder18, ano)
 write_delim(indice_inia, out_file1, delim = ';')
 
 
 
 # ----- PARTE 2: CÁLCULO DO "Índice de Acesso à Cidade" (IAC) -----
+ano = 2019
+files_folder <- "../../indice_acesso_cidade_dados"
+subfolder00  <- sprintf("%s/00_Originais/PesquisaClientes99", files_folder)
+subfolder18  <- sprintf('%s/18_indices/%s', files_folder, ano)
 
 # Carregar dados_calculados do Indicador de Acesso às Oportunidades em prol da
 # Redução de Desigualdades (IAOD)
-arquivo_iaod <- sprintf('%s/IAOD_%s.csv', subfolder19, ano)
+arquivo_iaod <- sprintf('%s/IAOD_%s.csv', subfolder18, ano)
 indice_iaod <- read_delim(arquivo_iaod, delim = ';')
+
+arquivo_inia <- sprintf('%s/INIA_%s.csv', subfolder18, ano)
+indice_inia <- read_delim(arquivo_inia, delim = ';')
 
 
 # Juntar dados de ambos os índices em um único dataframe
@@ -167,7 +174,6 @@ indices <-
 # composição do índice, enquanto o INIA corresponde a 20%
 indices <- indices %>% mutate(iac = ((iaod * 8) + (inia * 2)) / 10)
 
-
 # Guardar resultados do cálculo do IAC
-out_file2 <- sprintf('%s/IAC_%s.csv', subfolder19, ano)
+out_file2 <- sprintf('%s/IAC_%s.csv', subfolder18, ano)
 write_delim(indices, out_file2, delim = ';')
