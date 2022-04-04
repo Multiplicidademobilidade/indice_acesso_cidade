@@ -65,8 +65,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
     # Juntar dados de acessibilidade - carro compartilhado (res 7) aos hexágonos
     oport_carro <- read_rds(sprintf('%s/acess_07_%s_carro_compart_2019.rds', subfolder17, muni))
-    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin'))%>% # adicionando essa linha
-      dplyr::filter(!is.na(CMATT60)) # adicionando essa linha
+    data_carro  <- left_join(hex_agregados_7, oport_carro, by = c('id_hex' = 'origin'))
 
     # Juntar dados de acessibilidade ideal - carro compartilhado (res 7) aos hexágonos
     oport_carro_ideal <- read_rds(sprintf('%s/acess_ideal_07_%s_carro_compart_2019.rds', subfolder17, muni))
@@ -81,13 +80,15 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
     # Limpar ambiente de trabalho
     rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro, oport_carro_ideal)
-
-
+    
+    
+    
     # Criar indicadores de acesso para ônibus e para a combinação carro 
     # compartilhado + ônibus, para cidades que têm dados de ônibus
     if (muni %nin% skip_bus) {
       # 1. Calcular para integração carro compartilhado + ônibus:
-      # Selecionar colunas de interesse
+      # Selecionar colunas de interesse - como o cálculo será feito com 
+      # o input dos dados de carro compartilhado, o data_carro entra aqui
       data_rh_bus <- simplificar_colunas(data_carro, modo = 'carro_onibus') # corrigido aqui
       
       # Categorizar os hexágonos de acordo população total e população negra
@@ -100,26 +101,27 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
       # 2. Calcular somente para ônibus:
       # Selecionar colunas de interesse
       data_bus <- simplificar_colunas(data_bus, modo = 'onibus')
-
+      
       # Categorizar os hexágonos de acordo população total e população negra
       data_bus <- categorizar_populacao(data_bus)
       
       # Calcular componentes de acesso para trabalho, educação e saúde
       im_onibus <- calcular_indices_iaod(data_bus, modo = 'onibus')
-
+      
     } else { 
       # Para as cidades sem dados de onibus
       im_carro_onibus <- data.frame(im_carbus_educ = 0,
                                     im_carbus_saud = 0,
                                     im_carbus_trab = 0)
-
+      
       im_onibus <- data.frame(im_bus_educ = 0,
                               im_bus_saud = 0,
                               im_bus_trab = 0)
-
+      
     }
-
-
+    
+    
+    
     # Criar indicadores de acesso para carro compartilhado 
     
     # Selecionar colunas de interesse - carro compartilhado
@@ -177,9 +179,9 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     
     # Calcular componentes de acesso para trabalho, educação e saúde
     im_bici <- calcular_indices_iaod(data_bici, modo = 'bicicleta')
-
-
-
+    
+    
+    
     # Indicadores de acesso por modo de transporte
     
     # Considerando a Política Nacional de Mobilidade Urbana = PNMU:
