@@ -34,15 +34,15 @@ criar_mapas_acesso <- function(muni, formato){
   oportunidades <- c('trabalho', 'saude', 'educacao')
   modes <- c('ride_hailing', 'transit', 'walk', 'bike') # Fazendo para o auto
   # Cores
-  paleta <- c('Blues') 
-  paleta_NA <- '#DCDCDC'
+  paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65') 
+  paleta_NA <- '#808080'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Acessibilidade", files_folder)
-  save_folder <- sprintf("%s/%s", subfolderXY, muni)
+  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
+  save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
   
@@ -188,7 +188,7 @@ criar_mapas_acesso <- function(muni, formato){
                 n=5,
                 breaks = breaks, #c(0,20,40,60,80,100),
                 style = style,
-                palette = 'Blues', colorNA = paleta_NA, textNA = "Sem dados", 
+                palette = paleta, colorNA = paleta_NA, textNA = "Sem dados", 
                 title = "Oportunidades acessíveis",
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"))+
         tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("center", "bottom"))+
@@ -203,7 +203,7 @@ criar_mapas_acesso <- function(muni, formato){
 munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "man", "nat", "rec",
            "rio", "sne", "sjc", "spo", "ula")
 
-munis <- c('nat')
+munis <- c('bho')
 
 for (muni in munis){
   criar_mapas_acesso(muni = muni, formato = "png")
@@ -213,11 +213,16 @@ for (muni in munis){
 
 grafico_cma_entorno <- function(muni, ano=2019, formato){
   
-files_folder <- "../../indice-mobilidade_dados"
-subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
-subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-subfolderXY <- sprintf("%s/XY_imagens/2019/Perc_CMA", files_folder)
-save_folder <- sprintf("%s/%s", subfolderXY, muni)
+  # Cores
+  paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65') 
+  paleta_NA <- '#808080'
+  
+  # Estrutura de pasta
+  files_folder <- "../../indice_acesso_cidade_dados"
+  subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
+  subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
+  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Acessibilidade", files_folder)
+  save_folder <- sprintf("%s/%s", subfolder19, muni)
 
 dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
 
@@ -385,16 +390,20 @@ for (muni in munis){
 }
 
 # COMP_AOD
+# ------ CMA/CMA' * P -----
 
-# ------ CMA/CMA' -----
-
-grafico_cma_entorno <- function(muni, ano=2019, formato){
+grafico_comp_aod <- function(muni, ano=2019, formato){
   
-  files_folder <- "../../indice-mobilidade_dados"
+  # Cores
+  paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65') 
+  paleta_NA <- '#808080'
+  
+  # Estrutura de pasta
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolderXY <- sprintf("%s/XY_imagens/2019/Comp_AOD", files_folder)
-  save_folder <- sprintf("%s/%s", subfolderXY, muni)
+  subfolder19 <- sprintf("%s/19_mapas_acessibilidades/2019/Comp_AOD", files_folder)
+  save_folder <- sprintf("%s/%s", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
   
@@ -415,6 +424,7 @@ grafico_cma_entorno <- function(muni, ano=2019, formato){
                                      perc_pop_negra >= quantis_pop_negra_7[3] & perc_pop_negra < quantis_pop_negra_7[4] ~ 3, 
                                      perc_pop_negra >= quantis_pop_negra_7[2] & perc_pop_negra < quantis_pop_negra_7[3] ~ 2,
                                      TRUE ~1))
+  
   agregado_8 <- read_rds(sprintf("%s/hex_agregado_%s_08_2019.rds", subfolder14, muni))%>%
     dplyr::select(id_hex, sigla_muni, pop_total, cor_negra)
   agregado_8 <- agregado_8 %>% mutate(perc_pop_negra = cor_negra / pop_total)
@@ -465,20 +475,52 @@ grafico_cma_entorno <- function(muni, ano=2019, formato){
   cma_bike$comp_saud <- cma_bike$CMAST_r*cma_bike$cat_pop_negra
   cma_bike$comp_educ <- cma_bike$CMAET_r*cma_bike$cat_pop_negra
   
+  # carro_onibus
   cma_car <- read_rds(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
     #dplyr::filter(mode==submodo)%>%
     dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)
   
-  cma_ent_car <-  read_rds(sprintf("%s/acess_ideal_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
-    #dplyr::filter(mode==submodo)%>%
-    dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)%>%
-    rename(c(CMATT15_i=CMATT15, CMATT30_i=CMATT30, CMAST15_i=CMAST15, CMAST30_i=CMAST30, CMAET15_i=CMAET15, CMAET30_i=CMAET30))
+  cma_ent_car <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
+  viz_car <- get_kring(h3_address = cma_ent_car$id_hex, ring_size = 10, simple = TRUE)
+  
+  cma_ent_car$saud_entorno <- 0
+  cma_ent_car$educ_entorno <- 0
+  cma_ent_car$trab_entorno <- 0
+  
+  # Calcular quantidade de oportunidades no entorno de cada hexágono
+  for (i in 1:nrow(cma_ent_car)) {
+    cma_ent_car[i,]$saud_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$saude_total)
+    cma_ent_car[i,]$educ_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$edu_total)
+    cma_ent_car[i,]$trab_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$empregos_total)
+  }
+  
+  # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
+  # trab_entorno - este passo é necessário devido à divisão a seguir
+  cma_ent_car$saud_entorno <- ifelse(cma_ent_car$saud_entorno == 0, 1, cma_ent_car$saud_entorno)
+  cma_ent_car$educ_entorno <- ifelse(cma_ent_car$educ_entorno == 0, 1, cma_ent_car$educ_entorno)
+  cma_ent_car$trab_entorno <- ifelse(cma_ent_car$trab_entorno == 0, 1, cma_ent_car$trab_entorno)
+  
+#  cma_ent_car <-  read_rds(sprintf("%s/acess_ideal_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
+#    #dplyr::filter(mode==submodo)%>%
+#    dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)%>%
+#    rename(c(CMATT15_i=CMATT15, CMATT30_i=CMATT30, CMAST15_i=CMAST15, CMAST30_i=CMAST30, CMAET15_i=CMAET15, CMAET30_i=CMAET30))
+#  cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
+#  cma_car <- st_join(cma_car, agregado_7, join=st_equals)
+  
+  cma_ent_car <- cma_ent_car%>%
+    dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
+    rename(origin=id_hex)
+  
   cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
   cma_car <- st_join(cma_car, agregado_7, join=st_equals)
   
-  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$CMATT30_i)),0,(cma_car$CMATT30/cma_car$CMATT30_i))
-  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$CMAST30_i)),0,(cma_car$CMAST30/cma_car$CMAST30_i))
-  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$CMAET30_i)),0,(cma_car$CMAET30/cma_car$CMAET30_i))
+  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$trab_entorno)),0,(cma_car$CMATT30/cma_car$trab_entorno))
+  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$saud_entorno)),0,(cma_car$CMAST30/cma_car$saud_entorno))
+  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$educ_entorno)),0,(cma_car$CMAET30/cma_car$educ_entorno))
+  
+#  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$CMATT30_i)),0,(cma_car$CMATT30/cma_car$CMATT30_i))
+#  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$CMAST30_i)),0,(cma_car$CMAST30/cma_car$CMAST30_i))
+#  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$CMAET30_i)),0,(cma_car$CMAET30/cma_car$CMAET30_i))
   
   cma_car$comp_trab <- cma_car$CMATT_r*cma_car$cat_pop_negra
   cma_car$comp_saud <- cma_car$CMAST_r*cma_car$cat_pop_negra
@@ -574,10 +616,10 @@ grafico_cma_entorno <- function(muni, ano=2019, formato){
                   #panel.label.size = 0.8,
                   inner.margins = c(0.02, 0.02, 0.02, 0.4))+
         tm_fill(col = col, 
-                n=5,
-                #breaks = c(0,20,40,60,80,100),
-                style = 'jenks', #"cat",
-                palette = 'Blues', colorNA = "#DCDCDC", textNA = "Sem dados", 
+                n=4,
+                breaks = c(0,1,2,3,4),
+                style = 'fixed', #"cat",
+                palette = paleta, colorNA = paleta_NA, textNA = "Sem dados", 
                 title = "CMA/CMA' * P",
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
         tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("right", "bottom"))+
@@ -596,6 +638,6 @@ munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "man", "nat", "rec",
 munis <- 'bho'
 
 for (muni in munis){
-  grafico_cma_entorno(muni = muni, 
+  grafico_comp_aod(muni = muni, 
                       formato = "png")
 }

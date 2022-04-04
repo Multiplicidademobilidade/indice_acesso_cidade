@@ -28,7 +28,8 @@ criar_mapas_populacao <- function(muni, formato, res){
     output.dpi = 500
   )
   # Cores
-  paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65') 
+  #paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65')
+  paleta <- c('#e7eff0', '#b6ced1', '#568c93', '#0d5b65') 
   paleta_NA <- '#808080'
   
   # Estrutura de pasta
@@ -242,7 +243,7 @@ criar_mapas_oportunidades <- function(muni, formato='png', res='08'){
       main_title <- "Educação"
       coluna <- "edu_total"
       subtitulo <- "Número de estabelecimentos"
-      estilo <- "pretty"
+      estilo <- "jenks"
 
     }
     
@@ -254,7 +255,7 @@ criar_mapas_oportunidades <- function(muni, formato='png', res='08'){
                 title.size = 1, legend.title.size = 1,
                 inner.margins = c(0.02, 0.02, 0.02, 0.4))+
       tm_fill(col = coluna, 
-              n=5,
+              n=4,
               #breaks = c(0,1,5,10,20,70),
               style = estilo,
               palette = paleta, colorNA = paleta_NA, textNA = "Zero", 
@@ -264,7 +265,7 @@ criar_mapas_oportunidades <- function(muni, formato='png', res='08'){
     #tm_facets(by = "OPORT", nrow=1, free.coords = FALSE)+
     #tm_borders(alpha = 1)
       
-      file_name <- sprintf("%s/oport_%s_%s_%s_2019.%s", save_folder, oport, muni, res, formato)
+      file_name <- sprintf("%s/oport2_%s_%s_%s_2019.%s", save_folder, oport, muni, res, formato)
       tmap_save(tm = plot, filename = file_name, height = 1600, units = "px")
     
   }

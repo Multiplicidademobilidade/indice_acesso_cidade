@@ -12,7 +12,6 @@ output: html_notebook
     output.dpi = 500
   )
   # Cores
-  #paleta <- c('#38040E', '#F4442E', '#FFC145', '#05E4FF', '#6184D8') 
   paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65')
   paleta_NA <- '#DCDCDC'
   
