@@ -12,7 +12,7 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
     acess_ideal <- FALSE
     
   } else if (modo == 'carro_onibus') {
-    # Acessibilidades CMATT45, CMAST45, CMAET45
+    # Acessibilidades CMATT30, CMAST30, CMAET30
     matches_acessibilidade <- '^CMA[TSE]T30'
     
     # Atualizar modo de transporte para a combinação carro compart. + ônibus
@@ -34,7 +34,7 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
       # Descartar linhas que não tiveram os tempos de viagem calculados - seja
       # porque não possuem população na origem, seja porque não possuem 
       # oportunidades no destino
-      filter(!is.na(mode) & pop_total > 0) %>% 
+      filter(!is.na(mode) & pop_total > 0 & !is.na(CMATT60)) %>% 
       # Selecionar colunas de interesse
       dplyr::select('id_hex', 'sigla_muni',
                     # População por cor
@@ -183,7 +183,7 @@ calcular_indices_iaod <- function(df, modo) {
     df$trab_entorno <- ifelse(df$trab_entorno == 0, 1, df$trab_entorno)
     
     # Calcular a razão entre CMA e quantidade de oportunidades no entorno
-    # Para a combinação carro compartilhado e ônibus, CMA é de 45 minutos
+    # Para a combinação carro compartilhado e ônibus, CMA é de 30 minutos
     df$educ_perc <- df$CMAET30 / df$educ_entorno
     df$saud_perc <- df$CMAST30 / df$saud_entorno
     df$trab_perc <- df$CMATT30 / df$trab_entorno

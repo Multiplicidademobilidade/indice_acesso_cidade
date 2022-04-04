@@ -31,20 +31,18 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
 
 
   # Criar um dataframe vazio, para ser povoado em seguida
-  dados_indice <- data.frame(matrix(nrow = 0, ncol = 21))
+  dados_indice <- data.frame(matrix(nrow = 0, ncol = 18))
   colnames(dados_indice) <- c('muni', 'im', 'im_bus', 'im_walk', 'im_bike', 'im_carbus',
                               'im_walk_educ', 'im_walk_saud', 'im_walk_trab',
                               'im_bike_educ', 'im_bike_saud', 'im_bike_trab',
                               'im_bus_educ',  'im_bus_saud',  'im_bus_trab',
-                              'im_carbus_educ',  'im_carbus_saud',  'im_carbus_trab',
-                              'im_car_educ', 'im_car_saud', 'im_car_trab')
+                              'im_carbus_educ', 'im_carbus_saud', 'im_carbus_trab')
 
 
   # Cidades que não possuem dados de ônibus
   skip_bus <- c('jpa', 'tsa', 'vta')
 
-  # Comecando 
-  # acredito que o problema esteja na hora de carregar as bases
+  # Comecando
   for (muni in muni_list) {
     # Carregar e preparar as bases - usaremos as matrizes de dados agregados e de acessibilidade
 
@@ -76,8 +74,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # Juntar dados de acessibilidade - ônibus (res 7) aos hexágonos
     if (muni %nin% skip_bus) {
       oport_onibus <- read_rds(sprintf('%s/acess_07_%s_onibus_2019.rds', subfolder17, muni))
-      data_bus     <- left_join(hex_agregados_7, oport_onibus, by = c('id_hex' = 'origin'))%>% # adicionando essa linha
-        dplyr::filter(!is.na(CMATT60)) # adicionando essa linha
+      data_bus     <- left_join(hex_agregados_7, oport_onibus, by = c('id_hex' = 'origin'))
       rm(oport_onibus)
     }
 
@@ -85,7 +82,8 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro, oport_carro_ideal)
 
 
-    # Criar indicadores de acesso para ônibus, para cidades que têm esse dado
+    # Criar indicadores de acesso para ônibus e para a combinação carro 
+    # compartilhado + ônibus, para cidades que têm dados de ônibus
     if (muni %nin% skip_bus) {
       # 1. Calcular para integração carro compartilhado + ônibus:
       # Selecionar colunas de interesse
@@ -239,8 +237,7 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
                                im_walk_educ, im_walk_saud, im_walk_trab,
                                im_bike_educ, im_bike_saud, im_bike_trab,
                                im_bus_educ,  im_bus_saud,  im_bus_trab,
-                               im_carbus_educ,  im_carbus_saud,  im_carbus_trab,
-                               im_car_educ, im_car_saud, im_car_trab)
+                               im_carbus_educ,  im_carbus_saud,  im_carbus_trab)
     
     
     # # Exibir resultados na tela
