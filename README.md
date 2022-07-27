@@ -15,7 +15,7 @@ O Índice de Acesso à Cidade (IAC) é composto por outros dois índices, a sabe
 -   O **INIA** mostra o quanto automóveis por aplicativo ajudam a gerar novas viagens e a integrar com o transporte público - tem peso de 20% na composição do IAC.
 
 <p align="center">
-  <img src="https://github.com/Multiplicidademobilidade/indice_acesso_cidade/blob/main/iac.png" alt="IAC" width="600"/>
+  <img src="https://github.com/Multiplicidademobilidade/indice_acesso_cidade/blob/main/iac.jpg" alt="IAC" width="600"/>
 </p>
 
 # Cidades estudadas
