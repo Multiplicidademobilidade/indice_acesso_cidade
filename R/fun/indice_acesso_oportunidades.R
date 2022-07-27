@@ -34,7 +34,7 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
       # Descartar linhas que não tiveram os tempos de viagem calculados - seja
       # porque não possuem população na origem, seja porque não possuem 
       # oportunidades no destino
-      filter(!is.na(mode) & pop_total > 0 & !is.na(CMATT60)) %>% 
+      filter(!is.na(mode) & pop_total > 0) %>% 
       # Selecionar colunas de interesse
       dplyr::select('id_hex', 'sigla_muni',
                     # População por cor
@@ -49,7 +49,7 @@ simplificar_colunas <- function(df, modo, acess_ideal = FALSE) {
       # Descartar linhas que não tiveram os tempos de viagem calculados - seja
       # porque não possuem população na origem, seja porque não possuem 
       # oportunidades no destino
-      filter(!is.na(mode) & pop_total > 0 & !is.na(CMATT60)) %>% 
+      filter(!is.na(mode) & pop_total > 0) %>% 
       # Selecionar colunas de interesse
       dplyr::select('id_hex', mode, matches(matches_acessibilidade)) %>% 
       # Substituir valores 0 de CMATT, CMAST, CMAET para 1, para que cálculo

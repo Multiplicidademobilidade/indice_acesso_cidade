@@ -3,6 +3,13 @@
 
 # Calcula o acesso a oportunidades para os hexágonos de resolução 07. Considera
 # no cálculo somente modos motorizados. Para resolução 08, usar script seguinte.
+# 
+# Atenção: este script calcula as acessibilidades para o modo carro sem restrições
+# de tarifa e/ou congestionamento. Porém, no script 05.01, onde o resultado seria
+# aberto, a forma de calcular os índices para carros compartilhados passou a
+# considerar como proxies as distâncias de ônibus a 60 minutos (proxy para a 
+# integração carro compartilhado + integração com ônibus). Tudo o que usa os
+# resultados destes cálculos está comentado no script 05.01.
 
 # carregar bibliotecas
 source('fun/setup.R')
