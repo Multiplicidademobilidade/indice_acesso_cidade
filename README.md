@@ -6,13 +6,13 @@ Este repositório contém os códigos utilizados no processamento e análise de 
 
 O Projeto **Índice de Acesso à Cidade** tem como ponto de partida o importante projeto intitulado "Acesso a Oportunidades", desenvolvido pelo Instituto Pesquisa Econômica Aplicada - IPEA, no ano de 2019. Para mais informações sobre o projeto do IPEA, [visite o site](https://www.ipea.gov.br/acessooportunidades/) 
 
-O Índice de Acesso à Cidade (IAC) é composto por outros dois índices, a saber: o **Índice de Acesso às Oportunidades em Prol da Redução de Desigualdades** (IAOD) e o **Índice de Integração e Novas Viagens do Automóvel por Aplicativo** (INIA). Ambos são formados por indicadores que, por sua vez, são formados por componentes.
+O Índice de Acesso à Cidade (IAC) é composto por outros dois índices, a saber: o **Índice de Acesso às Oportunidades em Prol da Redução de Desigualdades** (IAOD) e o **Índice de Integração do Automóvel por Aplicativo com o Transporte Público** (IATP). Ambos são formados por indicadores que, por sua vez, são formados por componentes.
 
 -   O **IAC** aponta o quanto as cidades estão acessíveis para a população, considerados os diferentes modos de transporte;
     
 -   O **IAOD** mostra o quanto as pessoas conseguem acessar as oportunidades em suas cidades - tem peso de 80% na composição do IAC;
     
--   O **INIA** mostra o quanto automóveis por aplicativo ajudam a gerar novas viagens e a integrar com o transporte público - tem peso de 20% na composição do IAC.
+-   O **IATP** mostra o quanto automóveis por aplicativo ajudam a gerar viagens integradas com o transporte público - tem peso de 20% na composição do IAC.
 
 <p align="center">
   <img src="https://github.com/Multiplicidademobilidade/indice_acesso_cidade/blob/main/iac.jpg" alt="IAC" width="600"/>
