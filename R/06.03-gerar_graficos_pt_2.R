@@ -32,7 +32,14 @@ criar_mapas_acesso <- function(muni, formato){
   )
   
   oportunidades <- c('trabalho', 'saude', 'educacao')
-  modes <- c('ride_hailing', 'transit', 'walk', 'bike') # Fazendo para o auto
+  
+  skip_bus <- c('jpa', 'vta', 'tsa')
+  if (muni %nin% skip_bus){
+    modes <- c('ride_hailing', 'transit', 'walk', 'bike')
+  }else{
+    modes <- c('ride_hailing', 'walk', 'bike')
+  }
+   
   # Cores
   paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65') 
   paleta_NA <- '#808080'
@@ -41,16 +48,17 @@ criar_mapas_acesso <- function(muni, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas/2019/Acessibilidade", files_folder)
-  save_folder <- sprintf("%s/%s", subfolder19, muni)
+  subfolder19 <- sprintf("%s/19_mapas/2019", files_folder)
+  save_folder <- sprintf("%s/%s/Acessibilidade", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
+  
+  
   
   # 1.0 Carrega arquivos 
   # res 7
   file_aux_7 <- readRDS(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
   file_7_car <- readRDS(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))
-  file_7_bus <- readRDS(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))
   # res 8
   file_aux_8 <- readRDS(sprintf("%s/hex_agregado_%s_08_2019.rds", subfolder14, muni))
   file_8 <- readRDS(sprintf("%s/acess_08_%s_modos_ativos_2019.rds", subfolder17, muni))
@@ -62,14 +70,13 @@ criar_mapas_acesso <- function(muni, formato){
   et_total <- sum(file_aux_7$edu_total)
   
   data_plot_7_car <- st_join(file_aux_7, file_7_car, join=st_equals)
-  data_plot_7_bus <- st_join(file_aux_7, file_7_bus, join=st_equals)
   data_plot_8 <- st_join(file_aux_8, file_8, join=st_equals)
   
   # 2.0 Prepara bases
   # Trabalharemos com percentuais - RES 7
   # Trabalho
   data_plot_7_car$CMATT30_p <- (data_plot_7_car$CMATT30 / tt_total)*100
-  data_plot_7_bus$CMATT60_p <- (data_plot_7_bus$CMATT60 / tt_total)*100
+  
   # Saude
   #  data_plot_7$CMAST30_p <- (data_plot_7$CMAST30 / st_total)*100
   #  data_plot_7$CMAST60_p <- (data_plot_7$CMAST60 / st_total)*100
@@ -104,21 +111,32 @@ criar_mapas_acesso <- function(muni, formato){
                                                                     ifelse(between(CMAST30,2,5), 3,
                                                                            ifelse(between(CMAST30,6,10), 4, 5)))))
   data_plot_7_car$CMAST30_f <- factor(data_plot_7_car$CMAST30_f, levels = 1:5, labels = cmaf_labels)
-  data_plot_7_bus$CMAST60_f <-  with(data_plot_7_bus, ifelse(CMAST60 == 0, 1,
-                                                             ifelse(between(CMAST60, 0, 1), 2,
-                                                                    ifelse(between(CMAST60,2,5), 3,
-                                                                           ifelse(between(CMAST60,6,10), 4, 5)))))
-  data_plot_7_bus$CMAST60_f <- factor(data_plot_7_bus$CMAST60_f, levels = 1:5, labels = cmaf_labels)
+  
   data_plot_7_car$CMAET30_f <-  with(data_plot_7_car, ifelse(CMAET30 == 0, 1,
                                                              ifelse(between(CMAET30, 0, 1), 2,
                                                                     ifelse(between(CMAET30,2,5), 3,
                                                                            ifelse(between(CMAET30,6,10), 4, 5)))))
   data_plot_7_car$CMAET30_f <- factor(data_plot_7_car$CMAET30_f, levels = 1:5, labels = cmaf_labels)
-  data_plot_7_bus$CMAET60_f <-  with(data_plot_7_bus, ifelse(CMAET60 == 0, 1,
-                                                             ifelse(between(CMAET60, 0, 1), 2,
-                                                                    ifelse(between(CMAET60,2,5), 3,
-                                                                           ifelse(between(CMAET60,6,10), 4, 5)))))
-  data_plot_7_bus$CMAET60_f <- factor(data_plot_7_bus$CMAET60_f, levels = 1:5, labels = cmaf_labels)
+  
+  
+  if (muni %nin% skip_bus){
+    file_7_bus <- readRDS(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))
+    data_plot_7_bus <- st_join(file_aux_7, file_7_bus, join=st_equals)
+    data_plot_7_bus$CMATT60_p <- (data_plot_7_bus$CMATT60 / tt_total)*100
+    
+    data_plot_7_bus$CMAST60_f <-  with(data_plot_7_bus, ifelse(CMAST60 == 0, 1,
+                                                               ifelse(between(CMAST60, 0, 1), 2,
+                                                                      ifelse(between(CMAST60,2,5), 3,
+                                                                             ifelse(between(CMAST60,6,10), 4, 5)))))
+    data_plot_7_bus$CMAST60_f <- factor(data_plot_7_bus$CMAST60_f, levels = 1:5, labels = cmaf_labels)
+    
+    data_plot_7_bus$CMAET60_f <-  with(data_plot_7_bus, ifelse(CMAET60 == 0, 1,
+                                                               ifelse(between(CMAET60, 0, 1), 2,
+                                                                      ifelse(between(CMAET60,2,5), 3,
+                                                                             ifelse(between(CMAET60,6,10), 4, 5)))))
+    data_plot_7_bus$CMAET60_f <- factor(data_plot_7_bus$CMAET60_f, levels = 1:5, labels = cmaf_labels)
+  }
+  
   
   # 3.0 Gera graficos e salva
   
@@ -165,7 +183,7 @@ criar_mapas_acesso <- function(muni, formato){
         dados <- data_plot_7_car%>%
           dplyr::select(col_30)%>%
           rename(CMA=3)
-      } else{
+      } else {
         titulo_aux2 <- "Ônibus"
         titulo <- sprintf("Acesso %s \n%s", titulo_aux1, titulo_aux2)
         dados <- data_plot_7_bus%>%
@@ -201,9 +219,9 @@ criar_mapas_acesso <- function(muni, formato){
 }
 
 munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "man", "nat", "rec",
-           "rio", "sne", "sjc", "spo", "ula")
+           "rio", "sne", "sjc", "spo", "ula", 'jpa', 'tsa', 'vta')
 
-munis <- c('bho')
+munis <- c('vta')
 
 for (muni in munis){
   criar_mapas_acesso(muni = muni, formato = "png")
@@ -221,8 +239,8 @@ grafico_cma_entorno <- function(muni, ano=2019, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas/2019/Acessibilidade", files_folder)
-  save_folder <- sprintf("%s/%s", subfolder19, muni)
+  subfolder19 <- sprintf("%s/19_mapas/2019", files_folder)
+  save_folder <- sprintf("%s/%s/Acessibilidade", subfolder19, muni)
 
 dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
 
@@ -231,7 +249,13 @@ tmap_options(
   output.dpi = 500
 )
 
-modos <- c("carro_compart", "onibus", "walk", "bike")
+skip_bus <- c('jpa', 'tsa', 'vta')
+if (muni %nin% skip_bus){
+  modos <- c("carro_compart", "onibus", "walk", "bike")
+}else{
+  modos <- c("carro_compart", "walk", "bike")
+}
+
 oportunidades <- c('trabalho', 'saude', 'educacao')
 
 #walk
@@ -263,7 +287,7 @@ cma_bike$CMATT_r <- ifelse(is.na((cma_bike$CMATT30/cma_bike$CMATT30_i)*100),0,(c
 cma_bike$CMAST_r <- ifelse(is.na((cma_bike$CMAST30/cma_bike$CMAST30_i)*100),0,(cma_bike$CMAST30/cma_bike$CMAST30_i)*100)
 cma_bike$CMAET_r <- ifelse(is.na((cma_bike$CMAET30/cma_bike$CMAET30_i)*100),0,(cma_bike$CMAET30/cma_bike$CMAET30_i)*100)
 
-
+# car
 cma_car <- read_rds(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
   #dplyr::filter(mode==submodo)%>%
   dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)
@@ -278,45 +302,48 @@ cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$CMATT30_i)*100),0,(cma_
 cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$CMAST30_i)*100),0,(cma_car$CMAST30/cma_car$CMAST30_i)*100)
 cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$CMAET30_i)*100),0,(cma_car$CMAET30/cma_car$CMAET30_i)*100)
 
-# bus
-cma_bus <- read_rds(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))%>%
-  dplyr::select(origin, city, mode, CMATT60, CMAST60, CMAET60)
-cma_ent_bus <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
-viz_bus <- get_kring(h3_address = cma_ent_bus$id_hex, ring_size = 10, simple = TRUE)
-
-# Definir entorno - A partir de cada hexágono, será estabelecido um
-# entorno, onde serão agrupados o total de oportunidades por tipo
-cma_ent_bus$saud_entorno <- 0
-cma_ent_bus$educ_entorno <- 0
-cma_ent_bus$trab_entorno <- 0
-
-# Calcular quantidade de oportunidades no entorno de cada hexágono
-for (i in 1:nrow(cma_ent_bus)) {
-  cma_ent_bus[i,]$saud_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$saude_total)
-  cma_ent_bus[i,]$educ_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$edu_total)
-  cma_ent_bus[i,]$trab_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$empregos_total)
+if (muni %nin% skip_bus){
+  # bus
+  cma_bus <- read_rds(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))%>%
+    dplyr::select(origin, city, mode, CMATT60, CMAST60, CMAET60)
+  cma_ent_bus <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
+  viz_bus <- get_kring(h3_address = cma_ent_bus$id_hex, ring_size = 10, simple = TRUE)
+  
+  # Definir entorno - A partir de cada hexágono, será estabelecido um
+  # entorno, onde serão agrupados o total de oportunidades por tipo
+  cma_ent_bus$saud_entorno <- 0
+  cma_ent_bus$educ_entorno <- 0
+  cma_ent_bus$trab_entorno <- 0
+  
+  # Calcular quantidade de oportunidades no entorno de cada hexágono
+  for (i in 1:nrow(cma_ent_bus)) {
+    cma_ent_bus[i,]$saud_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$saude_total)
+    cma_ent_bus[i,]$educ_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$edu_total)
+    cma_ent_bus[i,]$trab_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$empregos_total)
+  }
+  
+  # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
+  # trab_entorno - este passo é necessário devido à divisão a seguir
+  cma_ent_bus$saud_entorno <- ifelse(cma_ent_bus$saud_entorno == 0, 1, cma_ent_bus$saud_entorno)
+  cma_ent_bus$educ_entorno <- ifelse(cma_ent_bus$educ_entorno == 0, 1, cma_ent_bus$educ_entorno)
+  cma_ent_bus$trab_entorno <- ifelse(cma_ent_bus$trab_entorno == 0, 1, cma_ent_bus$trab_entorno)
+  
+  # Calcular a razão entre CMA para 60 minutos e quantidade de oportunidades no entorno
+  #  cma$educ_perc <- (cma$CMAET60 / cma$educ_entorno)*100
+  #  cma$saud_perc <- (cma$CMAST60 / cma$saud_entorno)*100
+  #  cma$trab_perc <- (cma$CMATT60 / cma$trab_entorno)*100
+  
+  cma_ent_bus <- cma_ent_bus%>%
+    dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
+    rename(origin=id_hex)
+  
+  cma_bus <- st_join(cma_bus, cma_ent_bus, join=st_equals)
+  
+  cma_bus$CMATT_r <- ifelse(is.na((cma_bus$CMATT60/cma_bus$trab_entorno)*100),0,(cma_bus$CMATT60/cma_bus$trab_entorno)*100)
+  cma_bus$CMAST_r <- ifelse(is.na((cma_bus$CMAST60/cma_bus$saud_entorno)*100),0,(cma_bus$CMAST60/cma_bus$saud_entorno)*100)
+  cma_bus$CMAET_r <- ifelse(is.na((cma_bus$CMAET60/cma_bus$educ_entorno)*100),0,(cma_bus$CMAET60/cma_bus$educ_entorno)*100)
 }
 
-# Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
-# trab_entorno - este passo é necessário devido à divisão a seguir
-cma_ent_bus$saud_entorno <- ifelse(cma_ent_bus$saud_entorno == 0, 1, cma_ent_bus$saud_entorno)
-cma_ent_bus$educ_entorno <- ifelse(cma_ent_bus$educ_entorno == 0, 1, cma_ent_bus$educ_entorno)
-cma_ent_bus$trab_entorno <- ifelse(cma_ent_bus$trab_entorno == 0, 1, cma_ent_bus$trab_entorno)
-
-# Calcular a razão entre CMA para 60 minutos e quantidade de oportunidades no entorno
-#  cma$educ_perc <- (cma$CMAET60 / cma$educ_entorno)*100
-#  cma$saud_perc <- (cma$CMAST60 / cma$saud_entorno)*100
-#  cma$trab_perc <- (cma$CMATT60 / cma$trab_entorno)*100
-
-cma_ent_bus <- cma_ent_bus%>%
-  dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
-  rename(origin=id_hex)
-
-cma_bus <- st_join(cma_bus, cma_ent_bus, join=st_equals)
-
-cma_bus$CMATT_r <- ifelse(is.na((cma_bus$CMATT60/cma_bus$trab_entorno)*100),0,(cma_bus$CMATT60/cma_bus$trab_entorno)*100)
-cma_bus$CMAST_r <- ifelse(is.na((cma_bus$CMAST60/cma_bus$saud_entorno)*100),0,(cma_bus$CMAST60/cma_bus$saud_entorno)*100)
-cma_bus$CMAET_r <- ifelse(is.na((cma_bus$CMAET60/cma_bus$educ_entorno)*100),0,(cma_bus$CMAET60/cma_bus$educ_entorno)*100)
 
 for (oport in oportunidades){
   if (oport == 'trabalho'){
@@ -366,7 +393,7 @@ for (oport in oportunidades){
             n=5,
             breaks = c(0,20,40,60,80,100),
             style = 'fixed', #"cat",
-            palette = 'Blues', colorNA = "#DCDCDC", textNA = "Sem dados", 
+            palette = paleta, colorNA = paleta_NA, textNA = "Sem dados", 
             title = "CMA/CMA' (%)",
             legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
     tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("right", "bottom"))+
@@ -382,7 +409,7 @@ for (oport in oportunidades){
 munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "man", "nat", "rec",
            "rio", "sne", "sjc", "spo", "ula", "tsa", "vta", "jpa")
 
-munis <- 'bho'
+munis <- 'tsa'
 
 for (muni in munis){
   grafico_cma_entorno(muni = muni, 
@@ -402,8 +429,8 @@ grafico_comp_aod <- function(muni, ano=2019, formato){
   files_folder <- "../../indice_acesso_cidade_dados"
   subfolder14 <- sprintf("%s/14_hex_agregados/2019", files_folder)
   subfolder17 <- sprintf("%s/17_acesso_oportunidades/2019", files_folder)
-  subfolder19 <- sprintf("%s/19_mapas/2019/Comp_AOD", files_folder)
-  save_folder <- sprintf("%s/%s", subfolder19, muni)
+  subfolder19 <- sprintf("%s/19_mapas/2019", files_folder)
+  save_folder <- sprintf("%s/%s/Acessibilidade", subfolder19, muni)
   
   dir.create(sprintf("%s", save_folder), recursive = TRUE, showWarnings = FALSE)
   
@@ -411,8 +438,14 @@ grafico_comp_aod <- function(muni, ano=2019, formato){
     output.format = formato,
     output.dpi = 500
   )
+  skip_bus <- c('jpa', 'tsa', 'vta')
   
-  modos <- c("carro_compart", "onibus", "walk", "bike")
+  if (muni %nin% skip_bus){
+    modos <- c("carro_compart", "onibus", "walk", "bike")
+  }else{
+    modos <- c("walk", "bike")
+  }
+  
   oportunidades <- c('trabalho', 'saude', 'educacao')
   
   agregado_7 <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))%>%
@@ -475,101 +508,104 @@ grafico_comp_aod <- function(muni, ano=2019, formato){
   cma_bike$comp_saud <- cma_bike$CMAST_r*cma_bike$cat_pop_negra
   cma_bike$comp_educ <- cma_bike$CMAET_r*cma_bike$cat_pop_negra
   
-  # carro_onibus
-  cma_car <- read_rds(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
-    #dplyr::filter(mode==submodo)%>%
-    dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)
-  
-  cma_ent_car <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
-  viz_car <- get_kring(h3_address = cma_ent_car$id_hex, ring_size = 10, simple = TRUE)
-  
-  cma_ent_car$saud_entorno <- 0
-  cma_ent_car$educ_entorno <- 0
-  cma_ent_car$trab_entorno <- 0
-  
-  # Calcular quantidade de oportunidades no entorno de cada hexágono
-  for (i in 1:nrow(cma_ent_car)) {
-    cma_ent_car[i,]$saud_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$saude_total)
-    cma_ent_car[i,]$educ_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$edu_total)
-    cma_ent_car[i,]$trab_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$empregos_total)
+  if (muni %nin% skip_bus){
+    # carro_onibus
+    cma_car <- read_rds(sprintf("%s/acess_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
+      #dplyr::filter(mode==submodo)%>%
+      dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)
+    
+    cma_ent_car <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
+    viz_car <- get_kring(h3_address = cma_ent_car$id_hex, ring_size = 10, simple = TRUE)
+    
+    cma_ent_car$saud_entorno <- 0
+    cma_ent_car$educ_entorno <- 0
+    cma_ent_car$trab_entorno <- 0
+    
+    # Calcular quantidade de oportunidades no entorno de cada hexágono
+    for (i in 1:nrow(cma_ent_car)) {
+      cma_ent_car[i,]$saud_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$saude_total)
+      cma_ent_car[i,]$educ_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$edu_total)
+      cma_ent_car[i,]$trab_entorno <- sum(cma_ent_car[cma_ent_car$id_hex %in% viz_car[[i]],]$empregos_total)
+    }
+    
+    # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
+    # trab_entorno - este passo é necessário devido à divisão a seguir
+    cma_ent_car$saud_entorno <- ifelse(cma_ent_car$saud_entorno == 0, 1, cma_ent_car$saud_entorno)
+    cma_ent_car$educ_entorno <- ifelse(cma_ent_car$educ_entorno == 0, 1, cma_ent_car$educ_entorno)
+    cma_ent_car$trab_entorno <- ifelse(cma_ent_car$trab_entorno == 0, 1, cma_ent_car$trab_entorno)
+    
+    #  cma_ent_car <-  read_rds(sprintf("%s/acess_ideal_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
+    #    #dplyr::filter(mode==submodo)%>%
+    #    dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)%>%
+    #    rename(c(CMATT15_i=CMATT15, CMATT30_i=CMATT30, CMAST15_i=CMAST15, CMAST30_i=CMAST30, CMAET15_i=CMAET15, CMAET30_i=CMAET30))
+    #  cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
+    #  cma_car <- st_join(cma_car, agregado_7, join=st_equals)
+    
+    cma_ent_car <- cma_ent_car%>%
+      dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
+      rename(origin=id_hex)
+    
+    cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
+    cma_car <- st_join(cma_car, agregado_7, join=st_equals)
+    
+    cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$trab_entorno)),0,(cma_car$CMATT30/cma_car$trab_entorno))
+    cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$saud_entorno)),0,(cma_car$CMAST30/cma_car$saud_entorno))
+    cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$educ_entorno)),0,(cma_car$CMAET30/cma_car$educ_entorno))
+    
+    #  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$CMATT30_i)),0,(cma_car$CMATT30/cma_car$CMATT30_i))
+    #  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$CMAST30_i)),0,(cma_car$CMAST30/cma_car$CMAST30_i))
+    #  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$CMAET30_i)),0,(cma_car$CMAET30/cma_car$CMAET30_i))
+    
+    cma_car$comp_trab <- cma_car$CMATT_r*cma_car$cat_pop_negra
+    cma_car$comp_saud <- cma_car$CMAST_r*cma_car$cat_pop_negra
+    cma_car$comp_educ <- cma_car$CMAET_r*cma_car$cat_pop_negra
+    
+    # bus
+    cma_bus <- read_rds(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))%>%
+      dplyr::select(origin, city, mode, CMATT60, CMAST60, CMAET60)
+    cma_ent_bus <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
+    viz_bus <- get_kring(h3_address = cma_ent_bus$id_hex, ring_size = 10, simple = TRUE)
+    
+    # Definir entorno - A partir de cada hexágono, será estabelecido um
+    # entorno, onde serão agrupados o total de oportunidades por tipo
+    cma_ent_bus$saud_entorno <- 0
+    cma_ent_bus$educ_entorno <- 0
+    cma_ent_bus$trab_entorno <- 0
+    
+    # Calcular quantidade de oportunidades no entorno de cada hexágono
+    for (i in 1:nrow(cma_ent_bus)) {
+      cma_ent_bus[i,]$saud_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$saude_total)
+      cma_ent_bus[i,]$educ_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$edu_total)
+      cma_ent_bus[i,]$trab_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$empregos_total)
+    }
+    
+    # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
+    # trab_entorno - este passo é necessário devido à divisão a seguir
+    cma_ent_bus$saud_entorno <- ifelse(cma_ent_bus$saud_entorno == 0, 1, cma_ent_bus$saud_entorno)
+    cma_ent_bus$educ_entorno <- ifelse(cma_ent_bus$educ_entorno == 0, 1, cma_ent_bus$educ_entorno)
+    cma_ent_bus$trab_entorno <- ifelse(cma_ent_bus$trab_entorno == 0, 1, cma_ent_bus$trab_entorno)
+    
+    # Calcular a razão entre CMA para 60 minutos e quantidade de oportunidades no entorno
+    #  cma$educ_perc <- (cma$CMAET60 / cma$educ_entorno)*100
+    #  cma$saud_perc <- (cma$CMAST60 / cma$saud_entorno)*100
+    #  cma$trab_perc <- (cma$CMATT60 / cma$trab_entorno)*100
+    
+    cma_ent_bus <- cma_ent_bus%>%
+      dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
+      rename(origin=id_hex)
+    
+    cma_bus <- st_join(cma_bus, cma_ent_bus, join=st_equals)
+    cma_bus <- st_join(cma_bus, agregado_7, join=st_equals)
+    
+    cma_bus$CMATT_r <- ifelse(is.na((cma_bus$CMATT60/cma_bus$trab_entorno)),0,(cma_bus$CMATT60/cma_bus$trab_entorno))
+    cma_bus$CMAST_r <- ifelse(is.na((cma_bus$CMAST60/cma_bus$saud_entorno)),0,(cma_bus$CMAST60/cma_bus$saud_entorno))
+    cma_bus$CMAET_r <- ifelse(is.na((cma_bus$CMAET60/cma_bus$educ_entorno)),0,(cma_bus$CMAET60/cma_bus$educ_entorno))
+    
+    cma_bus$comp_trab <- cma_bus$CMATT_r*cma_bus$cat_pop_negra
+    cma_bus$comp_saud <- cma_bus$CMAST_r*cma_bus$cat_pop_negra
+    cma_bus$comp_educ <- cma_bus$CMAET_r*cma_bus$cat_pop_negra
   }
   
-  # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
-  # trab_entorno - este passo é necessário devido à divisão a seguir
-  cma_ent_car$saud_entorno <- ifelse(cma_ent_car$saud_entorno == 0, 1, cma_ent_car$saud_entorno)
-  cma_ent_car$educ_entorno <- ifelse(cma_ent_car$educ_entorno == 0, 1, cma_ent_car$educ_entorno)
-  cma_ent_car$trab_entorno <- ifelse(cma_ent_car$trab_entorno == 0, 1, cma_ent_car$trab_entorno)
-  
-#  cma_ent_car <-  read_rds(sprintf("%s/acess_ideal_07_%s_carro_compart_2019.rds", subfolder17, muni))%>%
-#    #dplyr::filter(mode==submodo)%>%
-#    dplyr::select(origin, city, mode, CMATT15, CMATT30, CMAST15, CMAST30, CMAET15, CMAET30)%>%
-#    rename(c(CMATT15_i=CMATT15, CMATT30_i=CMATT30, CMAST15_i=CMAST15, CMAST30_i=CMAST30, CMAET15_i=CMAET15, CMAET30_i=CMAET30))
-#  cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
-#  cma_car <- st_join(cma_car, agregado_7, join=st_equals)
-  
-  cma_ent_car <- cma_ent_car%>%
-    dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
-    rename(origin=id_hex)
-  
-  cma_car <- st_join(cma_car, cma_ent_car, join=st_equals)
-  cma_car <- st_join(cma_car, agregado_7, join=st_equals)
-  
-  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$trab_entorno)),0,(cma_car$CMATT30/cma_car$trab_entorno))
-  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$saud_entorno)),0,(cma_car$CMAST30/cma_car$saud_entorno))
-  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$educ_entorno)),0,(cma_car$CMAET30/cma_car$educ_entorno))
-  
-#  cma_car$CMATT_r <- ifelse(is.na((cma_car$CMATT30/cma_car$CMATT30_i)),0,(cma_car$CMATT30/cma_car$CMATT30_i))
-#  cma_car$CMAST_r <- ifelse(is.na((cma_car$CMAST30/cma_car$CMAST30_i)),0,(cma_car$CMAST30/cma_car$CMAST30_i))
-#  cma_car$CMAET_r <- ifelse(is.na((cma_car$CMAET30/cma_car$CMAET30_i)),0,(cma_car$CMAET30/cma_car$CMAET30_i))
-  
-  cma_car$comp_trab <- cma_car$CMATT_r*cma_car$cat_pop_negra
-  cma_car$comp_saud <- cma_car$CMAST_r*cma_car$cat_pop_negra
-  cma_car$comp_educ <- cma_car$CMAET_r*cma_car$cat_pop_negra
-  
-  # bus
-  cma_bus <- read_rds(sprintf("%s/acess_07_%s_onibus_2019.rds", subfolder17, muni))%>%
-    dplyr::select(origin, city, mode, CMATT60, CMAST60, CMAET60)
-  cma_ent_bus <- read_rds(sprintf("%s/hex_agregado_%s_07_2019.rds", subfolder14, muni))
-  viz_bus <- get_kring(h3_address = cma_ent_bus$id_hex, ring_size = 10, simple = TRUE)
-  
-  # Definir entorno - A partir de cada hexágono, será estabelecido um
-  # entorno, onde serão agrupados o total de oportunidades por tipo
-  cma_ent_bus$saud_entorno <- 0
-  cma_ent_bus$educ_entorno <- 0
-  cma_ent_bus$trab_entorno <- 0
-  
-  # Calcular quantidade de oportunidades no entorno de cada hexágono
-  for (i in 1:nrow(cma_ent_bus)) {
-    cma_ent_bus[i,]$saud_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$saude_total)
-    cma_ent_bus[i,]$educ_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$edu_total)
-    cma_ent_bus[i,]$trab_entorno <- sum(cma_ent_bus[cma_ent_bus$id_hex %in% viz_bus[[i]],]$empregos_total)
-  }
-  
-  # Substituir valores 0 por 1 nas colunas de saud_entorno, educ_entorno e
-  # trab_entorno - este passo é necessário devido à divisão a seguir
-  cma_ent_bus$saud_entorno <- ifelse(cma_ent_bus$saud_entorno == 0, 1, cma_ent_bus$saud_entorno)
-  cma_ent_bus$educ_entorno <- ifelse(cma_ent_bus$educ_entorno == 0, 1, cma_ent_bus$educ_entorno)
-  cma_ent_bus$trab_entorno <- ifelse(cma_ent_bus$trab_entorno == 0, 1, cma_ent_bus$trab_entorno)
-  
-  # Calcular a razão entre CMA para 60 minutos e quantidade de oportunidades no entorno
-  #  cma$educ_perc <- (cma$CMAET60 / cma$educ_entorno)*100
-  #  cma$saud_perc <- (cma$CMAST60 / cma$saud_entorno)*100
-  #  cma$trab_perc <- (cma$CMATT60 / cma$trab_entorno)*100
-  
-  cma_ent_bus <- cma_ent_bus%>%
-    dplyr::select(id_hex, trab_entorno, educ_entorno, saud_entorno)%>%
-    rename(origin=id_hex)
-  
-  cma_bus <- st_join(cma_bus, cma_ent_bus, join=st_equals)
-  cma_bus <- st_join(cma_bus, agregado_7, join=st_equals)
-  
-  cma_bus$CMATT_r <- ifelse(is.na((cma_bus$CMATT60/cma_bus$trab_entorno)),0,(cma_bus$CMATT60/cma_bus$trab_entorno))
-  cma_bus$CMAST_r <- ifelse(is.na((cma_bus$CMAST60/cma_bus$saud_entorno)),0,(cma_bus$CMAST60/cma_bus$saud_entorno))
-  cma_bus$CMAET_r <- ifelse(is.na((cma_bus$CMAET60/cma_bus$educ_entorno)),0,(cma_bus$CMAET60/cma_bus$educ_entorno))
-  
-  cma_bus$comp_trab <- cma_bus$CMATT_r*cma_bus$cat_pop_negra
-  cma_bus$comp_saud <- cma_bus$CMAST_r*cma_bus$cat_pop_negra
-  cma_bus$comp_educ <- cma_bus$CMAET_r*cma_bus$cat_pop_negra
   
   for (oport in oportunidades){
     if (oport == 'trabalho'){
@@ -635,7 +671,7 @@ grafico_comp_aod <- function(muni, ano=2019, formato){
 munis <- c("bho", "cam", "cgr", "cur", "for", "goi", "man", "nat", "rec",
            "rio", "sne", "sjc", "spo", "ula", "tsa", "vta", "jpa")
 
-munis <- 'bho'
+munis <- 'vta'
 
 for (muni in munis){
   grafico_comp_aod(muni = muni, 
