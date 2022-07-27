@@ -29,4 +29,4 @@ As 13 capitais estaduais e 4 cidades de relevância econômica distribuídas nas
 
 # Organização do repositório
 
-Para a organização dos scripts em `R` utilizados neste repositório, veja o arquivo **README.md** contido na pasta **R**.
+Para a organização dos scripts em `R` utilizados no repositório, veja o arquivo **README.md** contido na pasta **R**.
