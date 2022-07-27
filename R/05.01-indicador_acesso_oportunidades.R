@@ -10,19 +10,19 @@ source('fun/indice_acesso_oportunidades.R')
 indice_mobilidade_entorno <- function(muni_list, ano = 2019){
   # Essa função calcula uma série de indicadores intermediários que serão 
   # utilizados para compor o índice final. São eles:
-  # IAOD - Índice final, que é uma média ponderada dos índices por modo de transporte
+  # IAOD - Índice final, que é uma média ponderada dos indicadores por modo de transporte
   
-  # ia_bus - indicador de acesso por ônibus
-  # ia_car - indicador de acesso por carro compartilhado
-  # ia_walk - indicador de acesso a pé
-  # ia_bike - indicador de acesso por bicicleta
+  # im_bus - indicador de acesso por ônibus, peso = 4
+  # im_car - indicador de acesso por carro compartilhado peso = 1
+  # im_walk - indicador de acesso a pé = peso = 2
+  # im_bike - indicador de acesso por bicicleta = peso = 3
   
-  # Cada um dos índices acima é resultado da média aritmética dos índices por 
-  # tipo de oportunidade, por exemplo:
-  # im_bus_saud - ônibus > saúde
-  # IM_bus_trab - ônibus > trabalho
-
-  # ano <- 2019; muni <- 'nat'
+  # Cada um dos indicadores acima é formado por componentes que representam o acesso 
+  # aos tres tipos de oportunidade, por exemplo:
+  
+  # im_bus_trab - ônibus > trabalho, peso = 5
+  # im_bus_educ - ônibus > educacao, peso = 3
+  # im_bus_saud - ônibus > saúde, peso = 2
 
   # Estrutura de pastas
   files_folder <- "../../indice_acesso_cidade_dados"
@@ -82,7 +82,6 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     rm(hex_agregados_8, oport_ativos, oport_ativos_ideal, hex_agregados_7, oport_carro) # oport_carro_ideal
     
     
-    
     # Criar indicadores de acesso para ônibus e para a combinação carro 
     # compartilhado + ônibus, para cidades que têm dados de ônibus
     if (muni %nin% skip_bus) {
@@ -121,7 +120,6 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     }
     
     
-    
     # Criar indicadores de acesso para carro compartilhado (cálculo substituído
     # pela integração carro + ônibus)
     
@@ -140,7 +138,6 @@ indice_mobilidade_entorno <- function(muni_list, ano = 2019){
     # 
     # # Calcular componentes de acesso para trabalho, educação e saúde
     # im_carro <- calcular_indices_iaod(data_carro, modo = 'carro_compart')
-    
     
     
     # Criar indicadores de acesso para modos ativos
