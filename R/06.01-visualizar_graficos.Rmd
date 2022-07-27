@@ -13,10 +13,10 @@ output: html_notebook
   )
   # Cores
   paleta <- c('#e7eff0', '#b6ced1', '#86adb2', '#568c93', '#0d5b65')
-  paleta_NA <- '#DCDCDC'
+  paleta_NA <- '#808080'
   
   # Estrutura de pasta
-  files_folder <- "../../indice-mobilidade_dados"
+  files_folder <- "../../indice_acesso_cidade_dados"
   subfolder1 <- sprintf('%s/01_municipios/2019/', files_folder)
   subfolder2 <- sprintf('%s/02_setores_censitarios/2019', files_folder)
   subfolder12 <- sprintf('%s/12_hex_municipios/2019', files_folder)
@@ -126,7 +126,7 @@ main_title <- 'População'        # main_title em tm_layout
                 n=4,
                 #breaks = breaks,
                 style = estilo,
-                palette = 'Blues', colorNA = '#666666', textNA = "Sem população", 
+                palette = paleta, colorNA = paleta_NA, textNA = "Sem população", 
                 title = subtitulo,
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
         tm_scale_bar(breaks = c(0, 2, 4), text.size = .5)#, position=c("right", "bottom"))#+
@@ -152,7 +152,7 @@ main_title <- "População negra"
                 n=4,
                 breaks = breaks,
                 style = 'quantile',
-                palette = 'Blues', colorNA = "#666666", textNA = "Sem população", 
+                palette = paleta, colorNA = paleta_NA, textNA = "Sem população", 
                 title = subtitulo,
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"),
                 legend.position = c('left','center'))+ # scientific e interessante
@@ -169,7 +169,7 @@ quantis_pop_negra <- quantile(file_8$perc_pop_negra, na.rm=TRUE)
     mutate(cat_pop_negra = case_when(perc_pop_negra >= quantis_pop_negra[4] ~ 4, # 75% ou mais
                                      perc_pop_negra >= quantis_pop_negra[3] & perc_pop_negra < quantis_pop_negra[4] ~ 3, 
                                      perc_pop_negra >= quantis_pop_negra[2] & perc_pop_negra < quantis_pop_negra[3] ~ 2,
-                                     TRUE ~1))
+                                     perc_pop_negra >= quantis_pop_negra[1] & perc_pop_negra < quantis_pop_negra[2] ~ 1))
 ```
 
 ```{r}
@@ -190,7 +190,7 @@ main_title <- "População negra"
                 n=4,
                 breaks = breaks,
                 style = 'cat',
-                palette = 'Blues', colorNA = "#DCDCDC", textNA = "Sem população", 
+                palette = paleta, colorNA = paleta_NA, textNA = "Sem população", 
                 title = subtitulo,
                 legend.format = list(text.separator="a", scientific=TRUE, format="f"),
                 legend.position = c('left','bottom'))+ # scientific e interessante
@@ -202,7 +202,7 @@ main_title <- "População negra"
 Oportunidades
 
 ```{r}
-file <- readRDS(sprintf("%s/hex_agregado_%s_%s_2019.rds", subfolder14, muni, res))
+file <- readRDS(sprintf("%s/hex_agregado_%s_%s_2019.rds", subfolder14, muni, res='08'))
 
   tt_total <- sum(file$empregos_total)
   st_total <- sum(file$saude_total)
@@ -229,7 +229,7 @@ tm_shape(file) +
               n=5,
               #breaks = c(0,1,5,10,20,70),
               style = estilo,
-              palette = 'Blues', colorNA = "#DCDCDC", textNA = "Zero", 
+              palette = paleta, colorNA = paleta_NA, textNA = "Zero", 
               title = subtitulo,
               legend.format = list(text.separator="a", scientific=TRUE, format="f"))+ # scientific e interessante
       tm_scale_bar(breaks = c(0, 2, 4), text.size = .5, position=c("right", "bottom"))#+
@@ -239,7 +239,7 @@ tm_shape(file) +
 Acesso
 
 ```{r}
-cma_3%>%
+file%>%
   tm_shape()+ 
   tm_layout(main.title = sprintf("Acesso ao trabalho \n%s", titulo), 
             legend.outside = FALSE, frame = FALSE, 
@@ -247,7 +247,6 @@ cma_3%>%
             main.title.size = 1,
             main.title.position = c("center","TOP"),
             legend.title.size = 1,
-            main.title.position = 'center',
             frame.lwd = NA,
             #panel.label.bg.color = NA,
             #panel.label.size = 0.8,
