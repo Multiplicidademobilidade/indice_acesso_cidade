@@ -120,7 +120,7 @@ percentuais_pesquisa <-
   percentuais_pesquisa %>% 
   # Os dois primeiros componentes vão formar o indicador de integração com o transporte público
   mutate(c_int_tp     = (perc_integra_tp - min(.$perc_integra_tp))         / (max(.$perc_integra_tp) - min(.$perc_integra_tp)),
-         c_op_int_tp = (perc_combina_app_tp - min(.$perc_combina_app_tp)) / (max(.$perc_combina_app_tp) - min(.$perc_combina_app_tp)),
+         c_op_int_tp = (perc_combina_app_tp - min(.$perc_combina_app_tp))  / (max(.$perc_combina_app_tp) - min(.$perc_combina_app_tp)),
          # Os dois segundos vão formar o indicador de novas viagens
          c_nova_vg    = (perc_nao_teriam_vj - min(.$perc_nao_teriam_vj))   / (max(.$perc_nao_teriam_vj) - min(.$perc_nao_teriam_vj)),
          c_op_nova_vg = (perc_app_mais_vg - min(.$perc_app_mais_vg))       / (max(.$perc_app_mais_vg) - min(.$perc_app_mais_vg)))
