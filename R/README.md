@@ -14,3 +14,4 @@ As etapas são as seguintes:
   - `05`: **criação dos índices** de Acesso às Oportunidades em prol da Redução de Desigualdades (IAOD), de Integração e novas viagens do automóvel por aplicativo (INIA) e de Acesso à Cidade (IAC);
   - `06`: criação dos **gráficos** relacionados aos índices.
 
+**Observação**: O script 02.02 possui duas versões - uma para R e outra para Jupyter. Isso porque a execução em *multicore* no Jupyter é muito mais rápida do que a em R, sendo recomendável rodá-lo por lá.
